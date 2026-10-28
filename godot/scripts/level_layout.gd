@@ -101,9 +101,10 @@ func actor_position(actor: Dictionary) -> Vector3:
 # 9/37 aircraft start at a random heading; 98/99 are weapon definitions.
 const STORED_YAW := {1: [4, 0], 6: [9, 0], 8: [9, 0], 10: [8, 16], 11: [4, 16], 12: [4, 0],
 	16: [9, 0], 25: [5, 16], 27: [9, 0], 30: [9, 0], 32: [7, 0], 33: [9, 0], 34: [5, 0],
-	36: [9, 0], 96: [0, 0]}
-# A negative 16-bit value means "no fixed yaw": item pickups (16) spin, props (96) get a random yaw.
-const NEGATIVE_MEANS_UNSET := [16, 96]
+	36: [9, 0], 96: [0, 0], 97: [2, 0]}
+# A negative 16-bit value means "no fixed yaw": item pickups (16) spin, props (96) and
+# DCSQuad decals (97, loader 0x80049c38) get a random yaw.
+const NEGATIVE_MEANS_UNSET := [16, 96, 97]
 # Turret parts with their own absolute yaw, by index in "objects": the base of
 # classes 8/36 (Turret.base_rotation) and the base + middle of class 33.
 const PART_YAW := {8: {1: [12, 16]}, 36: {1: [12, 16]}, 33: {1: [12, 16], 2: [11, 16]}}

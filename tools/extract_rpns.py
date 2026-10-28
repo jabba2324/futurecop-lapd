@@ -96,21 +96,99 @@ SCRIPT VM (verified against the interpreter at 0x80069d68 and its jump table at
     0x14 r     pop b; if b == 0: goto (address of r) + r
 
   Variable banks (allocated in 0x80076eb0, reset per level in 0x80069b58):
-    v[i]    *(0x8009fa94)[i]   61 ints of game state; v[0..56] are zeroed at start-up.
-                               Named where the code confirms them (VARIABLE_NAMES):
-                               v[3] number of players (1/2), v[6..9] random 0..999
-                               drawn at level start, v[10..12] player 1 gun / heavy /
-                               special weapon choice, v[13..15] the same for player 2
-                               (0x800573a4 copies them into the player; the Cvkh/Cvkb
-                               2-16 load conditions test them), v[16]/v[17] mission
-                               result flags (0x80025b7c compares them), v[23] game
-                               type (1 = Precinct Assault team scoring in the spawner
-                               0x8006125c), v[56] last announcer event code (written
-                               by game code, read and cleared by PA scripts).
-                               Other indices are unnamed.
+    v[i]    *(0x8009fa94)[i]   61 ints of game state; v[0..56] are zeroed at start-up
+                               (0x80076eb0). v[] is the game's global state block, so
+                               most entries are written and read by game code; the
+                               ones scripts use are all named (VARIABLE_NAMES). The
+                               PA entries v[25..56] live in the Precinct Assault
+                               HUD 0x80047f30, the PA stats getter 0x80059e9c (index
+                               = player 0/1, or the Sky Captain AI for "0"), the Sky
+                               Captain AI 0x800336dc / its init 0x800331cc and the
+                               turret capture/kill code 0x8002d1a0 / 0x8002d664.
+                               [C] = confirmed in code, [P] = plausible reading.
+      v[2]  p1_difficulty      [C] per-player skill byte (v[38] = player 2), kept
+                               across levels by main 0x80076a2c (starts at 1), loaded
+                               from .DEM byte +1 (0x80059bfc). Player max health
+                               x1.00 / x1.25 / x1.50 for 0 / 1 / 2, 3 = invulnerable
+                               (0x800579d4; incoming damage scaled the same way in
+                               0x80052f54; ammo/weapon stats +25 % / +50 % in
+                               0x8006ab38, 0x8006bd48). [P] 2 is the easiest
+                               setting: CW scripts add enemies when v[2] < 2 / != 2.
+      v[3]  num_players        [C] 1 or 2.
+      v[4]  level_exit_code    [C] written by the game, never by scripts: 4 while
+                               loading (0x80024e3c), 1 in play (0x800259d8), on exit
+                               (0x80025b7c) by game state: mission-end countdown
+                               expired -> 0; match/cheat end states 0xb/0xc -> 0 when
+                               v[16] == v[17], else 1; others 2 / 3 / 4. Main
+                               0x80076a2c: 0 = go on to the next level / movie, 3 =
+                               back to the front end.
+      v[6..9] level_random_0..3 [C] rand() % 1000 drawn per level (0x80069b58).
+      v[10..12] p1_gun / p1_heavy / p1_special, v[13..15] the same for player 2
+                               [C] weapon choice (gun 0-5, heavy 16-21, special
+                               32-36). 0x800573a4 copies them into the player, the
+                               Cvkh/Cvkb load conditions test them, .DEM bytes
+                               +2..+7 set them (0x80059bfc).
+      v[16] mission_result, v[17] mission_result_ref  [C] compared by the game:
+                               end-of-match screen 0x80028164 and exit 0x80025b7c
+                               test v[16] == v[17]. CW scripts set v[16] = 0,
+                               v[17] = 1 at start and v[16] = 1 on success; in PA
+                               v[16] == v[17] means player 1 LOST (the "win" cheat
+                               0x80060a0c sets v[16] = v[17] + 1 for player 1).
+      v[19] pa_ai_level        [C] Sky Captain level 0..9 (HUD "L%02d" = v[19]+1),
+                               clamped in 0x800331cc; it scales the AI's health,
+                               speed and buying; +1 after a won 1-player PA match
+                               (0x80028164); 10 = PA campaign finished (main
+                               0x80076a2c). Front end / demo table set it (0x80078c88).
+      v[23] game_type          [C] 0 = Crime War, 1 = Precinct Assault (team
+                               scoring in the spawner 0x8006125c, PA HUD, ...).
+      v[25]/v[26] p1_points / p2_points   [C] team 1 / team 2 (P2 or Sky Captain)
+                               current points: HUD 0x80047f30, stats item 13; +1 per
+                               turret captured/destroyed (0x8002d1a0/0x8002d664);
+                               scripts add/spend them; the AI spends v[26].
+      v[27]/v[28] p1_tanks / p1_jets, v[29]/v[30] p2_tanks / p2_jets   [C] unit
+                               counts shown by the HUD as "%02ld/%02ld"; the AI caps
+                               its own at 20 (0x800336dc). Tank = class 5, jet =
+                               class 9 (the Csac the scripts spawn for them).
+      v[31]/v[32] p1_points_scored / p2_points_scored   [C] stats item 14.
+      v[33]/v[34] p1_outposts / p2_outposts   [C] stats item 12 ("Outposts
+                               Claimed"); the HUD blinks the points when >= 30 and
+                               v[33]+v[34] < 4 (an outpost is still free).
+      v[35]/v[36]/v[37] secret_un / secret_ov / secret_m3a  [C] persistent flags:
+                               saved in the password (0x8007f02c / 0x8007ea78) and
+                               the memory-card save (0x80080b70). Set only by the
+                               on_detect script of one hidden actor in UN, OV and
+                               M3A respectively. [P] secret areas found.
+      v[38] p2_difficulty      [C] as v[2] for player 2.
+      v[39] sky_captain_mode   [C] mirror of the AI's state (0x800336dc):
+                               [P] 0 = roam / hunt, 1 = support own attack,
+                               2 = defend base (2 at spawn, 0x800331cc).
+      v[40..43] outpost_owner_0..3  [C] team owning outpost k (0 = free); the AI
+                               claims a free one for 30 points (writes its team,
+                               2), a player's claim script writes 1 and takes 30
+                               from v[25]. [P] Scripts also store 3 / 4 after
+                               reacting to a claim (handled markers).
+      v[44]/v[45] ai_buy_tanks / ai_buy_jets   [C] units the AI bought at its base
+                               (1 point each); v[46] ai_buy_dreadnought / v[47]
+                               ai_buy_superfortress (50 points each); v[48+2k] /
+                               v[49+2k] ai_buy_tanks_outpost_k / ai_buy_jets_outpost_k
+                               (k = 0..3, 2 points each). Written by the AI, read,
+                               turned into spawns and cleared by PA Cfun scripts.
+      v[56] announcer_event    [C] written by game code (0x800336dc, 0x8002d1a0,
+                               0x8002d664, 0x80035698), read and cleared by PA
+                               scripts: 2 / 3 Sky Captain goes after the player,
+                               6 it captured a turret, 7 it destroyed a turret,
+                               9 it respawned. Codes 1, 4, 5, 8 are tested by
+                               scripts but no writer was found.
+      Not written or read by any script in the 15 levels: v[0], v[1], v[5], v[18],
+      v[20..22], v[24] (cleared on exit by 0x80025b7c), v[57..60] (= the *ref
+      pointers). No code access was found for v[0], v[1], v[5], v[18], v[20..22].
     *ref[i] *(v[57+i])         4 pointers set by 0x80069b1c:
                                *ref[0] = 0x8009faa4 game clock (1/300 s units)
-                               *ref[1] = 0x8009fab4 (unknown)
+                               *ref[1] = 0x8009fab4 unused: no instruction in
+                                 SLUS_007.39 reads or writes it (searched absolute
+                                 lui/lo16 and gp-relative (gp = 0x8009f214) accesses;
+                                 the only hit is the pointer setup) and no script
+                                 uses it. A free variable.
                                *ref[2] = 0x8009fa70 mission-end countdown: when > 0
                                  the main loop (0x80027d9c) subtracts the tick delta and
                                  ends the mission when it reaches 0 (scripts write
@@ -176,26 +254,82 @@ MESSAGES (actor_msg / group_msg_*; confirmed by decompilation unless marked)
       69 visible on/off (flag 0x20)   100 start Csfx/actor effect b on this actor
       101 stop effect b on this actor
     class specific (consumer function in parentheses):
-      2-7, 10-15  path follower command, mode = msg-1, value = b (0x8004f188; meaning
-                  of the modes not traced)
+      TARGET KINDS. One target search 0x8004e80c serves path followers, shooters,
+      turrets and zones (zone filter test 0x8002f8b8): it returns the nearest live
+      actor (not self, not dead, within the caller's range) whose
+        kind 1 class id (struct byte 0x16) == b    kind 2 actor id (u16 0x14) == b
+        kind 3 group_id (byte 0x17) == b           kind 4 team (byte 0x18) == b
+        kind 5 team is a set bit of mask b (1 << team & b)
+        (kind 7 = actor-id flag 0x4000 and kind 6 = nothing exist, but no message
+        selects them; zones also have kind 8 = class with class 18 counted as 1)
+      e.g. "class == 1" = the players. b is a u8 (mailbox), so actor ids > 255 can
+      not be targeted by message.
+      1-7, 10-15  path follower (classes 5/20/26/28/31; 0x8004f188 stores mode =
+                  msg-1 in path +0x3c bits 24-27 and b in path +0x42; the node
+                  chooser 0x8004f330 uses them at every node) [C]:
+                  1  path_random            mode 0: pick a random next node (default)
+                  2-6 path_seek_<kind>      modes 1-5: prefer the neighbour node that
+                     (class/actor/group/team/team_mask)  points most towards the
+                     nearest actor of target kind 1-5 with value b (search range =
+                     path +0x2e; if path +0x3a > 0 only with probability
+                     +0x3a/4096 per node, else random)
+                  7  path_goto_node         mode 6: head towards Cnet node b
+                  10-14 path_flee_<kind>    modes 9-13: the same but prefer the
+                     node pointing AWAY from the target
+                  15 path_avoid_node        mode 14: head away from node b
+                  (8, 9 and >= 16 are not accepted: modes 7/8/15 do not exist.
+                  Class 26 walkers switch to the flee modes themselves when hurt.)
       19 path go (b != 0) / stop (b = 0)   20/21 enable/disable node b of own Cnet
       22 path speed = b * 0x2900 / 300 >> 4 (fx12)
-      30 weapon fire on/off (0 = hold fire)  31-35 target mode msg-30 with target b
-      38 switch weapon to definition b       (shooters, 0x8005ffb8)
-      41-44 turret target mode msg-40 with target b  45 turret on/off
-      46 class 30: swap to model slot b (0..3)            (turrets, 0x8002cb20)
+      30 weapon fire on (b != 0) / hold fire (b = 0; BaseShooter +4 flag 0x100)
+      31-35 shooter target = target kind msg-30 (class/actor/group/team/team_mask)
+            with value b; the shooter's periodic search 0x800600e8 uses it
+      38 switch weapon to the class-98 weapon definition whose actor id (low byte)
+         == b (table 0x800a2300, 0x8005ff70)  (shooters, 0x8005ffb8) [C]
+      41-44 turret target = target kind msg-40 (class/actor/group/team) with value b
+            (searched every 0x5dc clock units in 0x8002cc30)
+      45 turret on (b != 0) / off (b = 0: +0xdf flag 4 skips all turret logic)
+      46 class 30: swap to model slot b (0..3)            (turrets, 0x8002cb20) [C]
       50 play animation track b   51 continue from frame b   52 hold frame b
                                                           (AnmD state, 0x800449f8)
       75 class 35: objective node b>>3 state = b&7   76 node b>>5 icon colour = b&31
-      80 class 25 MoveableProp: target position/state = b       (0x8002f280)
+      80 class 25 MoveableProp: move to the end position/rotation (b != 0) or back
+         to the start (b = 0) (+0xa1, read by the mover 0x8002f30c; with the
+         ping-pong flag it then toggles by itself)                (0x8002f280) [C]
       82 class 10 Elevator: 0 stop, 1-10 travel to stop b-1, >= 11 jump to stop b-11
       83 class 10 Elevator: enable (b != 0) / lock (b = 0)        (0x80041728)
-      85 class 27: activate (b != 0) / deactivate   86 class 27 +0xe6 = b
-      90 class 26: set state b   91 class 26: enable (b != 0) / disable
-      95-98 player (class 1) commands (0x800585b8; not identified)
-      110 class 31: on/off      115 class 80: +0x11e = b
-      120/121 class 14/38 zone parameters  122 class 14/38 zone enable (b != 0; runs
-              on_detect when the zone has flag 0x20) / disable (b = 0)
+      85 class 27 MovingShooter: b != 0 = move out to pos+offset (state 1; only
+         from the home pause 0 or while returning 3), b = 0 = return home (state
+         3; only while out 1/2)                            (0x8002e528 -> 0x8002e2bc) [C]
+      86 class 27: animation speed while paused = b/16 (+0xe6; 0 = normal) [C]
+      90 class 26 PathedWalker: set behaviour state b (+0x15f, 0x8002b1dc) [C]:
+         0 wander (quarter speed unless walker flag 1; attacks targets it meets),
+         1 attack (needs a target: ignored when sent by message), 2 flee (also
+         entered automatically below 5 health), 3 walk the path ignoring targets,
+         4 [P] hold / fight (never flees), 5 halt (speed 0) and shoot,
+         6 run to the nearest Cnet node with flag bit 0 (retreat), 7 die (death
+         animation, sets dead flag), 8 dead.
+      91 class 26: b = 0 sets walker flags 0xfe (incl. 0x80 = never attack, 0x02 =
+         never flee) and full speed; b != 0 clears flag 1 (slow wander again;
+         bits 1-7 stay set)                                        (0x8002b4b4) [C]
+      95-98 player (class 1; 0x800585b8, player data = actor +0xac) [C]:
+         95 clear the player's lock-on target (+0x6c, the aim target of the weapon
+            mount 0x80057e40)
+         96 camera shake += b*128 (+0xd0, decays by the tick delta; damage adds to
+            it too, 0x80057358; camera 0x800569ec)
+         97 set camera view b (+0xa4) and show its name for 3 s: 0 Standard,
+            1 Close-Up, 2 Standard Side, 3 Close-Up Side, 4 Sky, 5 Crowd Control,
+            6 Crowd Control Side (5/6 fall back to 0 outside crowd-control
+            regions, 0x80031b40) (names: table 0x8009ac58)
+         98 set vehicle mode b: 0 walker, 1 hovercraft (+0x2fd, ignored while a
+            transformation runs; the transform code 0x80055988 does the rest)
+      110 class 31 (pusher field: shoves nearby players, 0x8003a160): force on
+          (b != 0) / off (b = 0) (+0x140 bit 0; also resets the push) (0x8003a09c) [C]
+      115 class 80 (no instances in any level): +0x11e = b (0x80039bd0)
+      120 class 14/38 zone: filter value = b (+0xa2)  121 filter type = b (+0xa1;
+          the target kinds above, tested by 0x8002f8b8)          (0x80031004) [C]
+      122 class 14/38 zone enable (b != 0; runs on_detect when the zone has flag
+          0x20) / disable (b = 0)
   Spawner messages (0x800614bc; any other number is ignored):
       70 spawner on (b != 0, also resets the countdown so it spawns next tick) / off
       71 spawn one now (only while alive < max and the spawn budget is not used up;
@@ -213,7 +347,9 @@ Output: parsed/<LEVEL>/rpns.json
                          "pseudo"} x2], "unknown_pad"}]}
   roles is ["load_condition", "on_load"], or ["spawn_condition", "on_spawn"] for Csac.
   Pseudo code names known variables as bank[index:name] and known messages as
-  number:name (VARIABLE_NAMES, MESSAGES, SPAWNER_MESSAGES, PROP_MESSAGES).
+  number:name (VARIABLE_NAMES, MESSAGES, SPAWNER_MESSAGES, PROP_MESSAGES). For
+  actor/group messages with a literal argument it adds the argument's meaning as a
+  comment (target kind, Cnet node, camera view, walker state, ...; _msg_arg_note).
 """
 
 import json
@@ -266,26 +402,31 @@ MSG_SPAWN = 0x47
 
 # Message names (see the MESSAGES section of the docstring for the evidence).
 # actor_msg / group_msg_a / group_msg_b share one numbering.
+_KINDS = ("class", "actor", "group", "team", "team_mask")
 MESSAGES = {
-    2: "path_mode_1", 3: "path_mode_2", 4: "path_mode_3", 5: "path_mode_4",
-    6: "path_mode_5", 7: "path_mode_6", 10: "path_mode_9", 11: "path_mode_10",
-    12: "path_mode_11", 13: "path_mode_12", 14: "path_mode_13", 15: "path_mode_14",
+    1: "path_random",
+    **{2 + k: f"path_seek_{n}" for k, n in enumerate(_KINDS)},
+    7: "path_goto_node",
+    **{10 + k: f"path_flee_{n}" for k, n in enumerate(_KINDS)},
+    15: "path_avoid_node",
     19: "path_go", 20: "path_node_enable", 21: "path_node_disable", 22: "path_speed",
-    30: "weapon_fire_enable", 31: "target_mode_1", 32: "target_mode_2",
-    33: "target_mode_3", 34: "target_mode_4", 35: "target_mode_5", 38: "set_weapon",
-    41: "turret_target_mode_1", 42: "turret_target_mode_2", 43: "turret_target_mode_3",
-    44: "turret_target_mode_4", 45: "turret_enable", 46: "turret_set_model",
+    30: "weapon_fire_enable",
+    **{31 + k: f"target_{n}" for k, n in enumerate(_KINDS)},
+    38: "set_weapon",
+    **{41 + k: f"turret_target_{n}" for k, n in enumerate(_KINDS[:4])},
+    45: "turret_enable", 46: "turret_set_model",
     50: "anim_play_track", 51: "anim_continue_from", 52: "anim_hold_frame",
     56: "set_health_x100", 57: "set_ambient_sound", 58: "set_collision_damage",
     59: "set_collision", 60: "damage", 61: "remove", 62: "set_map_icon",
     63: "set_invincible", 64: "set_untargetable", 65: "set_health", 66: "set_group",
     67: "set_team", 68: "set_uv_offset", 69: "set_visible",
     75: "objective_node_state", 76: "objective_node_icon", 80: "moveable_prop_goto",
-    82: "elevator_goto", 83: "elevator_enable", 85: "class27_activate",
-    86: "class27_param", 90: "class26_state", 91: "class26_enable",
-    95: "player_cmd_95", 96: "player_cmd_96", 97: "player_cmd_97", 98: "player_cmd_98",
-    100: "start_effect", 101: "stop_effect", 105: "nop_105", 110: "class31_enable",
-    115: "class80_param", 120: "zone_param_120", 121: "zone_param_121",
+    82: "elevator_goto", 83: "elevator_enable", 85: "mover_extend",
+    86: "mover_pause_anim_speed", 90: "walker_set_behaviour", 91: "walker_passive",
+    95: "player_clear_target", 96: "player_camera_shake", 97: "player_set_camera",
+    98: "player_set_vehicle_mode",
+    100: "start_effect", 101: "stop_effect", 105: "nop_105", 110: "pusher_enable",
+    115: "class80_param", 120: "zone_filter_value", 121: "zone_filter_type",
     122: "zone_enable", 124: "trigger_enable", 126: "cfun_set_count",
 }
 SPAWNER_MESSAGES = {70: "spawner_enable", 71: "spawn"}
@@ -299,14 +440,68 @@ _MSG_TABLES = {0x38: MESSAGES, 0x39: MESSAGES, 0x3a: MESSAGES,
 
 # Variables named from the code (see "Variable banks" in the docstring).
 VARIABLE_NAMES = {
-    ("v", 3): "num_players", ("v", 6): "level_random_0", ("v", 7): "level_random_1",
+    ("v", 2): "p1_difficulty", ("v", 3): "num_players", ("v", 4): "level_exit_code",
+    ("v", 6): "level_random_0", ("v", 7): "level_random_1",
     ("v", 8): "level_random_2", ("v", 9): "level_random_3",
     ("v", 10): "p1_gun", ("v", 11): "p1_heavy", ("v", 12): "p1_special",
     ("v", 13): "p2_gun", ("v", 14): "p2_heavy", ("v", 15): "p2_special",
-    ("v", 16): "result_1", ("v", 17): "result_2", ("v", 23): "game_type",
+    ("v", 16): "mission_result", ("v", 17): "mission_result_ref",
+    ("v", 19): "pa_ai_level", ("v", 23): "game_type",
+    ("v", 25): "p1_points", ("v", 26): "p2_points",
+    ("v", 27): "p1_tanks", ("v", 28): "p1_jets", ("v", 29): "p2_tanks", ("v", 30): "p2_jets",
+    ("v", 31): "p1_points_scored", ("v", 32): "p2_points_scored",
+    ("v", 33): "p1_outposts", ("v", 34): "p2_outposts",
+    ("v", 35): "secret_un", ("v", 36): "secret_ov", ("v", 37): "secret_m3a",
+    ("v", 38): "p2_difficulty", ("v", 39): "sky_captain_mode",
+    ("v", 40): "outpost_owner_0", ("v", 41): "outpost_owner_1",
+    ("v", 42): "outpost_owner_2", ("v", 43): "outpost_owner_3",
+    ("v", 44): "ai_buy_tanks", ("v", 45): "ai_buy_jets",
+    ("v", 46): "ai_buy_dreadnought", ("v", 47): "ai_buy_superfortress",
+    **{("v", 48 + 2 * k): f"ai_buy_tanks_outpost_{k}" for k in range(4)},
+    **{("v", 49 + 2 * k): f"ai_buy_jets_outpost_{k}" for k in range(4)},
     ("v", 56): "announcer_event",
-    ("*ref", 0): "clock", ("*ref", 2): "mission_end_countdown", ("*ref", 3): "play_sound",
+    ("*ref", 0): "clock", ("*ref", 1): "unused", ("*ref", 2): "mission_end_countdown",
+    ("*ref", 3): "play_sound",
 }
+
+# Readable meaning of literal message arguments (pseudo-code comments only).
+_CAMERAS = ("Standard", "Close-Up", "Standard Side", "Close-Up Side", "Sky",
+            "Crowd Control", "Crowd Control Side")
+_WALKER_STATES = ("wander", "attack", "flee", "walk ignoring targets", "hold/fight",
+                  "halt and shoot", "retreat to flagged node", "die", "dead")
+_KIND_FIELDS = ("class", "actor id", "group", "team", "team mask")
+
+
+def _msg_arg_note(msg, arg):
+    """Comment for message `msg` (actor/group numbering) with literal argument `arg`."""
+    if arg is None:
+        return ""
+    kind = None
+    if 2 <= msg <= 6 or 10 <= msg <= 14:
+        kind = (msg - 2) % 8
+        verb = "seek" if msg < 10 else "flee from"
+    elif 31 <= msg <= 35 or 41 <= msg <= 44:
+        kind, verb = (msg - 31) % 10, "target"
+    if kind is not None:
+        a = arg & 0xff
+        return f"{verb} nearest {_KIND_FIELDS[kind]} {'mask ' + hex(a) if kind == 4 else a}"
+    if msg in (7, 15):
+        return f"{'towards' if msg == 7 else 'away from'} node {arg & 0xff}"
+    if msg == 97:
+        a = arg & 0xff
+        return f"{_CAMERAS[a]} Camera" if a < len(_CAMERAS) else ""
+    if msg == 98:
+        return {0: "walker", 1: "hovercraft"}.get(arg & 0xff, "")
+    if msg == 90:
+        a = arg & 0xff
+        return _WALKER_STATES[a] if a < len(_WALKER_STATES) else ""
+    if msg == 85:
+        return "move out" if arg & 0xff else "return home"
+    if msg == 80:
+        return "to end" if arg & 0xff else "to start"
+    if msg == 121 and 1 <= (arg & 0xff) <= 5:
+        return f"filter by {_KIND_FIELDS[(arg & 0xff) - 1]}"
+    return ""
 
 
 def _var(bank, idx_txt, idx_val):
@@ -577,6 +772,10 @@ def disassemble(code, start=0, end=None, ctx=None, has_arg=False, stop_at_end=Tr
         elif op in _MSG_TABLES:
             mname = message_name(op, args[1][1])
             mtxt = f"{txt[1]}:{mname}" if mname else txt[1]
+            anote = (_msg_arg_note(args[1][1], args[2][1])
+                     if op in (0x38, 0x39, 0x3a) and args[1][1] is not None else "")
+            if anote:
+                suffix = f"{suffix}; {anote}" if suffix else f"  # {anote}"
             pseudo.append(f"{OPCODES[op][0]}({txt[0]}, {mtxt}, {txt[2]}){suffix}")
         elif op in OPCODES:
             pseudo.append(f"{OPCODES[op][0]}({', '.join(txt)}){suffix}")

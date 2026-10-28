@@ -74,7 +74,7 @@ Csfx - Global effect-definition tables (2 per level, both id 1, in the shared
   94 0x80044770). Placed Cact actors of classes 87-94 are the same records: the actor
   loader 0x8004d6d4 sends them to the same routines (0x80076878 etc.), into table 0.
 
-  WHAT THEY ARE (confirmed unless marked): one effect system. Classes 87-90 and 92-94
+  WHAT THEY ARE (confirmed in SLUS_007.39): one effect system. Classes 87-90 and 92-94
   are effect DEFINITIONS: each record is copied whole into a heap block and stored in
   a 2 x 256 registry 0x800a7040[table][id] (0x8003c404), so the id byte is unique per
   table across these classes (verified: no duplicates in any level). Table 1 holds
@@ -82,66 +82,39 @@ Csfx - Global effect-definition tables (2 per level, both id 1, in the shared
   (class 1 / 18), table 0 otherwise. An effect is started by 0x800402dc(owner, id,
   ..., table) -> 0x8003d680 / 0x8003e984, which creates an instance through the
   class's create function and runs it through its per-class handler:
-    87 particle emitter (create 0x800762b0, handler 0x80075698): a pool of Cpyr
-       sprite particles (draw 0x800752e0 -> Cpyr lookup 0x8005a6a4) with a 3-key RGB
-       colour ramp and an emission direction/speed.
-    88 beam (0x80074024 / 0x80073bbc): a line between two attachment points drawn by
-       0x8007377c / 0x80070e48 that applies damage (method 0xe, amount = damage
-       field) to actors it touches - lasers / electric arcs.
-    89 colour-ramped primitive (0x8007043c / 0x8006ff44, draw 0x8006f898): two
-       RGB ramps with their own times, direction/speed - flashes, rings (guessed).
-    90 debris / fragment emitter (0x8004c920 / 0x8004c324): spawns child effects
-       (0x8003e984, 0x8003d680) and can break up the owner's model (0x8003a8c0)
-       (purpose of the fields guessed).
+    87 trail ribbon (create 0x800762b0, handler 0x80075698): points dropped as the
+       owner moves, joined into a fading quad strip (formerly called a particle
+       emitter).
+    88 lightning (0x80074024 / 0x80073bbc): jagged bolts between the owner and a
+       scattered far end (0x8007377c / 0x80070e48) that damage what they touch
+       (method 0xe, amount = blast_damage).
+    89 flash disc / star (0x8007043c / 0x8006ff44, draw 0x80070158): screen-facing
+       gouraud fan with a centre and a rim colour ramp.
+    90 model shatter (0x8004c920 / 0x8004c324): throws the faces of the owner's
+       model (or the whole model) as tumbling fragments with child effects.
     91 DAMAGE / EXPLOSION SET, the value of BaseEntity.explosion (actor +0x20). Not
        an effect: 0x8003bc7c stores a 28-byte entry in its own 256-slot table
        0x800a0c70[id]. Readers: 0x8003b898 (death explosion), 0x8003bae4 (damage
        stage changes), 0x8003fa34 / 0x8003b838 (created with the actor), 0x8003b7d8
        (class 26), 0x8003b4e0, 0x8003b5ac.
-    92 trail / ribbon (0x8006eb80 / 0x8006e814): flag 0x40 allocates a 256-point
-       trail buffer (0x8006c84c) (guessed).
+    92 shockwave ring (0x8006eb80 / 0x8006e814): expanding annulus that damages
+       what it sweeps (formerly guessed to be a trail; flag 0x40 is a trail mode).
     93 single sprite (0x80040e60 / 0x80040874, draw 0x80040734): one Cpyr sprite
-       animation (Cpyr id at +0x34, looked up by 0x8005a654) with velocity; at most
-       351 alive.
+       animation with velocity; at most 351 alive.
     94 point-particle burst (0x800447f0, init 0x80043430 / 0x80044610): up to 700
-       28-byte particles (count halved on low memory) with two RGB colours.
+       28-byte particles (count halved on low memory) with a colour ramp.
 
-  Common definition header (body offsets; 0x8003c14c copies it into every instance):
-    +0   u32 word0 (0 in table 0, 0x02bdd2ec in table 1 - stale tool value)
-    +4   u8  class (86..94); bytes 5-7 are 0 in table 0 and junk in table 1
-    +8   i32 x, +12 i32 y, +16 i32 z (16.16) - only used for placed effects (flag 1:
-         0x8003c2a4 starts the effect there at load); stale tool values in Csfx
-    +20  u8  id                 +21 u8 next_id (instance +6; often id + 1: a chain)
-    +22  u8  unknown_22 (instance +0x11)   +23 u8 unknown_23
-    +24  i16 yaw, +26 i16 pitch (BAM) and +28 i16 distance: offset from the spawn
-         point / attachment (0x8003c2a4, 0x8003d9f8)
-    +30  i8  attachment point (-1 = owner's default)
-    +32  i32 duration, fx16 seconds (instance +0x16 = v * 300 / 65536 clock units;
-         0 = class default, e.g. a sprite's animation length)
-    +36  i32 second time, fx16 seconds (instance +4; forced >= 0 when next_id is set,
-         probably the delay before next_id starts - guessed)
-    +40  i16 repeat count (-1 = none; 1 is normalised to "no repeat")
-    +42  i16 repeat interval, fx12 seconds (instance +0x14 = v * 300 / 4096)
-    +44  u16 unknown_44 (instance +0x18)
-    +46  i16 damage, +48 i16 radius: 0x8003e984 applies splash damage (0x800410bc)
-         when damage != 0 and radius > 0, else direct damage to the owner (method 9)
-    +50  u16 flags: 0x1 placed at load, 0x8 inherit the parent's transform,
-         0x10 small / 0x2000 big camera shake within 0x20000 of a player (0x80057358,
-         300 / 1000), 0x20 screen effect at the position (0x80025d6c), others unknown
-    +52  class-specific size: 87/88/89 i16 at +52, 92 at +76, 93 at +54, 94 i8 at +80
-         (negative = relative to the owner, 0x8003db70)
-  Class-specific fields beyond +52 are decoded where the create function makes the
-  meaning clear ("fields"), the rest stays in "body" (hex).
-
-  Class 91 entry (body offsets; runtime entry layout in brackets):
-    +20 u8 id   +21 u8 alt_effect [0x1a]: 50 % replacement for the death effect when
-    flags bit 0 is clear, and the only effect of "mode 0" calls
-    +22 u16 flags [0x18]   +24 u8 created_effect [0]: started when the actor is
-    created   +25 u8 class26_effect [1]   +26/27 u8 unknown
-    +28 5 x u8[4] groups [4..23]: group k is used when bit k of the caller's mask is
-    set; byte 0 = effect on destruction, bytes 1/2/3 = effect while health is below
-    75 % / 50 % / 25 % of the maximum (0x8003b65c stages, 0x8003b5ac). All values
-    are effect ids in table 0 (or 1 for the player), 0 = none.
+  Record layout = the Cact TCAt body: +0 u32 word0 (0 in table 0, 0x02bdd2ec in
+  table 1 - stale tool value), +4 u8 class (86..94; bytes 5-7 are 0 in table 0 and
+  junk in table 1), +8/+12/+16 i32 x/y/z (16.16; only used for placed effects,
+  stale tool values in Csfx), +20 the class payload.
+  THE PAYLOAD LAYOUT IS DECODED BY tools/decode_actors.py (decode_definition, field
+  tables _EFFECT_HEADER / _EFFECT_TAILS / DamageEffectSet): the 32-byte effect
+  header and every class tail, with units and function addresses, are documented
+  in that docstring ("Instanced effects"). Payload offset = body offset - 20. In
+  csfx.json each record's "fields" holds x/y/z plus one dict per segment
+  ("EffectHeader", "Effect<N>", or "DamageEffectSet") of {field: {off (payload),
+  type, raw, value, unit}}; the raw body stays in "body" (hex).
 
 Cctr - Loader control markers (2 per level, 20 bytes each).
   Handler at 0x80025230 (confirmed by disassembly) ignores the payload and only looks
@@ -159,8 +132,7 @@ Output in parsed/<LEVEL>/:
                          records ("tones"; + the extract_sfx.py file name)
   sfx_tones/vkbNN_tTT.wav every program decoded from its Cvkb offset at its play pitch
   csfx.json              Csfx tables: records with class_name, decoded "fields"
-                         (common header + class_fields, or the class-91 set) and the
-                         raw body hex
+                         (x/y/z + the decode_actors.py segments) and the raw body hex
   cctr.json              Cctr markers
 """
 
@@ -351,103 +323,25 @@ def _parse_cvkh(r, vkb, tone_dir):
 # ── Csfx ──────────────────────────────────────────────────────────────────
 
 _CSFX_CLASS_NAMES = {
-    86: "table_header", 87: "particle_emitter", 88: "beam", 89: "colour_ramp_shape",
-    90: "debris_emitter", 91: "damage_explosion_set", 92: "trail", 93: "sprite",
+    86: "table_header", 87: "trail_ribbon", 88: "lightning", 89: "flash_disc",
+    90: "model_shatter", 91: "damage_explosion_set", 92: "shockwave_ring", 93: "sprite",
     94: "point_particles",
 }
 
-# (name, struct format, body offset); see the Csfx section of the docstring.
-_CSFX_COMMON = [
-    ("x", "<i", 8), ("y", "<i", 12), ("z", "<i", 16), ("id", "B", 20),
-    ("next_id", "B", 21), ("unknown_22", "B", 22), ("unknown_23", "B", 23),
-    ("yaw", "<h", 24), ("pitch", "<h", 26), ("distance", "<h", 28),
-    ("attach_point", "b", 30), ("unknown_31", "B", 31), ("duration_fx16s", "<i", 32),
-    ("time2_fx16s", "<i", 36), ("repeat_count", "<h", 40),
-    ("repeat_interval_fx12s", "<h", 42), ("unknown_44", "<H", 44), ("damage", "<h", 46),
-    ("damage_radius", "<h", 48), ("flags", "<H", 50),
-]
-
-
-def _rgb(o):
-    return [("%s_r" % o[0], "B", o[1]), ("%s_g" % o[0], "B", o[1] + 1),
-            ("%s_b" % o[0], "B", o[1] + 2)]
-
-
-# Class-specific fields (names from the create functions; meanings beyond the
-# offsets are guessed unless the docstring says otherwise).
-_CSFX_CLASS_FIELDS = {
-    87: [("size", "<h", 52), ("particle_count", "<h", 54)] + _rgb(("colour0", 56))
-        + _rgb(("colour1", 59)) + _rgb(("colour2", 62))
-        + [("unknown_65", "B", 65), ("phase_time_0", "<h", 66), ("phase_time_1", "<h", 68),
-           ("phase_time_2", "<h", 70), ("unknown_72", "<h", 72), ("emit_yaw", "<h", 74),
-           ("emit_pitch", "<h", 76), ("emit_speed", "<h", 78), ("unknown_80", "<h", 80),
-           ("unknown_82", "<h", 82), ("unknown_84", "<h", 84), ("flags2", "<H", 86)],
-    88: [("size", "<h", 52), ("unknown_54", "<h", 54), ("unknown_56", "<h", 56)]
-        + _rgb(("colour", 59))
-        + [("unknown_62", "<h", 62), ("unknown_64", "<h", 64), ("unknown_66", "<h", 66),
-           ("unknown_68", "<h", 68), ("unknown_72", "<h", 72), ("flags2", "<H", 74)],
-    89: [("size", "<h", 52), ("unknown_54", "B", 54), ("unknown_56", "<h", 56),
-         ("ramp0_time", "<h", 58), ("ramp1_time", "<h", 60)]
-        + _rgb(("ramp0_start", 62)) + _rgb(("ramp0_end", 65))
-        + _rgb(("ramp1_start", 68)) + _rgb(("ramp1_end", 71))
-        + [("emit_yaw", "<h", 74), ("emit_pitch", "<h", 76), ("emit_speed", "<h", 78),
-           ("unknown_80", "<h", 80), ("unknown_82", "B", 82), ("unknown_84", "<h", 84),
-           ("flags2", "<H", 86)],
-    90: [("unknown_52", "B", 52), ("unknown_53", "B", 53), ("unknown_54", "B", 54),
-         ("unknown_56", "<h", 56), ("unknown_58", "<h", 58), ("unknown_60", "<h", 60),
-         ("unknown_62", "<h", 62), ("emit_yaw", "<h", 64), ("emit_pitch", "<h", 66),
-         ("unknown_68", "<h", 68), ("unknown_70", "<h", 70), ("unknown_72", "B", 72),
-         ("unknown_73", "B", 73), ("flags2", "B", 74)],
-    92: [("unknown_52", "<h", 52), ("unknown_54", "<h", 54), ("unknown_56", "<h", 56),
-         ("unknown_58", "<h", 58), ("unknown_60", "<h", 60), ("unknown_62", "<h", 62),
-         ("segment_length", "<h", 64)] + _rgb(("colour0", 66)) + _rgb(("colour1", 69))
-        + [("unknown_72", "<h", 72), ("unknown_74", "B", 74), ("size", "<h", 76),
-           ("unknown_78", "<h", 78), ("unknown_80", "<h", 80), ("flags2", "<H", 82)],
-    93: [("cpyr_id", "B", 52), ("size", "<h", 54), ("emit_yaw", "<h", 56),
-         ("emit_pitch", "<h", 58), ("emit_speed", "<h", 60), ("unknown_62", "<h", 62)]
-        + _rgb(("colour0", 65)) + _rgb(("colour1", 69))
-        + [("unknown_72", "<h", 72), ("unknown_74", "<h", 74), ("anim_fps", "<h", 76),
-           ("unknown_78", "<h", 78), ("unknown_80", "<h", 80), ("unknown_82", "<h", 82),
-           ("unknown_84", "<h", 84), ("flags2", "<H", 86)],
-    94: [("count", "<h", 52), ("max_count", "<h", 54), ("unknown_56", "<h", 56),
-         ("unknown_58", "<h", 58), ("unknown_60", "<h", 60), ("emit_yaw", "<h", 62),
-         ("emit_pitch", "<h", 64), ("emit_speed", "<h", 66), ("unknown_68", "<h", 68),
-         ("unknown_70", "<h", 70), ("unknown_72", "<h", 72), ("unknown_74", "<h", 74),
-         ("unknown_76", "<h", 76), ("unknown_78", "<h", 78), ("size", "b", 80)]
-        + _rgb(("colour0", 81)) + _rgb(("colour1", 84))
-        + [("unknown_88", "<h", 88), ("unknown_90", "B", 90), ("unknown_91", "B", 91),
-           ("unknown_92", "<H", 92), ("unknown_94", "B", 94), ("unknown_95", "B", 95)],
-}
-
-
-def _unpack_fields(body, fields):
-    out = {}
-    for name, fmt, off in fields:
-        if off + struct.calcsize(fmt) <= len(body):
-            out[name] = struct.unpack_from(fmt, body, off)[0]
-    return out
-
 
 def _decode_csfx_body(cls, body):
-    """Decoded fields of one Csfx / effect-actor body (see the docstring)."""
-    if cls == 91 and len(body) >= 48:
-        return {"id": body[20], "alt_effect": body[21],
-                "flags": struct.unpack_from("<H", body, 22)[0],
-                "created_effect": body[24], "class26_effect": body[25],
-                "unknown_26": body[26], "unknown_27": body[27],
-                "groups": [{"destroyed": body[28 + 4 * k], "below_75": body[29 + 4 * k],
-                            "below_50": body[30 + 4 * k], "below_25": body[31 + 4 * k]}
-                           for k in range(5)]}
-    if cls not in _CSFX_CLASS_FIELDS:
+    """Decoded fields of one Csfx record body, with the effect/damage-set tables
+    of decode_actors.py (one decoder for Csfx records and placed effect actors).
+    The payload starts at body +20, so payload offset = body offset - 20."""
+    from decode_actors import decode_definition, _EFFECT_SIZES
+    payload = body[20:]
+    if cls not in _EFFECT_SIZES or len(payload) != _EFFECT_SIZES[cls]:
         return None
-    f = _unpack_fields(body, _CSFX_COMMON)
-    for k in ("duration_fx16s", "time2_fx16s"):
-        if k in f:
-            f[k.replace("_fx16s", "_seconds")] = round(f[k] / 65536, 4)
-    if "repeat_interval_fx12s" in f:
-        f["repeat_interval_seconds"] = round(f["repeat_interval_fx12s"] / 4096, 4)
-    f["class_fields"] = _unpack_fields(body, _CSFX_CLASS_FIELDS[cls])
-    return f
+    name, segs = decode_definition(cls, payload)
+    out = {"x": struct.unpack_from("<i", body, 8)[0], "y": struct.unpack_from("<i", body, 12)[0],
+           "z": struct.unpack_from("<i", body, 16)[0], "decoder_class": name}
+    out.update(segs)
+    return out
 
 
 def _parse_csfx(r):

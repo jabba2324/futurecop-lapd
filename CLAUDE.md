@@ -215,14 +215,26 @@ demos. All of it is viewable in the asset viewer.
 
 Almost every field is now confirmed against SLUS_007.39 (function addresses are cited in
 each docstring). What's still open:
-- **Actors:** 88.8% of payload bytes are decoded. Still unknown: some tail fields of the
-  effect classes 87–94 and the weapon definitions 98/99, BaseTurret +1/+2/+10, the tails
-  of classes 5/26/36, ItemPickup +2…+14, and the class-97 rotation.
-- **Csfx:** class-specific fields of effect classes 88/89/90/92/94. The common header and
-  the class meanings are decoded.
-- **RPN VM:** path modes, player messages 95–98, some class-specific message details,
-  `*ref[1]` and most of `v[]`. Messages are u8 message + **u8 argument**, so large script
-  arguments are truncated by the game itself.
+- **Actors (98.3% of payload bytes decoded; fields confirmed never read count as
+  `unused_*`):** weapon +29 (classes 98/99), lightning (88) +50, class 35 +18/+19, class 32
+  +14, BasePathed +10, class 27 +18…22, class 34 +12, Trigger +6, Prop +9; the reader of
+  class 99 `weapon_category`; most lightning (88) flag names and ring (92) flags
+  0x4/0x8/0x20.
+  - The effect classes 87–94 have one decoder (tables in decode_actors.py), which
+    extract_sfx_meta.py reuses for Csfx records.
+  - Corrections from that pass: 87 is a trail ribbon, 88 lightning, 89 a flash disc/star,
+    90 a model shatter, 92 a shockwave ring; class 31 is a player `Pusher`.
+- **RPN VM / variables:** all messages any script uses are named, and so are all `v[]`
+  indices any script touches. Still unknown:
+  - `v[0]`, `v[1]`, `v[5]`, `v[18]` and `v[20..22]`: no code or script uses them.
+  - `v[56]` codes 1/4/5/8: scripts test them, but no writer was found.
+  - Walker state 4 and the meaning of each `v[39]` Sky Captain AI mode.
+  - `*ref[1]` is unused.
+  - Messages are u8 message + **u8 argument**, so large script arguments are truncated by
+    the game itself.
+- **Demos:** decoded. Timing values are 1/300 s per frame, and each demo is 60 s. Buttons
+  are the game's remapped input word (default config assumed). The retail game only plays
+  demos back.
 - **Small leftovers:**
   - The Cctr payload is freed unread, so it can't be recovered from the executable.
   - Cvkh +10/+13 and Cnet `unknown_10` are never read by the game.
