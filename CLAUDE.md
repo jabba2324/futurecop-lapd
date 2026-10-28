@@ -189,6 +189,19 @@ in `decode_actors.py` as hypotheses.
       - Frame meshes are built once per model and shared; rebuilding per instance made
         LAX1 run at 6 frames/s instead of 145.
       - The Models tab plays them too.
+    - Effects: `scripts/effect_player.gd` plays effect definitions approximately.
+      - The effect lookup is the Csfx table 0 overlaid with the level's class 87–94
+        actors.
+      - Effects flagged `placed_at_load` loop at their positions (224 in 8 levels).
+      - Selecting an effect actor plays it.
+      - Selecting an actor with `BaseEntity.explosion` plays its damage set's
+        destruction effect and lists its damage stages.
+      - The shared header (repeat, chained next effect, placement) and each class's
+        visual are driven by the decoded fields. The size/speed unit scale (fx12, ×8,
+        per second) is assumed.
+    - Minimap: `scripts/minimap.gd` shows the heightmap and decoded map icons
+      (`BaseEntity.map_icon` / `NeutralTurret.map_icon_a`), cropped to the play area,
+      with a camera marker. Click to move the camera there.
     - Colour: by team, group or class.
     - Selecting an actor draws its wiring (orange = sends, cyan = receives) and its range,
       and lists spawner details. "Level fn N" entries show a level function's script and

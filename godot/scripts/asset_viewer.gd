@@ -21,6 +21,8 @@ const ObjLoader := preload("res://scripts/obj_loader.gd")
 const LevelLayout := preload("res://scripts/level_layout.gd")
 const LevelOverlays := preload("res://scripts/level_overlays.gd")
 const UvAnimator := preload("res://scripts/uv_animator.gd")
+const EffectPlayer := preload("res://scripts/effect_player.gd")
+const Minimap := preload("res://scripts/minimap.gd")
 
 const TABS := ["Models", "Terrain", "Textures", "Images", "Fonts", "Level", "Audio", "Video", "Data"]
 const PANEL_WIDTH := 360
@@ -51,7 +53,11 @@ var _nearest := true
 var _lit := true
 var _show_paths := true
 # Level-view overlays (level_overlays.gd), keyed by toggle name.
-var _show := {"Decals": true, "Zones": true, "Ranges": false, "Wiring": false, "Heights": false, "Animate": true}
+var _show := {"Decals": true, "Zones": true, "Ranges": false, "Wiring": false, "Heights": false, "Animate": true,
+	"Effects": true, "Minimap": true}
+var _effects: Dictionary = {}     # effect_id -> {cls, def} (level effect actors + Csfx table 0)
+var _damage_sets: Dictionary = {} # set_id -> DamageEffectSet record
+var _minimap: Control
 var _overlays: Dictionary = {}    # toggle name -> Node3D
 var _wiring: Dictionary = {}      # {edges, functions} for the current level
 var _focus_fx: Node3D             # per-selection wiring lines / ranges / beams
@@ -322,6 +328,8 @@ func _build_ui() -> void:
 			_show[name] = on
 			if name == "Animate":
 				_refresh_tab()
+			elif name == "Minimap":
+				_minimap.visible = on and _tab == "Level"
 			elif _overlays.has(name) and is_instance_valid(_overlays[name]):
 				_overlays[name].visible = on)
 		_level_controls.append(_opts_row.get_child(_opts_row.get_child_count() - 1))
@@ -390,6 +398,19 @@ func _build_ui() -> void:
 	_tree.visible = false
 	_tree.item_collapsed.connect(_on_tree_collapsed)
 	_view.add_child(_tree)
+
+	_minimap = Minimap.new()
+	_minimap.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_minimap.custom_minimum_size = Vector2(280, 280)
+	_minimap.offset_left = -292
+	_minimap.offset_top = -292
+	_minimap.offset_right = -12
+	_minimap.offset_bottom = -12
+	_minimap.visible = false
+	_minimap.picked.connect(func(world: Vector3) -> void:
+		_target = Vector3(world.x, _target.y, world.z)
+		_update_camera())
+	_view.add_child(_minimap)
 
 
 func _add_toggle(label: String, on: bool, cb: Callable) -> void:
@@ -494,6 +515,7 @@ func _refresh_tab() -> void:
 	_opts_row.visible = not media
 	for c: Control in _level_controls:
 		c.visible = _tab == "Level"
+	_minimap.visible = _tab == "Level" and _show.Minimap
 	_anim_btn.clear()
 	_anim_btn.visible = _tab == "Models"
 	_media_row.visible = _tab in ["Models", "Audio", "Video"]
@@ -986,6 +1008,17 @@ func _build_overlays(root: Node3D, layout: RefCounted) -> void:
 		"Heights": LevelOverlays.build_height_layers(_read_json(d.path_join("heightmap.json"))),
 	}
 	_wiring = LevelOverlays.build_wiring(decoded, _read_json(d.path_join("rpns.json")), _read_json(d.path_join("fun.json")))
+	_build_effect_registry(decoded)
+	_overlays["Effects"] = _build_placed_effects(decoded)
+	var icons := []
+	for rec: Dictionary in decoded:
+		var icon: Variant = LevelOverlays.field(rec, "map_icon")
+		if icon == null:
+			icon = LevelOverlays.field(rec, "map_icon_a")
+		var n: Node3D = _actor_nodes.get(int(rec.id))
+		if icon is Dictionary and n:
+			icons.append([n.position, icon])
+	_minimap.setup(_read_json(d.path_join("heightmap.json")), icons)
 	_overlays["Wiring"] = LevelOverlays.build_wiring_lines(_wiring.edges, _actor_nodes)
 	# Spawners (Csac): a ring at each spawn point, shown with the zones.
 	var ring := ImmediateMesh.new()
@@ -1009,6 +1042,76 @@ func _build_overlays(root: Node3D, layout: RefCounted) -> void:
 		root.add_child(_overlays[name])
 	_focus_fx = Node3D.new()
 	root.add_child(_focus_fx)
+
+
+func _build_effect_registry(decoded: Array) -> void:
+	## effect_id -> {cls, def}: Csfx table 0 (global effects) overlaid with the
+	## level's own effect-definition actors; damage-effect sets by set_id.
+	_effects = {}
+	_damage_sets = {}
+	var csfx: Variant = _read_json(_ldir().path_join("csfx.json"))
+	if csfx is Array:
+		for table: Dictionary in csfx:
+			if int(table.get("table_index", 0)) != 0:
+				continue
+			for r: Dictionary in table.get("records", []):
+				var cls := int(r.get("class", 0))
+				if cls < 87 or cls > 94 or cls == 91:
+					continue
+				var def := {}
+				for seg: String in r.get("fields", {}):
+					if r.fields[seg] is Dictionary:
+						for name: String in r.fields[seg]:
+							def[seg + "." + name] = r.fields[seg][name].get("value")
+				var id: Variant = def.get("EffectHeader.effect_id")
+				if id != null:
+					_effects[int(id)] = {"cls": cls, "def": def}
+	for rec: Dictionary in decoded:
+		var cls := int(rec.class_id)
+		if cls == 91:
+			_damage_sets[int(LevelOverlays.field(rec, "set_id", -1))] = rec
+		elif cls >= 87 and cls <= 94:
+			var def := {}
+			for k: String in rec.fields:
+				def[k] = rec.fields[k].get("value")
+			var id: Variant = def.get("EffectHeader.effect_id")
+			if id != null:
+				_effects[int(id)] = {"cls": cls, "def": def}
+
+
+func _build_placed_effects(decoded: Array) -> Node3D:
+	## Effects flagged placed_at_load, looping at their actor positions.
+	var root := Node3D.new()
+	root.name = "Effects"
+	var sprites := _ldir().path_join("particles")
+	for rec: Dictionary in decoded:
+		var cls := int(rec.class_id)
+		if cls < 87 or cls > 94 or cls == 91:
+			continue
+		var flags: Variant = LevelOverlays.field(rec, "effect_flags", [])
+		var n: Node3D = _actor_nodes.get(int(rec.id))
+		if not (flags is Array and "placed_at_load" in flags) or n == null:
+			continue
+		var anchor := Node3D.new()
+		anchor.position = n.position
+		anchor.set_meta("actor_id", int(rec.id))
+		var p := EffectPlayer.new()
+		p.setup(_effects.get(int(LevelOverlays.field(rec, "effect_id", -1)), {"cls": cls, "def": {}}), _effects, sprites, true)
+		anchor.add_child(p)
+		root.add_child(anchor)
+	return root
+
+
+func _play_effect_at(effect_id: int, where: Vector3) -> bool:
+	if not _effects.has(effect_id) or not is_instance_valid(_focus_fx):
+		return false
+	var anchor := Node3D.new()
+	anchor.position = where
+	var p := EffectPlayer.new()
+	p.setup(_effects[effect_id], _effects, _ldir().path_join("particles"), true)
+	anchor.add_child(p)
+	_focus_fx.add_child(anchor)
+	return true
 
 
 func _apply_colour() -> void:
@@ -1153,6 +1256,24 @@ func _focus_actor(a: Variant) -> void:
 		a.id, a.kind, a["class"], same, a.pos_x, a.pos_z, p.x, p.y, p.z,
 		", ".join(a.get("objects", [])), ", ".join(a.get("textures", []))]
 	var rec: Dictionary = _decoded.get(int(a.id), {})
+	# Effects: an effect actor plays itself; anything with a damage-effect set plays
+	# its destruction effect (looping while selected) and lists the damage stages.
+	var cls := int(a["class"])
+	if cls >= 87 and cls <= 94 and cls != 91:
+		if _play_effect_at(int(LevelOverlays.field(rec, "effect_id", -1)), p):
+			text += "\n[b]Effect[/b] playing (approximate preview)\n"
+	var set_ref := str(LevelOverlays.field(rec, "explosion", ""))
+	if set_ref.begins_with("damage_effect_set "):
+		var ds: Dictionary = _damage_sets.get(int(set_ref.trim_prefix("damage_effect_set ")), {})
+		if ds:
+			var stages := PackedStringArray()
+			for k: String in ds.fields:
+				var v: Variant = ds.fields[k].get("value")
+				if v is String and v.begins_with("effect "):
+					stages.append("%s: %s%s" % [k.get_slice(".", 1), v, "" if _effects.has(int(v.trim_prefix("effect "))) else " (not in this level)"])
+			var destroy := str(LevelOverlays.field(ds, "part_0_destroy_effect", LevelOverlays.field(ds, "random_destroy_effect", "")))
+			var playing := destroy.begins_with("effect ") and _play_effect_at(int(destroy.trim_prefix("effect ")), p)
+			text += "\n[b]Damage effects[/b] (%s)%s\n%s\n" % [set_ref, " — destruction effect playing" if playing else "", "\n".join(stages)]
 	if rec.get("spawn"):
 		var sp: Dictionary = rec.spawn
 		text += "\n[b]Spawner[/b] spawns %s every %.2f s · max %d alive · budget %s%s\n" % [rec.get("class_name", "?"),
@@ -1286,6 +1407,8 @@ func _read_wav(path: String) -> Dictionary:
 
 
 func _process(delta: float) -> void:
+	if _minimap and _minimap.visible:
+		_minimap.set_camera(_target)
 	if _strip and _tab == "Images" and _tex_rect.texture == _strip:
 		_strip_time += delta
 		var frames: int = _strip.atlas.get_height() / 48
