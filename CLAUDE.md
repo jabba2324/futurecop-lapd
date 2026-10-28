@@ -239,14 +239,25 @@ in `decode_actors.py` as hypotheses.
   `res://assets/...`, which is gitignored, so they only load after `run_all.py`.
   - **The player** is the first X1-Alpha in `actors.json`. It's a `CharacterBody3D` with
     `player.gd`, a capsule collider and the chase camera. Other X1s stay static.
-  - Per-level extras: `SUN_COLOR`, and a Music node from `music/`.
-  - The scene root runs `scripts/level_ambience.gd` (visual only, nothing reacts):
-    - It loops the level's `placed_at_load` effects via `effect_player.gd`, using
-      `EffectPlayer.build_registry` (shared with the viewer).
-    - It plays 3DTA texture animations on the instanced `.glb` parts (e.g. the X1's
-      beacon).
-    - It needs `actors_decoded.json`, `csfx.json` and `particles/` in
-      `assets/<LEVEL>/`, which `sync_godot_assets.py` copies.
+  - Per-level extras: a Music node from `music/`. Lighting is the same neutral sun in
+    every level; the CONFT red sun tint is gone.
+  - Animated props (models with clips or 3DTA) use their `.glb`, and keep the OBJ props'
+    offsets, yaw and ground tilt. `sync_godot_assets.py` copies a `.glb` only for
+    those.
+  - The scene root runs `scripts/level_ambience.gd` (visual/audio only, nothing reacts):
+    - placed effects;
+    - class-97 decals (only some levels have them, e.g. M2C 180, UN 88, M4A1 44);
+    - looping `all_frames` clips on props (not on the X1 parts);
+    - 3DTA texture animations;
+    - looping 3D ambient sounds. `BaseEntity.ambient_sound` "sound N" is the Cshd entry
+      with **group_id N** (group_id is the sound key), and it plays that entry's tone
+      WAV.
+    - **Lighting:** L toggles the PS1 look (the default: unshaded, no sun, terrain vertex
+      colours ×2 because PS1 colour 128 = full brightness) and real-time lit. G toggles
+      fog. A hint line shows the keys.
+    - It needs, in `assets/<LEVEL>/`: `actors_decoded.json`, `csfx.json`, `dcs.json`,
+      `shd.json`, `particles/`, the decal textures and the ambient WAVs, all copied by
+      `sync_godot_assets.py`.
   - **Collision is built at load time** by `scripts/terrain_collision.gd` on the Terrain
     node, which keeps the `.tscn` files under 1 MB:
     - a concave shape of the stitched terrain, with `backface_collision` on because the

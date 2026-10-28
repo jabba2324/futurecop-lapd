@@ -19,7 +19,6 @@ const LevelLayout := preload("res://scripts/level_layout.gd")
 var _layout: RefCounted
 
 # Per-level setup that used to be hand edits on the generated scenes.
-const SUN_COLOR := {"CONFT": Color(0.68477565, 0.2997981, 0.37404373)}
 # Player collision: a capsule around the X1 legs (feet at y=0, ~0.9 units tall).
 const PLAYER_RADIUS := 0.28
 const PLAYER_HEIGHT := 0.9
@@ -108,8 +107,6 @@ func _add_environment(root: Node3D) -> void:
 	sun.rotation_degrees = Vector3(-50, 30, 0)
 	sun.light_energy = 1.5
 	sun.shadow_enabled = true
-	if SUN_COLOR.has(_level):
-		sun.light_color = SUN_COLOR[_level]
 	root.add_child(sun)
 	sun.owner = root
 
@@ -242,15 +239,22 @@ func _add_actors(root: Node3D) -> bool:
 		var part_yaws: Dictionary = LevelLayout.part_yaw_offsets(actor)
 		for i in objects.size():
 			var obj_name: String = objects[i]
-			var path: String = _base + "objects/" + str(obj_name)
-			if not ResourceLoader.exists(path):
-				continue
-			var mesh_res: Mesh = load(path) as Mesh
-			if mesh_res == null:
-				continue
-			var mi := MeshInstance3D.new()
+			# Animated props (clips or 3DTA texture animation) use their .glb, which
+			# sync_godot_assets.py copies only for those; level_ambience.gd plays them.
+			var glb: String = _base + "models/" + str(obj_name).get_basename() + ".glb"
+			var mi: Node3D
+			if ResourceLoader.exists(glb):
+				mi = (load(glb) as PackedScene).instantiate()
+			else:
+				var path: String = _base + "objects/" + str(obj_name)
+				if not ResourceLoader.exists(path):
+					continue
+				var mesh_res: Mesh = load(path) as Mesh
+				if mesh_res == null:
+					continue
+				mi = MeshInstance3D.new()
+				(mi as MeshInstance3D).mesh = mesh_res
 			mi.name = str(obj_name).get_basename()
-			mi.mesh = mesh_res
 			var y_off: float = obj_y_offsets.get(str(obj_name), 0.0)
 			if y_off != 0.0:
 				mi.position.y = y_off

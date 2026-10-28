@@ -123,9 +123,14 @@ static func _load_mtl(path: String) -> Dictionary:
 	return out
 
 
-static func load_texture(path: String) -> ImageTexture:
+static func load_texture(path: String) -> Texture2D:
 	if _textures.has(path):
 		return _textures[path]
+	if path.begins_with("res://"):
+		# Inside the project (generated scenes): use the imported texture.
+		var res: Texture2D = load(path) if ResourceLoader.exists(path) else null
+		_textures[path] = res
+		return res
 	var img := Image.load_from_file(path)
 	var tex: ImageTexture = ImageTexture.create_from_image(img) if img else null
 	if tex:

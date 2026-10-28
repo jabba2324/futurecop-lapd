@@ -12,6 +12,11 @@ it copies:
   loading/<LEVEL>LD.png              the level's loading screen (menu preview)
   actors_decoded.json, csfx.json,    effect definitions + placements and the particle
   particles/*.png                    sprites, for level_ambience.gd's placed effects
+  models/<cobj>.glb (animated)       props whose model has animation clips or 3DTA
+                                     texture animation (used instead of the OBJ)
+  dcs.json + decal textures          class-97 decals (level_overlays.build_decals)
+  shd.json + sfx_tones/*.wav         ambient sounds (BaseEntity.ambient_sound → the
+                                     Cshd entry with that group_id → its tone WAV)
 Anything else under godot/assets/<LEVEL>/ (except Godot's *.import sidecars of
 copied files) is removed, so the folder mirrors exactly what the generator reads.
 
@@ -23,6 +28,7 @@ Then:  godot --headless --path godot --import
 import json
 import os
 import shutil
+import struct
 import sys
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -44,6 +50,18 @@ def _mtl_textures(mtl_path):
     return out
 
 
+def _glb_animated(path):
+    """True when a .glb has animation clips or 3DTA texture animation."""
+    if not os.path.exists(path):
+        return False
+    with open(path, "rb") as f:
+        head = f.read(20)
+        j = json.loads(f.read(struct.unpack_from("<I", head, 12)[0]))
+    meshes = j.get("meshes", [])
+    uv = meshes and meshes[0].get("extras", {}).get("fc_uv_animations")
+    return bool(j.get("animations") or uv)
+
+
 def _wanted_files(level):
     src = os.path.join(_PARSED, level)
     files = {"terrain/map.obj", "terrain/map.mtl", "actors.json", "heightmap.json", "nets.json"}
@@ -54,12 +72,28 @@ def _wanted_files(level):
             continue
         for obj in a.get("objects", []):
             name = os.path.splitext(obj)[0]
-            if a["class"] == _X1_CLASS:
+            if a["class"] == _X1_CLASS or _glb_animated(os.path.join(src, "models", name + ".glb")):
                 files.add(f"models/{name}.glb")
-            else:
+            if a["class"] != _X1_CLASS:
                 files.update({f"objects/{name}.obj", f"objects/{name}.mtl"})
     files.add(f"loading/{level}LD.png")
-    files.update({"actors_decoded.json", "csfx.json"})
+    files.update({"actors_decoded.json", "csfx.json", "dcs.json", "shd.json"})
+    # Decal textures and ambient-sound WAVs actually referenced by the level.
+    decoded = json.load(open(os.path.join(src, "actors_decoded.json"))).get("actors", [])
+    dcs_ids = {r["fields"]["DCSQuad.dcs_id"]["value"] for r in decoded
+               if r["class_id"] == 97 and "DCSQuad.dcs_id" in r["fields"]}
+    if os.path.exists(os.path.join(src, "dcs.json")):
+        for table in json.load(open(os.path.join(src, "dcs.json"))).get("cdcs", []):
+            for e in table.get("entries", []):
+                if e.get("dcs_id") in dcs_ids and e.get("texture"):
+                    files.add(e["texture"])
+    groups = {int(str(r["fields"]["BaseEntity.ambient_sound"]["value"])[6:]) for r in decoded
+              if str(r["fields"].get("BaseEntity.ambient_sound", {}).get("value", "")).startswith("sound ")}
+    if os.path.exists(os.path.join(src, "shd.json")):
+        for t in json.load(open(os.path.join(src, "shd.json"))).get("tables", []):
+            for e in t.get("entries", []):
+                if e.get("group_id") in groups and e.get("tone_wav"):
+                    files.add(e["tone_wav"])
     particles = os.path.join(src, "particles")
     if os.path.isdir(particles):
         files.update(f"particles/{f}" for f in os.listdir(particles) if f.endswith(".png"))
