@@ -50,10 +50,12 @@ Level scenes: every level except FE has `godot/scenes/<LEVEL>_level.tscn`. Each 
 terrain with collision, all props as static scenery, and the X1-Alpha walker at player
 one's start: W/S walk, A/D turn, with a chase camera. There are no enemies, scripts or
 objectives; it's for walking around the level. The `.tscn` files are committed, but
-they load `godot/assets/`, so run the pipeline first, then open one:
+they load `godot/assets/`, so run the pipeline first. Then run the project for a
+level-select menu, or open a level directly:
 
 ```sh
-godot --path godot res://scenes/M2C_level.tscn
+godot --path godot                               # menu: pick a level, Esc returns to it
+godot --path godot res://scenes/M2C_level.tscn   # one level directly
 ```
 
 To regenerate a scene:

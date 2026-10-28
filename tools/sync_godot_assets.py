@@ -9,6 +9,7 @@ it copies:
   models/<cobj>.glb                  X1-Alpha (class 1) parts, assembled from glTF
   textures/*.png                     every texture an included .mtl references
   actors.json, heightmap.json, nets.json, music/*.wav
+  loading/<LEVEL>LD.png              the level's loading screen (menu preview)
 Anything else under godot/assets/<LEVEL>/ (except Godot's *.import sidecars of
 copied files) is removed, so the folder mirrors exactly what the generator reads.
 
@@ -55,6 +56,7 @@ def _wanted_files(level):
                 files.add(f"models/{name}.glb")
             else:
                 files.update({f"objects/{name}.obj", f"objects/{name}.mtl"})
+    files.add(f"loading/{level}LD.png")
     music = os.path.join(src, "music")
     if os.path.isdir(music):
         files.update(f"music/{f}" for f in os.listdir(music) if f.endswith(".wav"))

@@ -1,6 +1,6 @@
 ## The walkable X1-Alpha: a CharacterBody3D that follows the terrain collision
 ## built by terrain_collision.gd. W/S walks along +Z (the X1's forward, see
-## level_layout.assemble_x1), A/D turns.
+## level_layout.assemble_x1), A/D turns, Esc returns to the level-select menu.
 extends CharacterBody3D
 
 const SPEED := 5.0
@@ -59,6 +59,11 @@ func _snap_to_ground() -> void:
 	var hit := space.intersect_ray(q)
 	if hit:
 		global_position.y = hit.position.y + 0.05
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Esc goes back to the level-select menu.
+	if event.is_action_pressed("ui_cancel") and ResourceLoader.exists("res://scenes/menu.tscn"):
+		get_tree().change_scene_to_file("res://scenes/menu.tscn")
 
 func _physics_process(delta: float) -> void:
 	if not _grounded_at_start:

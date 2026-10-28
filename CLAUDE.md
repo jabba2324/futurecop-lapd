@@ -156,7 +156,10 @@ in `decode_actors.py` as hypotheses.
 
 ## Godot project (`godot/`)
 
-- Godot 4.6, Forward+. Main scene: `scenes/CONFT_level.tscn`.
+- Godot 4.6, Forward+. Main scene: `scenes/menu.tscn` (`scripts/menu.gd`), a level-select
+  menu that lists the existing `scenes/<LEVEL>_level.tscn`, grouped by disc folder (CW =
+  Crime War, PA = Precinct Assault). It previews each level's loading screen, synced to
+  `assets/<L>/loading/`. Esc in a level returns to it.
   - Linux: `godot` (Godot 4.6.3 in `~/.local/opt`).
   - Mac: `/Applications/Godot.app/Contents/MacOS/Godot`.
 - **Asset viewer**: `godot --path godot res://scenes/asset_viewer.tscn`
