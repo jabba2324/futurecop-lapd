@@ -3,9 +3,11 @@
 ##   - effects the level places at load, looping (effect_player.gd)
 ##   - class-97 decals (level_overlays.build_decals)
 ##   - prop animation clips (all_frames, looping) and 3DTA texture animations
-##   - additive blending on "_add" materials of .glb props (ObjLoader.apply_fc_blend)
+##   - additive and env-mapped (sphere-map reflection) materials of .glb props
+##     (ObjLoader.apply_fc_materials)
 ##   - ambient sounds: BaseEntity.ambient_sound → the Cshd entry with that
 ##     group_id → its tone WAV, looping 3D audio at the actor
+##   - minimap (minimap.gd) of the heightmap, map icons and the walker; M toggles
 ##   - lighting: L toggles the PS1 look (baked terrain vertex colours ×2, unshaded,
 ##     no sun; the default) and real-time lighting; G toggles distance fog
 ## Reads res://assets/<LEVEL>/ (synced by tools/sync_godot_assets.py).
@@ -16,6 +18,7 @@ const UvAnimator := preload("res://scripts/uv_animator.gd")
 const LevelLayout := preload("res://scripts/level_layout.gd")
 const LevelOverlays := preload("res://scripts/level_overlays.gd")
 const ObjLoader := preload("res://scripts/obj_loader.gd")
+const Minimap := preload("res://scripts/minimap.gd")
 
 var _base := ""
 var _layout: RefCounted
@@ -24,6 +27,8 @@ var _ps1_look := true
 var _fog := false
 var _lit_materials: Dictionary = {}   # MeshInstance3D -> [surface override materials in lit mode]
 var _hint: Label
+var _minimap: Control
+var _player: Node3D
 
 
 func _ready() -> void:
@@ -36,6 +41,7 @@ func _ready() -> void:
 	_start_animations()
 	_start_ambient_sounds()
 	_add_hint()
+	_add_minimap()
 	# After the terrain collision and decals exist, so their materials get the look too.
 	_apply_lighting.call_deferred()
 
@@ -80,7 +86,7 @@ func _start_animations() -> void:
 		var path := n.scene_file_path
 		if not path.ends_with(".glb"):
 			continue
-		ObjLoader.apply_fc_blend(n)   # additive materials (e.g. CONFT's light beams)
+		ObjLoader.apply_fc_materials(n, path)   # additive (CONFT's light beams) and env-mapped
 		# 3DTA texture animation on this part's own mesh (<model>_mesh).
 		var uv := UvAnimator.read_glb_uv_animations(path)
 		if uv:
@@ -147,6 +153,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_G:
 			_fog = not _fog
 			_apply_lighting()
+		elif event.keycode == KEY_M and _minimap:
+			_minimap.visible = not _minimap.visible
+			_update_hint()
 
 
 func _apply_lighting() -> void:
@@ -196,5 +205,38 @@ func _add_hint() -> void:
 
 func _update_hint() -> void:
 	if _hint:
-		_hint.text = "W/S walk · A/D turn · L lighting: %s · G fog: %s · Esc menu" % [
-			"PS1" if _ps1_look else "lit", "on" if _fog else "off"]
+		_hint.text = "W/S walk · A/D turn · L lighting: %s · G fog: %s · M map: %s · Esc menu" % [
+			"PS1" if _ps1_look else "lit", "on" if _fog else "off",
+			"on" if _minimap and _minimap.visible else "off"]
+
+
+# ─── Minimap ──────────────────────────────────────────────────────────────────
+
+func _add_minimap() -> void:
+	## The viewer's minimap (heightmap + decoded map icons) in the bottom-right corner,
+	## tracking the walker. M toggles it.
+	var players := find_children("*", "CharacterBody3D", true, false)
+	_player = players[0] if players.size() > 0 else null
+	var icons := []
+	for rec: Dictionary in _decoded:
+		var icon: Variant = LevelOverlays.field(rec, "map_icon")
+		if icon == null:
+			icon = LevelOverlays.field(rec, "map_icon_a")
+		if icon is Dictionary:
+			icons.append([_actor_pos(rec), icon])
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	_minimap = Minimap.new()
+	_minimap.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_minimap.offset_left = -232
+	_minimap.offset_top = -232
+	_minimap.offset_right = -12
+	_minimap.offset_bottom = -12
+	_minimap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(_minimap)
+	_minimap.setup(_json(_base + "heightmap.json"), icons)
+
+
+func _process(_delta: float) -> void:
+	if _minimap and _minimap.visible and _player:
+		_minimap.set_camera(_player.global_position, _player.global_basis.z)   # X1 faces +Z

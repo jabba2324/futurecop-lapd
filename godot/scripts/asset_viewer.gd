@@ -699,7 +699,7 @@ func _gltf_scene(path: String) -> Node3D:
 	if doc.append_from_file(path, state) != OK:
 		return null
 	var scene := doc.generate_scene(state) as Node3D
-	ObjLoader.apply_fc_blend(scene)
+	ObjLoader.apply_fc_materials(scene, path)
 	_attach_uv_animator(scene, UvAnimator.read_glb_uv_animations(path), path)
 	return scene
 
@@ -712,7 +712,7 @@ func _show_gltf(path: String) -> void:
 		_info.text = "Could not load %s" % path
 		return
 	var scene := doc.generate_scene(state) as Node3D
-	ObjLoader.apply_fc_blend(scene)
+	ObjLoader.apply_fc_materials(scene, path)
 	var uv_anims := UvAnimator.read_glb_uv_animations(path)
 	_attach_uv_animator(scene, uv_anims, path)
 	# No Flip Y here: export_gltf.py applies the root-bone rotation that the
@@ -806,6 +806,8 @@ func _style_meshes(node: Node) -> void:
 			continue
 		for s in mi.mesh.get_surface_count():
 			var src := mi.mesh.surface_get_material(s)
+			if src is ShaderMaterial:
+				continue   # env-map shader (ObjLoader.apply_fc_materials) styles itself
 			var m: StandardMaterial3D = (src as StandardMaterial3D).duplicate() if src is StandardMaterial3D else StandardMaterial3D.new()
 			m.cull_mode = BaseMaterial3D.CULL_DISABLED if _two_sided else BaseMaterial3D.CULL_BACK
 			m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST if _nearest else BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -966,8 +968,8 @@ func _build_level() -> void:
 
 func _animated_part(glb: String) -> Node3D:
 	## A playing instance of an animated glTF model (skeleton/morph clips and/or
-	## 3DTA texture animation), or of one with MIX/additive materials (which the OBJ
-	## can't express), or null if the model has none of these.
+	## 3DTA texture animation), or of one with MIX/additive/env-mapped materials (which
+	## the OBJ can't express), or null if the model has none of these.
 	if not _gltf_cache.has(glb):
 		var entry := {"animated": false}
 		if FileAccess.file_exists(glb):
@@ -977,7 +979,8 @@ func _animated_part(glb: String) -> Node3D:
 			var blended := false
 			if doc.append_from_file(glb, state) == OK:
 				for m in state.get_materials():
-					blended = blended or m.resource_name.contains("_add") or m.resource_name.contains("_mix")
+					blended = blended or m.resource_name.contains("_add") or m.resource_name.contains("_mix") \
+						or m.resource_name.ends_with("_env")
 			if state.get_animations().size() > 0 or uv.size() > 0 or blended:
 				entry = {"animated": true, "doc": doc, "state": state, "uv": uv}
 		_gltf_cache[glb] = entry
@@ -985,7 +988,7 @@ func _animated_part(glb: String) -> Node3D:
 	if not c.animated:
 		return null
 	var scene := (c.doc as GLTFDocument).generate_scene(c.state) as Node3D
-	ObjLoader.apply_fc_blend(scene)
+	ObjLoader.apply_fc_materials(scene, glb)
 	_attach_uv_animator(scene, c.uv, glb)
 	var players := scene.find_children("*", "AnimationPlayer", true, false)
 	if players.size() > 0:

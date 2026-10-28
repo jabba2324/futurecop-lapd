@@ -1,7 +1,8 @@
-## Top-down minimap for the viewer's Level view: the heightmap as a shaded
-## terrain image, every actor's decoded map icon (BaseEntity.map_icon colour and
-## shape; NeutralTurret uses map_icon_a), and the camera's position. Clicking
-## moves the camera there (the `picked` signal carries the world x/z).
+## Top-down minimap for the viewer's Level view and the walkable scenes: the
+## heightmap as a shaded terrain image, every actor's decoded map icon
+## (BaseEntity.map_icon colour and shape; NeutralTurret uses map_icon_a), and the
+## camera's (or walker's) position and heading. In the viewer, clicking moves the
+## camera there (the `picked` signal carries the world x/z).
 extends Control
 
 signal picked(world: Vector3)
@@ -19,6 +20,7 @@ var _origin := Vector2.ZERO     # world x/z of the shown area's top-left (the pl
 var _extent := Vector2.ONE      # world size of the shown area
 var _icons: Array = []          # [world Vector3, Color, shape, flashing]
 var _camera := Vector3.ZERO
+var _facing := Vector3.ZERO     # world direction for the heading tick (zero = none)
 var _time := 0.0
 
 
@@ -73,8 +75,9 @@ func setup(hm: Variant, icons: Array) -> void:
 	queue_redraw()
 
 
-func set_camera(world: Vector3) -> void:
+func set_camera(world: Vector3, facing := Vector3.ZERO) -> void:
 	_camera = world
+	_facing = facing
 
 
 func _process(delta: float) -> void:
@@ -112,6 +115,9 @@ func _draw() -> void:
 			draw_circle(p, 2.5, e[1])
 	var c := _to_map(_camera)
 	draw_arc(c, 6.0, 0, TAU, 16, Color.WHITE, 1.5)
+	var f := Vector2(_facing.x, _facing.z)
+	if f.length() > 0.001:
+		draw_line(c, c + f.normalized() * 12.0, Color.WHITE, 2.0)
 	draw_rect(_rect(), Color(1, 1, 1, 0.3), false)
 
 

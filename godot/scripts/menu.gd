@@ -1,8 +1,9 @@
 ## Level-select menu for the walkable level scenes (godot/scenes/<LEVEL>_level.tscn).
 ## Lists the scenes that exist, grouped by the disc folder they come from (CW =
 ## Crime War, PA = Precinct Assault), previews each level's loading screen, and
-## opens the chosen one (Enter, double-click or the Walk button). In a level,
-## Esc comes back here (player.gd).
+## opens the chosen one (Enter, double-click or the Walk button). While the scene
+## loads (in the background) the level's original loading screen fills the window.
+## In a level, Esc comes back here (player.gd).
 extends Control
 
 const SCENE_DIR := "res://scenes/"
@@ -13,6 +14,7 @@ const PRECINCT_ASSAULT := ["CONFT", "HK", "JOKE", "OVMP", "SLIM"]
 var _list: ItemList
 var _preview: TextureRect
 var _caption: Label
+var _loading := ""   # scene path being loaded in the background
 
 
 func _ready() -> void:
@@ -104,5 +106,35 @@ func _open_selected() -> void:
 	if sel.is_empty():
 		return
 	var level: Variant = _list.get_item_metadata(sel[0])
-	if level != null:
-		get_tree().change_scene_to_file(SCENE_DIR + "%s_level.tscn" % level)
+	if level == null or _loading != "":
+		return
+	_show_loading_screen(level)
+	_loading = SCENE_DIR + "%s_level.tscn" % level
+	ResourceLoader.load_threaded_request(_loading)
+
+
+func _show_loading_screen(level: String) -> void:
+	var cover := ColorRect.new()
+	cover.color = Color.BLACK
+	cover.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(cover)
+	var shot := "res://assets/%s/loading/%sLD.png" % [level, level]
+	if ResourceLoader.exists(shot):
+		var pic := TextureRect.new()
+		pic.texture = load(shot)
+		pic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		cover.add_child(pic)   # the picture itself says "Loading in progress"
+
+
+func _process(_delta: float) -> void:
+	if _loading == "":
+		return
+	match ResourceLoader.load_threaded_get_status(_loading):
+		ResourceLoader.THREAD_LOAD_LOADED:
+			get_tree().change_scene_to_packed(ResourceLoader.load_threaded_get(_loading))
+			_loading = ""
+		ResourceLoader.THREAD_LOAD_FAILED, ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			push_error("Could not load " + _loading)
+			_loading = ""

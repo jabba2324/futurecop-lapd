@@ -139,15 +139,79 @@ static func load_texture(path: String) -> Texture2D:
 	return tex
 
 
-static func apply_fc_blend(root: Node) -> void:
-	## glTF has no additive mode, so export_gltf.py marks PS1 ADDITION materials with an
-	## "_add" name suffix (and alphaMode BLEND). Switch those to additive blending; MIX
-	## ("_mix") already imports as alpha blending.
+# Environment (reflection) mapping, after fc-mit's GLES2 renderer: an env-mapped face
+# adds the level's sphere map, looked up by the view-space reflection vector, where its
+# own texture is see-through (shine × (1 − alpha); STP texels are alpha 0.5). The
+# sphere map is the 128×128 disc at (0, 124) in cbmp010 (fc-mit Environment.cpp); every
+# level has one there. Not checked against the game's own env-map code.
+const _ENV_SHADER := """
+shader_type spatial;
+render_mode unshaded, cull_back%s;
+uniform sampler2D albedo_tex : source_color, filter_nearest;
+uniform sampler2D shine : source_color, filter_linear;
+varying vec2 env_uv;
+void vertex() {
+	vec3 e = normalize((MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz);
+	vec3 n = normalize((MODELVIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	vec3 r = reflect(e, n);
+	float m = 2.0 * sqrt(r.x * r.x + r.y * r.y + (r.z + 1.0) * (r.z + 1.0));
+	env_uv = vec2(r.x / m + 0.5, 0.5 - r.y / m);
+}
+void fragment() {
+	vec4 c = texture(albedo_tex, UV) * COLOR;
+	ALBEDO = c.rgb + texture(shine, env_uv).rgb * (1.0 - c.a);
+	%s
+}
+"""
+static var _env_shaders: Dictionary = {}   # mix? -> Shader
+static var _shines: Dictionary = {}        # cbmp010 path -> Texture2D
+
+
+static func shine_texture(cbmp010_path: String) -> Texture2D:
+	## The sphere-map disc cut out of a level's cbmp010.png (cached).
+	if not _shines.has(cbmp010_path):
+		var tex := load_texture(cbmp010_path)
+		var img := tex.get_image() if tex else null
+		if img and img.is_compressed():
+			img.decompress()
+		_shines[cbmp010_path] = ImageTexture.create_from_image(img.get_region(Rect2i(0, 124, 128, 128))) if img else null
+	return _shines[cbmp010_path]
+
+
+static func _env_material(src: StandardMaterial3D, shine: Texture2D) -> ShaderMaterial:
+	var mix := src.resource_name.contains("_mix")
+	if not _env_shaders.has(mix):
+		var sh := Shader.new()
+		sh.code = _ENV_SHADER % ([", blend_mix, depth_draw_opaque", "ALPHA = c.a > 0.99 ? 1.0 : 0.5;"] if mix else ["", ""])
+		_env_shaders[mix] = sh
+	var m := ShaderMaterial.new()
+	m.shader = _env_shaders[mix]
+	m.resource_name = src.resource_name
+	m.set_shader_parameter("albedo_tex", src.albedo_texture)
+	m.set_shader_parameter("shine", shine)
+	return m
+
+
+static func apply_fc_materials(root: Node, glb_path: String) -> void:
+	## PS1 material modes the glTF import can't express, for a scene instanced from
+	## <level>/models/<cobj>.glb (export_gltf.py material suffixes):
+	##   "_add": glTF has no additive mode, so these import as alpha blending; switch them
+	##           to additive. ("_mix" already imports as alpha blending.)
+	##   "_env": environment-mapped faces get the sphere-map shader above, with the
+	##           sphere map from <level>/textures/cbmp010.png.
+	var shine: Texture2D = null
 	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
 		if mi.mesh == null:
 			continue
 		for s in mi.mesh.get_surface_count():
 			var m := mi.mesh.surface_get_material(s) as StandardMaterial3D
-			if m and m.resource_name.contains("_add"):
+			if m == null:
+				continue   # already converted (shared mesh) or not a glTF material
+			if m.resource_name.contains("_add"):
 				m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 				m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+			if m.resource_name.ends_with("_env"):
+				if shine == null:
+					shine = shine_texture(glb_path.get_base_dir().get_base_dir().path_join("textures/cbmp010.png"))
+				if shine:
+					mi.mesh.surface_set_material(s, _env_material(m, shine))

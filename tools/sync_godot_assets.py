@@ -52,8 +52,8 @@ def _mtl_textures(mtl_path):
 
 def _glb_needed(path):
     """True when a prop needs its .glb rather than the OBJ: animation clips, 3DTA texture
-    animation, or MIX/additive blended materials (the OBJ has no blend modes, so e.g.
-    CONFT's additive light beams would draw as solid dark slabs)."""
+    animation, MIX/additive blended materials (the OBJ has no blend modes, so e.g.
+    CONFT's additive light beams would draw as solid dark slabs) or env-mapped faces."""
     if not os.path.exists(path):
         return False
     with open(path, "rb") as f:
@@ -61,7 +61,8 @@ def _glb_needed(path):
         j = json.loads(f.read(struct.unpack_from("<I", head, 12)[0]))
     meshes = j.get("meshes", [])
     uv = meshes and meshes[0].get("extras", {}).get("fc_uv_animations")
-    blend = any(m.get("extras", {}).get("fc_blend") for m in j.get("materials", []))
+    blend = any(m.get("extras", {}).get("fc_blend") or m.get("extras", {}).get("fc_environment_map")
+                for m in j.get("materials", []))
     return bool(j.get("animations") or uv or blend)
 
 
@@ -81,6 +82,7 @@ def _wanted_files(level):
                 files.update({f"objects/{name}.obj", f"objects/{name}.mtl"})
     files.add(f"loading/{level}LD.png")
     files.update({"actors_decoded.json", "csfx.json", "dcs.json", "shd.json"})
+    files.add("textures/cbmp010.png")   # env-map sphere map (obj_loader.shine_texture)
     # Decal textures and ambient-sound WAVs actually referenced by the level.
     decoded = json.load(open(os.path.join(src, "actors_decoded.json"))).get("actors", [])
     dcs_ids = {r["fields"]["DCSQuad.dcs_id"]["value"] for r in decoded
