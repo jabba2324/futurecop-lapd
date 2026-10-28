@@ -1045,38 +1045,9 @@ func _build_overlays(root: Node3D, layout: RefCounted) -> void:
 
 
 func _build_effect_registry(decoded: Array) -> void:
-	## effect_id -> {cls, def}: Csfx table 0 (global effects) overlaid with the
-	## level's own effect-definition actors; damage-effect sets by set_id.
-	_effects = {}
-	_damage_sets = {}
-	var csfx: Variant = _read_json(_ldir().path_join("csfx.json"))
-	if csfx is Array:
-		for table: Dictionary in csfx:
-			if int(table.get("table_index", 0)) != 0:
-				continue
-			for r: Dictionary in table.get("records", []):
-				var cls := int(r.get("class", 0))
-				if cls < 87 or cls > 94 or cls == 91:
-					continue
-				var def := {}
-				for seg: String in r.get("fields", {}):
-					if r.fields[seg] is Dictionary:
-						for name: String in r.fields[seg]:
-							def[seg + "." + name] = r.fields[seg][name].get("value")
-				var id: Variant = def.get("EffectHeader.effect_id")
-				if id != null:
-					_effects[int(id)] = {"cls": cls, "def": def}
-	for rec: Dictionary in decoded:
-		var cls := int(rec.class_id)
-		if cls == 91:
-			_damage_sets[int(LevelOverlays.field(rec, "set_id", -1))] = rec
-		elif cls >= 87 and cls <= 94:
-			var def := {}
-			for k: String in rec.fields:
-				def[k] = rec.fields[k].get("value")
-			var id: Variant = def.get("EffectHeader.effect_id")
-			if id != null:
-				_effects[int(id)] = {"cls": cls, "def": def}
+	var reg := EffectPlayer.build_registry(decoded, _read_json(_ldir().path_join("csfx.json")))
+	_effects = reg.effects
+	_damage_sets = reg.damage_sets
 
 
 func _build_placed_effects(decoded: Array) -> Node3D:
@@ -1088,9 +1059,8 @@ func _build_placed_effects(decoded: Array) -> Node3D:
 		var cls := int(rec.class_id)
 		if cls < 87 or cls > 94 or cls == 91:
 			continue
-		var flags: Variant = LevelOverlays.field(rec, "effect_flags", [])
 		var n: Node3D = _actor_nodes.get(int(rec.id))
-		if not (flags is Array and "placed_at_load" in flags) or n == null:
+		if not EffectPlayer.placed_at_load(rec) or n == null:
 			continue
 		var anchor := Node3D.new()
 		anchor.position = n.position

@@ -47,6 +47,8 @@ func _init() -> void:
 
 	var root := Node3D.new()
 	root.name = _level
+	# Placed effects and texture animations (visual only).
+	root.set_script(load("res://scripts/level_ambience.gd"))
 
 	# Offset to compensate for grids wider/taller than the CONFT baseline (gw=14, gh=16).
 	if _layout.actor_x_off != 0.0 or _layout.actor_z_off != 0.0:

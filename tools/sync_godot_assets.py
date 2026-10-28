@@ -10,6 +10,8 @@ it copies:
   textures/*.png                     every texture an included .mtl references
   actors.json, heightmap.json, nets.json, music/*.wav
   loading/<LEVEL>LD.png              the level's loading screen (menu preview)
+  actors_decoded.json, csfx.json,    effect definitions + placements and the particle
+  particles/*.png                    sprites, for level_ambience.gd's placed effects
 Anything else under godot/assets/<LEVEL>/ (except Godot's *.import sidecars of
 copied files) is removed, so the folder mirrors exactly what the generator reads.
 
@@ -57,6 +59,10 @@ def _wanted_files(level):
             else:
                 files.update({f"objects/{name}.obj", f"objects/{name}.mtl"})
     files.add(f"loading/{level}LD.png")
+    files.update({"actors_decoded.json", "csfx.json"})
+    particles = os.path.join(src, "particles")
+    if os.path.isdir(particles):
+        files.update(f"particles/{f}" for f in os.listdir(particles) if f.endswith(".png"))
     music = os.path.join(src, "music")
     if os.path.isdir(music):
         files.update(f"music/{f}" for f in os.listdir(music) if f.endswith(".wav"))

@@ -240,6 +240,13 @@ in `decode_actors.py` as hypotheses.
   - **The player** is the first X1-Alpha in `actors.json`. It's a `CharacterBody3D` with
     `player.gd`, a capsule collider and the chase camera. Other X1s stay static.
   - Per-level extras: `SUN_COLOR`, and a Music node from `music/`.
+  - The scene root runs `scripts/level_ambience.gd` (visual only, nothing reacts):
+    - It loops the level's `placed_at_load` effects via `effect_player.gd`, using
+      `EffectPlayer.build_registry` (shared with the viewer).
+    - It plays 3DTA texture animations on the instanced `.glb` parts (e.g. the X1's
+      beacon).
+    - It needs `actors_decoded.json`, `csfx.json` and `particles/` in
+      `assets/<LEVEL>/`, which `sync_godot_assets.py` copies.
   - **Collision is built at load time** by `scripts/terrain_collision.gd` on the Terrain
     node, which keeps the `.tscn` files under 1 MB:
     - a concave shape of the stitched terrain, with `backface_collision` on because the

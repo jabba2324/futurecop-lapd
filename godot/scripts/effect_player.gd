@@ -27,6 +27,44 @@ var _items: Array = []   # {node, age, life, kind, ...}
 var _rng := RandomNumberGenerator.new()
 
 
+static func build_registry(decoded: Array, csfx: Variant) -> Dictionary:
+	## {effects: effect_id -> {cls, def}, damage_sets: set_id -> record}.
+	## Csfx table 0 (global effects) is overlaid with the level's own class 87–94
+	## effect-definition actors (decoded = actors_decoded.json "actors").
+	var effects := {}
+	var damage_sets := {}
+	if csfx is Array:
+		for table: Dictionary in csfx:
+			if int(table.get("table_index", 0)) != 0:
+				continue
+			for r: Dictionary in table.get("records", []):
+				var cls := int(r.get("class", 0))
+				if cls < 87 or cls > 94 or cls == 91:
+					continue
+				var def := {}
+				for seg: String in r.get("fields", {}):
+					if r.fields[seg] is Dictionary:
+						for name: String in r.fields[seg]:
+							def[seg + "." + name] = r.fields[seg][name].get("value")
+				if def.get("EffectHeader.effect_id") != null:
+					effects[int(def["EffectHeader.effect_id"])] = {"cls": cls, "def": def}
+	for rec: Dictionary in decoded:
+		var cls := int(rec.class_id)
+		var def := {}
+		for k: String in rec.fields:
+			def[k] = rec.fields[k].get("value")
+		if cls == 91 and def.get("DamageEffectSet.set_id") != null:
+			damage_sets[int(def["DamageEffectSet.set_id"])] = rec
+		elif cls >= 87 and cls <= 94 and cls != 91 and def.get("EffectHeader.effect_id") != null:
+			effects[int(def["EffectHeader.effect_id"])] = {"cls": cls, "def": def}
+	return {"effects": effects, "damage_sets": damage_sets}
+
+
+static func placed_at_load(rec: Dictionary) -> bool:
+	var flags: Variant = rec.get("fields", {}).get("EffectHeader.effect_flags", {}).get("value")
+	return flags is Array and "placed_at_load" in flags
+
+
 func setup(fx: Dictionary, registry: Dictionary, sprite_dir: String, loop: bool, depth: int = 0) -> void:
 	_fx = fx
 	_registry = registry
@@ -140,7 +178,9 @@ func _spawn() -> void:
 		93:
 			var tex: Texture2D = null
 			var img := _sprites.path_join("cpyr001_p%03d.png" % int(_field("cpyr_id")))
-			if FileAccess.file_exists(img):
+			if img.begins_with("res://"):
+				tex = load(img) if ResourceLoader.exists(img) else null
+			elif FileAccess.file_exists(img):
 				tex = ImageTexture.create_from_image(Image.load_from_file(img))
 			var q := QuadMesh.new()
 			var s := maxf(absf(_field("size")) / 4096.0 * U, 0.1)
