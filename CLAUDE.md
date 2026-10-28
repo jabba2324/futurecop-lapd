@@ -68,6 +68,7 @@ textures written by `extract_visuals.py`, and `extract_tos.py` checks against `v
 | `extract_canm.py` | `CANM` (MNAC) radio-panel animations in SWVR | `anims/*.png` (64×48 frame strips), `.gif`, `anims.json` |
 | `extract_lsc.py` | `.LSC` loading screens (MDEC) | `loading/*.png` |
 | `extract_demos.py` | `.DEM` attract-mode joypad recordings | `demos/*.json` |
+| `extract_exe_strings.py` | text in the executable `SLUS_007.39` (game text, file names, SDK/debug) | `FE/exe_strings.json` |
 | `extract_videos.py` | `.WVE` FMVs + `EA_LOGO.FSV` (via jPSXdec + ffmpeg) | `parsed/video/*.ogv` |
 
 `tools/lib/` holds the shared helpers: `iff_utils.py` (game-file lookup and IFF walker)
@@ -243,7 +244,12 @@ each docstring). What's still open:
   - The SFX sample rates (extract_sfx.py writes 11025 Hz; Cvkh says 16/22 kHz for 734
     tones).
   - The per-class initial yaws in level_layout.gd.
-- **Cut content:** 10 script references point at actor ids that don't exist (M2C
+- **Disc coverage:** every file on the PS1 disc is decoded or accounted for. `DUMMY.DAT`
+  is 27.6 MB of zeros, `SYSTEM.CNF` is the boot config, and the executable embeds no
+  images or audio, only text.
+- **Cut content:** the executable loads `brfe3.wve`/`poe3.wve` (an "E3" level's briefing
+  and post-mission movies) and `alang.lsc` (a language-select loading screen), none of
+  which are on the retail disc. Separately, 10 script references point at actor ids that don't exist (M2C
   469/470, OV 442/346/352, OVMP 219/223). The PC and PS1 builds of OVMP have identical
   actor sets, so these actors were removed before release and the messages go nowhere.
 

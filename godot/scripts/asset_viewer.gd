@@ -1124,7 +1124,7 @@ func _on_tree_collapsed(item: TreeItem) -> void:
 			var e: Variant = v[i]
 			var hint := ""
 			if e is Dictionary:
-				for key in ["name", "id", "class_name", "type"]:
+				for key in ["name", "id", "class_name", "type", "text"]:
 					if e.has(key):
 						hint = "  %s" % e[key]
 						break

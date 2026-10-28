@@ -22,7 +22,7 @@ STEPS = [
     "extract_actors", "extract_sfx", "convert_fonts", "export_gltf", "decode_actors",
     "extract_nets", "extract_rpns", "extract_fun", "extract_shd", "extract_tos",
     "extract_dcs", "extract_sfx_meta", "extract_frontend", "extract_canm",
-    "extract_lsc", "extract_demos", "extract_videos", "sync_godot_assets",
+    "extract_lsc", "extract_demos", "extract_exe_strings", "extract_videos", "sync_godot_assets",
 ]
 
 
