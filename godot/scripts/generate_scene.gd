@@ -1,5 +1,7 @@
 ## Run once with: Godot --headless --script scripts/generate_scene.gd [-- LEVEL]
-## Builds a level as a static editable .tscn scene.
+## Builds a level as a walkable .tscn scene: terrain (collision built at load time
+## by terrain_collision.gd), every placed actor as static scenery, and the first
+## X1-Alpha as the player (player.gd, a CharacterBody3D with a chase camera).
 ## LEVEL defaults to CONFT; pass any extracted level name (e.g. OVMP, LAX1).
 ## Needs godot/assets/<LEVEL>/ (filled by tools/sync_godot_assets.py), incl. models/*.glb for the
 ## class-1 X1-Alpha parts. Run `godot --headless --path godot --import` first.
@@ -17,12 +19,14 @@ const LevelLayout := preload("res://scripts/level_layout.gd")
 var _layout: RefCounted
 
 # Per-level setup that used to be hand edits on the generated scenes.
-# PLAYER_ACTOR: actor that gets player.gd and the chase camera (replaces the root camera).
-const PLAYER_ACTOR := {"CONFT": 12}
 const SUN_COLOR := {"CONFT": Color(0.68477565, 0.2997981, 0.37404373)}
-# Chase camera relative to the player actor: behind and above, pitched down 40°.
-const PLAYER_CAMERA := Transform3D(Basis(Vector3(1, 0, 0), Vector3(0, 0.7660445, -0.64278764),
-	Vector3(0, 0.64278764, 0.7660445)), Vector3(0, 2.5363665, 0.7880659))
+# Player collision: a capsule around the X1 legs (feet at y=0, ~0.9 units tall).
+const PLAYER_RADIUS := 0.28
+const PLAYER_HEIGHT := 0.9
+# Chase camera relative to the player actor: behind (-Z, the X1 faces +Z) and
+# above, pitched down 40°.
+const PLAYER_CAMERA := Transform3D(Basis(Vector3.UP, PI)) * Transform3D(Basis(Vector3(1, 0, 0),
+	Vector3(0, 0.7660445, -0.64278764), Vector3(0, 0.64278764, 0.7660445)), Vector3(0, 2.5363665, 0.7880659))
 const PLAYER_CAMERA_FOV := 117.99254
 
 
@@ -50,10 +54,9 @@ func _init() -> void:
 
 	_add_music(root)
 	_add_environment(root)
-	if not PLAYER_ACTOR.has(_level):
-		_add_camera(root)
 	_add_terrain(root)
-	_add_actors(root)
+	if not _add_actors(root):
+		_add_camera(root)  # no X1 in this level: fixed overview camera instead
 
 	var scene := PackedScene.new()
 	var err := scene.pack(root)
@@ -151,6 +154,8 @@ func _add_terrain(root: Node3D) -> void:
 	root.add_child(terrain_node)
 	terrain_node.owner = root
 
+	terrain_node.set_script(load("res://scripts/terrain_collision.gd"))
+
 	var mesh_res := load(_terrain_obj) as Mesh
 	if mesh_res == null:
 		push_warning("Could not load terrain — run --import first")
@@ -173,7 +178,8 @@ func _add_terrain(root: Node3D) -> void:
 	mi.owner = root
 
 
-func _add_actors(root: Node3D) -> void:
+func _add_actors(root: Node3D) -> bool:
+	## Returns true when a player (the first X1-Alpha) was placed.
 	var actors_root := Node3D.new()
 	actors_root.name = "Actors"
 	root.add_child(actors_root)
@@ -182,27 +188,32 @@ func _add_actors(root: Node3D) -> void:
 	var file := FileAccess.open(_actors_json, FileAccess.READ)
 	if file == null:
 		push_warning("Could not open actors.json")
-		return
+		return false
 
 	var data: Variant = JSON.parse_string(file.get_as_text())
 	file.close()
 	if not data or not data.has("actors"):
 		push_error("actors.json parse failed")
-		return
+		return false
 
 	var placed := 0
+	var has_player := false
 	for actor in data.actors:
 		var objects: Array = actor.get("objects", [])
 		if objects.is_empty() or not LevelLayout.is_placed(actor):
 			continue
 
 		var cls: int = actor.get("class", 0)
-		var actor_node := Node3D.new()
+		var is_player: bool = LevelLayout.is_x1(actor) and not has_player
+		var actor_node: Node3D = CharacterBody3D.new() if is_player else Node3D.new()
+		has_player = has_player or is_player
 		actor_node.name = "Actor_%d" % actor.id
 		# Store class and id as metadata so they're visible in editor
 		actor_node.set_meta("actor_id", actor.id)
 		actor_node.set_meta("class",    cls)
 		actor_node.position = _layout.actor_position(actor)
+		if is_player:
+			actor_node.position.y += 0.1  # drop onto the terrain collision at start
 		var rot_y: float = _layout.actor_yaw_degrees(actor)
 		if not is_nan(rot_y):
 			actor_node.rotation_degrees.y = rot_y
@@ -245,6 +256,7 @@ func _add_actors(root: Node3D) -> void:
 		placed += 1
 
 	print("  Placed %d actors" % placed)
+	return has_player
 
 
 func _add_x1(actor_node: Node3D, actor: Dictionary, root: Node3D) -> void:
@@ -256,8 +268,17 @@ func _add_x1(actor_node: Node3D, actor: Dictionary, root: Node3D) -> void:
 		return (load(path) as PackedScene).instantiate())
 	actor_node.add_child(x1)
 	_own_new(x1, root)
-	if PLAYER_ACTOR.get(_level, -1) == int(actor.id):
+	if actor_node is CharacterBody3D:
 		actor_node.set_script(load("res://scripts/player.gd"))
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = PLAYER_RADIUS
+		capsule.height = PLAYER_HEIGHT
+		var shape := CollisionShape3D.new()
+		shape.name = "Collision"
+		shape.shape = capsule
+		shape.position.y = PLAYER_HEIGHT / 2.0
+		actor_node.add_child(shape)
+		shape.owner = root
 		var cam := Camera3D.new()
 		cam.name = "Camera"
 		cam.transform = PLAYER_CAMERA

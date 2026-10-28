@@ -12,7 +12,7 @@ it copies:
 Anything else under godot/assets/<LEVEL>/ (except Godot's *.import sidecars of
 copied files) is removed, so the folder mirrors exactly what the generator reads.
 
-Usage: sync_godot_assets.py [LEVEL ...]   (default: the levels already in godot/assets/)
+Usage: sync_godot_assets.py [LEVEL ...]   (default: every parsed level with terrain, i.e. all but FE)
 Then:  godot --headless --path godot --import
        godot --headless --path godot --script scripts/generate_scene.gd -- LEVEL
 """
@@ -95,7 +95,8 @@ def sync_level(level):
 
 
 def main():
-    levels = [l.upper() for l in sys.argv[1:]] or sorted(os.listdir(_ASSETS))
+    levels = [l.upper() for l in sys.argv[1:]] or sorted(
+        l for l in os.listdir(_PARSED) if os.path.exists(os.path.join(_PARSED, l, "terrain", "map.obj")))
     for level in levels:
         if not os.path.isdir(os.path.join(_PARSED, level)):
             print(f"{level}: no parsed/{level}/ — run the extractors first", file=sys.stderr)

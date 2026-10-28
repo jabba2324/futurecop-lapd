@@ -221,8 +221,8 @@ static func assemble_x1(actor: Dictionary, load_part: Callable) -> Node3D:
 	## the .glb parts are upright with feet at y=0, so no flip or raise is needed.
 	var root := Node3D.new()
 	root.name = "X1"
-	# The parts face +Z; turn them so the mech faces the actor node's -Z (Godot forward).
-	root.rotation_degrees.y = 180.0
+	# The parts face +Z, which is also the forward direction of the stored X1 yaw:
+	# with it, 4 of 5 tested start bays open ahead of the mech, not behind it.
 	var objects: Array = actor.get("objects", [])
 	var parts: Dictionary = {}
 	for i in mini(objects.size(), X1_ROLES.size()):

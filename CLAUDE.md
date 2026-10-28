@@ -2,7 +2,7 @@
 
 Reverse-engineering the PS1 game *Future Cop: L.A.P.D.* (EA, 1998): extract every asset
 from the disc with Python, and browse all of it in a Godot 4 asset viewer. (The Godot
-project also holds four generated Precinct Assault level scenes.)
+project also holds a generated, walkable scene for each level.)
 
 ## Repo layout
 
@@ -186,8 +186,8 @@ in `decode_actors.py` as hypotheses.
     base flags bit 0).
 - `scripts/generate_scene.gd` is a headless generator. It builds `scenes/<LEVEL>_level.tscn`
   from `godot/assets/<LEVEL>/`, which `tools/sync_godot_assets.py` fills from `parsed/` for
-  **CONFT, HK, OVMP, SLIM**. These include `nets.json` and `models/` (the X1 part
-  `.glb`s); the rest are OBJs.
+  **all 14 levels with terrain** (every level except FE). These include `nets.json` and
+  `models/` (the X1 part `.glb`s); the rest are OBJs.
   ```
   python3 -I tools/sync_godot_assets.py CONFT     # parsed/ → godot/assets/
   godot --headless --path godot --import        # first, or textures fail to load
@@ -195,17 +195,31 @@ in `decode_actors.py` as hypotheses.
   ```
   The committed scenes are pure generator output; there are no hand edits. They reference
   `res://assets/...`, which is gitignored, so they only load after `run_all.py`.
-  - Per-level extras are constants in the generator: `PLAYER_ACTOR` (player.gd plus the
-    chase camera), `SUN_COLOR`, and a Music node from `music/`.
+  - **The player** is the first X1-Alpha in `actors.json`. It's a `CharacterBody3D` with
+    `player.gd`, a capsule collider and the chase camera. Other X1s stay static.
+  - Per-level extras: `SUN_COLOR`, and a Music node from `music/`.
+  - **Collision is built at load time** by `scripts/terrain_collision.gd` on the Terrain
+    node, which keeps the `.tscn` files under 1 MB:
+    - a concave shape of the stitched terrain, with `backface_collision` on because the
+      PS1 walls are single-sided;
+    - a convex hull per prop mesh.
+    It skips the player, because it runs before `player.gd`'s `_ready`. It uses the render
+    mesh, not the game's own Ctil collision channels.
   - Run `--import` first, because a `--script` run that finds textures used in 3D marks
     them for VRAM compression but never reimports them.
   - Parts mounted inside an instanced `.glb` need `set_editable_instance()`, or `pack()`
     drops them.
 - `.tscn` rule: every `[ext_resource]` must come before any `[sub_resource]`, or the scene
   fails to load.
-- `scripts/player.gd` is attached to Actor_12 in CONFT. W/S moves along the actor's
-  −Z axis and A/D turns it. While moving it plays the legs' real walk cycle, and it
-  returns to rest when stopped.
+- `scripts/player.gd` is the walker, a `CharacterBody3D`.
+  - **Controls:** W/S walk along the actor's **+Z** axis (the X1's forward), A/D turn.
+  - **Physics:** gravity, `move_and_slide`, and a 50° max floor angle.
+  - **Spawn:** on its first physics frame it snaps onto the real ground with a raycast,
+    because the heightmap estimate can be a few units off (OVMP: by 2.5).
+  - **Animation:** it plays the legs' real walk cycle while moving and returns to rest when
+    it stops.
+  - **Testing (2026-10-28):** a scripted walk test showed it lands on the floor in all
+    14 levels and walks out of the start bay in most of them.
 - `scripts/music_loop.gd` is an AudioStreamPlayer that replays itself when the track finishes.
 - `.godot/` and `*.import` are gitignored. Commit the `.uid` files.
 

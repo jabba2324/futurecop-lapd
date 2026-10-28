@@ -14,7 +14,7 @@ format facts and open questions.
 ```
 parsed/    everything the tools extract, one folder per level (+ parsed/video/)
 tools/     the extractors (Python) and lib/ shared helpers
-godot/     Godot 4.6 project: the asset viewer and four generated multiplayer level scenes
+godot/     Godot 4.6 project: the asset viewer and a walkable scene for each level
 ```
 
 The game itself stays outside the repo, in its parent folder:
@@ -46,13 +46,22 @@ godot --path godot res://scenes/asset_viewer.tscn            # browse everything
 Run `run_all.py` once before opening the viewer; it fills `parsed/` and `godot/assets/`.
 The video step also needs `java` and an `ffmpeg` built with libtheora.
 
-Level scenes (CONFT, HK, OVMP, SLIM; CONFT has a playable mech on WASD). The `.tscn`
-files are committed, but they load `godot/assets/`, so run the pipeline first:
+Level scenes: every level except FE has `godot/scenes/<LEVEL>_level.tscn`. Each has the
+terrain with collision, all props as static scenery, and the X1-Alpha walker at player
+one's start: W/S walk, A/D turn, with a chase camera. There are no enemies, scripts or
+objectives; it's for walking around the level. The `.tscn` files are committed, but
+they load `godot/assets/`, so run the pipeline first, then open one:
+
+```sh
+godot --path godot res://scenes/M2C_level.tscn
+```
+
+To regenerate a scene:
 
 ```sh
 ~/.venvs/fc-lapd/bin/python -I tools/sync_godot_assets.py    # parsed/ → godot/assets/ (run_all does this too)
 godot --headless --path godot --import
-godot --headless --path godot --script scripts/generate_scene.gd -- CONFT
+godot --headless --path godot --script scripts/generate_scene.gd -- M2C
 ```
 
 ## From the disc images to `../ps1/` and `../pc/`
