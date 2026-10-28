@@ -241,9 +241,16 @@ in `decode_actors.py` as hypotheses.
     `player.gd`, a capsule collider and the chase camera. Other X1s stay static.
   - Per-level extras: a Music node from `music/`. Lighting is the same neutral sun in
     every level; the CONFT red sun tint is gone.
-  - Animated props (models with clips or 3DTA) use their `.glb`, and keep the OBJ props'
-    offsets, yaw and ground tilt. `sync_godot_assets.py` copies a `.glb` only for
-    those.
+  - Animated props (models with clips or 3DTA) and props with MIX/additive materials use
+    their `.glb`, keeping the OBJ props' offsets, yaw and ground tilt. The OBJ has no
+    blend modes, so CONFT's additive light beams (cobj056–064, `cbmp010_add`) drew as
+    solid black slabs. `sync_godot_assets.py` copies a `.glb` only for those props.
+  - `ObjLoader.apply_fc_blend()` switches `_add` materials to `BLEND_MODE_ADD`, because
+    glTF has no additive mode and they import as alpha blending. Both the scenes and the
+    viewer call it; the viewer's Level view also uses the `.glb` for blended props.
+  - Open question: CONFT cobj063 (spikes on actors 360/362) is all env-mapped MIX faces
+    without 4DGI 0x20, so it is exported opaque (fc-mit's rule) and looks dark. Not
+    checked against the game.
   - The scene root runs `scripts/level_ambience.gd` (visual/audio only, nothing reacts):
     - placed effects;
     - class-97 decals (only some levels have them, e.g. M2C 180, UN 88, M4A1 44);

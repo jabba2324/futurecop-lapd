@@ -699,6 +699,7 @@ func _gltf_scene(path: String) -> Node3D:
 	if doc.append_from_file(path, state) != OK:
 		return null
 	var scene := doc.generate_scene(state) as Node3D
+	ObjLoader.apply_fc_blend(scene)
 	_attach_uv_animator(scene, UvAnimator.read_glb_uv_animations(path), path)
 	return scene
 
@@ -711,6 +712,7 @@ func _show_gltf(path: String) -> void:
 		_info.text = "Could not load %s" % path
 		return
 	var scene := doc.generate_scene(state) as Node3D
+	ObjLoader.apply_fc_blend(scene)
 	var uv_anims := UvAnimator.read_glb_uv_animations(path)
 	_attach_uv_animator(scene, uv_anims, path)
 	# No Flip Y here: export_gltf.py applies the root-bone rotation that the
@@ -964,20 +966,26 @@ func _build_level() -> void:
 
 func _animated_part(glb: String) -> Node3D:
 	## A playing instance of an animated glTF model (skeleton/morph clips and/or
-	## 3DTA texture animation), or null if the model has neither.
+	## 3DTA texture animation), or of one with MIX/additive materials (which the OBJ
+	## can't express), or null if the model has none of these.
 	if not _gltf_cache.has(glb):
 		var entry := {"animated": false}
 		if FileAccess.file_exists(glb):
 			var uv := UvAnimator.read_glb_uv_animations(glb)
 			var doc := GLTFDocument.new()
 			var state := GLTFState.new()
-			if doc.append_from_file(glb, state) == OK and (state.get_animations().size() > 0 or uv.size() > 0):
+			var blended := false
+			if doc.append_from_file(glb, state) == OK:
+				for m in state.get_materials():
+					blended = blended or m.resource_name.contains("_add") or m.resource_name.contains("_mix")
+			if state.get_animations().size() > 0 or uv.size() > 0 or blended:
 				entry = {"animated": true, "doc": doc, "state": state, "uv": uv}
 		_gltf_cache[glb] = entry
 	var c: Dictionary = _gltf_cache[glb]
 	if not c.animated:
 		return null
 	var scene := (c.doc as GLTFDocument).generate_scene(c.state) as Node3D
+	ObjLoader.apply_fc_blend(scene)
 	_attach_uv_animator(scene, c.uv, glb)
 	var players := scene.find_children("*", "AnimationPlayer", true, false)
 	if players.size() > 0:

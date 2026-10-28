@@ -50,8 +50,10 @@ def _mtl_textures(mtl_path):
     return out
 
 
-def _glb_animated(path):
-    """True when a .glb has animation clips or 3DTA texture animation."""
+def _glb_needed(path):
+    """True when a prop needs its .glb rather than the OBJ: animation clips, 3DTA texture
+    animation, or MIX/additive blended materials (the OBJ has no blend modes, so e.g.
+    CONFT's additive light beams would draw as solid dark slabs)."""
     if not os.path.exists(path):
         return False
     with open(path, "rb") as f:
@@ -59,7 +61,8 @@ def _glb_animated(path):
         j = json.loads(f.read(struct.unpack_from("<I", head, 12)[0]))
     meshes = j.get("meshes", [])
     uv = meshes and meshes[0].get("extras", {}).get("fc_uv_animations")
-    return bool(j.get("animations") or uv)
+    blend = any(m.get("extras", {}).get("fc_blend") for m in j.get("materials", []))
+    return bool(j.get("animations") or uv or blend)
 
 
 def _wanted_files(level):
@@ -72,7 +75,7 @@ def _wanted_files(level):
             continue
         for obj in a.get("objects", []):
             name = os.path.splitext(obj)[0]
-            if a["class"] == _X1_CLASS or _glb_animated(os.path.join(src, "models", name + ".glb")):
+            if a["class"] == _X1_CLASS or _glb_needed(os.path.join(src, "models", name + ".glb")):
                 files.add(f"models/{name}.glb")
             if a["class"] != _X1_CLASS:
                 files.update({f"objects/{name}.obj", f"objects/{name}.mtl"})

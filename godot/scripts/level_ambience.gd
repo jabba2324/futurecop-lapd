@@ -3,6 +3,7 @@
 ##   - effects the level places at load, looping (effect_player.gd)
 ##   - class-97 decals (level_overlays.build_decals)
 ##   - prop animation clips (all_frames, looping) and 3DTA texture animations
+##   - additive blending on "_add" materials of .glb props (ObjLoader.apply_fc_blend)
 ##   - ambient sounds: BaseEntity.ambient_sound → the Cshd entry with that
 ##     group_id → its tone WAV, looping 3D audio at the actor
 ##   - lighting: L toggles the PS1 look (baked terrain vertex colours ×2, unshaded,
@@ -14,6 +15,7 @@ const EffectPlayer := preload("res://scripts/effect_player.gd")
 const UvAnimator := preload("res://scripts/uv_animator.gd")
 const LevelLayout := preload("res://scripts/level_layout.gd")
 const LevelOverlays := preload("res://scripts/level_overlays.gd")
+const ObjLoader := preload("res://scripts/obj_loader.gd")
 
 var _base := ""
 var _layout: RefCounted
@@ -78,6 +80,7 @@ func _start_animations() -> void:
 		var path := n.scene_file_path
 		if not path.ends_with(".glb"):
 			continue
+		ObjLoader.apply_fc_blend(n)   # additive materials (e.g. CONFT's light beams)
 		# 3DTA texture animation on this part's own mesh (<model>_mesh).
 		var uv := UvAnimator.read_glb_uv_animations(path)
 		if uv:

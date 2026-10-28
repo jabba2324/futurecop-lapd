@@ -137,3 +137,17 @@ static func load_texture(path: String) -> Texture2D:
 		tex.set_meta("source_path", path)  # lets the viewer show which page a surface uses
 	_textures[path] = tex
 	return tex
+
+
+static func apply_fc_blend(root: Node) -> void:
+	## glTF has no additive mode, so export_gltf.py marks PS1 ADDITION materials with an
+	## "_add" name suffix (and alphaMode BLEND). Switch those to additive blending; MIX
+	## ("_mix") already imports as alpha blending.
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(s) as StandardMaterial3D
+			if m and m.resource_name.contains("_add"):
+				m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+				m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
