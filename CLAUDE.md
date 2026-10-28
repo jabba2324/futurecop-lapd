@@ -159,7 +159,8 @@ in `decode_actors.py` as hypotheses.
 - Godot 4.6, Forward+. Main scene: `scenes/menu.tscn` (`scripts/menu.gd`), a level-select
   menu that lists the existing `scenes/<LEVEL>_level.tscn`, grouped by disc folder (CW =
   Crime War, PA = Precinct Assault). It previews each level's loading screen, synced to
-  `assets/<L>/loading/`. Esc in a level returns to it.
+  `assets/<L>/loading/`, and shows it full-screen while the chosen scene loads in the
+  background (`ResourceLoader.load_threaded_request`). Esc in a level returns to it.
   - Linux: `godot` (Godot 4.6.3 in `~/.local/opt`).
   - Mac: `/Applications/Godot.app/Contents/MacOS/Godot`.
 - **Asset viewer**: `godot --path godot res://scenes/asset_viewer.tscn`
@@ -241,16 +242,21 @@ in `decode_actors.py` as hypotheses.
     `player.gd`, a capsule collider and the chase camera. Other X1s stay static.
   - Per-level extras: a Music node from `music/`. Lighting is the same neutral sun in
     every level; the CONFT red sun tint is gone.
-  - Animated props (models with clips or 3DTA) and props with MIX/additive materials use
+  - Animated props (models with clips or 3DTA) and props with MIX/additive/env-mapped materials use
     their `.glb`, keeping the OBJ props' offsets, yaw and ground tilt. The OBJ has no
     blend modes, so CONFT's additive light beams (cobj056–064, `cbmp010_add`) drew as
     solid black slabs. `sync_godot_assets.py` copies a `.glb` only for those props.
-  - `ObjLoader.apply_fc_blend()` switches `_add` materials to `BLEND_MODE_ADD`, because
-    glTF has no additive mode and they import as alpha blending. Both the scenes and the
-    viewer call it; the viewer's Level view also uses the `.glb` for blended props.
-  - Open question: CONFT cobj063 (spikes on actors 360/362) is all env-mapped MIX faces
-    without 4DGI 0x20, so it is exported opaque (fc-mit's rule) and looks dark. Not
-    checked against the game.
+  - `ObjLoader.apply_fc_materials()` fixes what glTF can't express. Both the scenes and
+    the viewer call it, and the viewer's Level view also uses the `.glb` for these props.
+    - `_add` materials become `BLEND_MODE_ADD`; glTF has no additive mode, so they
+      import as alpha blending.
+    - `_env` (environment-mapped) materials get a sphere-map shader, after fc-mit's
+      GLES2 renderer: colour + shine × (1 − texture alpha). The shine is looked up by the
+      view-space reflection vector in the 128×128 disc at (0, 124) of the level's
+      `cbmp010.png`. Every level has a sphere map there; OV and HK have abstract ones.
+      This hasn't been checked against the game's own env-map code.
+    - Before this, env-only models such as CONFT cobj063 (the arches on actors 360/362)
+      drew near-black.
   - The scene root runs `scripts/level_ambience.gd` (visual/audio only, nothing reacts):
     - placed effects;
     - class-97 decals (only some levels have them, e.g. M2C 180, UN 88, M4A1 44);
@@ -259,6 +265,8 @@ in `decode_actors.py` as hypotheses.
     - looping 3D ambient sounds. `BaseEntity.ambient_sound` "sound N" is the Cshd entry
       with **group_id N** (group_id is the sound key), and it plays that entry's tone
       WAV.
+    - **Minimap** (bottom right; M toggles): `minimap.gd` from the viewer, tracking the
+      walker with a heading tick.
     - **Lighting:** L toggles the PS1 look (the default: unshaded, no sun, terrain vertex
       colours ×2 because PS1 colour 128 = full brightness) and real-time lit. G toggles
       fog. A hint line shows the keys.

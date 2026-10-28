@@ -50,7 +50,8 @@ Level scenes: every level except FE has `godot/scenes/<LEVEL>_level.tscn`. Each 
 terrain with collision, all props as static scenery, and the X1-Alpha walker at player
 one's start: W/S walk, A/D turn, with a chase camera. Placed effects, decals, animated
 props and ambient sounds are included. L switches between the original PS1 lighting (the
-default) and real-time lighting, and G toggles fog. There are no enemies, scripts or
+default) and real-time lighting, G toggles fog and M the minimap. Reflective surfaces
+use the level's sphere map, and the level's loading screen shows while it loads. There are no enemies, scripts or
 objectives; it's for walking around the level. The `.tscn` files are committed, but
 they load `godot/assets/`, so run the pipeline first. Then run the project for a
 level-select menu, or open a level directly:

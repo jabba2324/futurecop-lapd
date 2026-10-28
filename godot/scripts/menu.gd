@@ -36,7 +36,7 @@ func _ready() -> void:
 	title.add_theme_font_size_override("font_size", 32)
 	left.add_child(title)
 	var hint := Label.new()
-	hint.text = "Choose a level to walk around.\nIn a level: W/S walk, A/D turn,\nL lighting (PS1/lit), G fog, Esc returns here."
+	hint.text = "Choose a level to walk around.\nIn a level: W/S walk, A/D turn,\nL lighting (PS1/lit), G fog, M map, Esc returns here."
 	hint.modulate = Color(0.75, 0.78, 0.85)
 	left.add_child(hint)
 
