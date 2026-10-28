@@ -220,6 +220,10 @@ func _add_actors(root: Node3D) -> bool:
 
 		actors_root.add_child(actor_node)
 		actor_node.owner = root
+		var aligned: Array = LevelLayout.ground_aligned_parts(actor)
+		var normal: Vector3 = _layout.ground_normal(actor_node.position.x, actor_node.position.z)
+		if -1 in aligned:
+			actor_node.quaternion = LevelLayout.tilt_local(Quaternion.IDENTITY, actor_node.quaternion, normal)
 
 		if LevelLayout.is_x1(actor):
 			_add_x1(actor_node, actor, root)
@@ -250,6 +254,8 @@ func _add_actors(root: Node3D) -> bool:
 				mi.position.y = y_off
 			if part_yaws.has(i):
 				mi.rotation_degrees.y = part_yaws[i]
+			if i in aligned:
+				mi.quaternion = LevelLayout.tilt_local(actor_node.quaternion, mi.quaternion, normal)
 			actor_node.add_child(mi)
 			mi.owner = root
 

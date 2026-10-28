@@ -6,6 +6,7 @@
 ## Optional user args (after `--`), handy for scripted screenshots:
 ##   --level HK  --tab Models  --item cobj015  --yaw 30 --pitch 20  --dist 4
 ##   --anim 0  --seek 0.5  --shot /abs/out.png  --parsed /abs/parsed
+##   --show Heights,Ranges,Wiring  --hide Decals  --colour Team   (Level overlays)
 ##
 ## Categories: Models (models/*.glb with animations, else objects/*.obj),
 ## Terrain, Textures, Particles, Fonts, Level (terrain + every actor laid out
@@ -18,6 +19,7 @@ extends Node3D
 
 const ObjLoader := preload("res://scripts/obj_loader.gd")
 const LevelLayout := preload("res://scripts/level_layout.gd")
+const LevelOverlays := preload("res://scripts/level_overlays.gd")
 
 const TABS := ["Models", "Terrain", "Textures", "Images", "Fonts", "Level", "Audio", "Video", "Data"]
 const PANEL_WIDTH := 360
@@ -47,6 +49,15 @@ var _two_sided := true
 var _nearest := true
 var _lit := true
 var _show_paths := true
+# Level-view overlays (level_overlays.gd), keyed by toggle name.
+var _show := {"Decals": true, "Zones": true, "Ranges": false, "Wiring": false, "Heights": false, "Animate": true}
+var _overlays: Dictionary = {}    # toggle name -> Node3D
+var _wiring: Dictionary = {}      # {edges, functions} for the current level
+var _focus_fx: Node3D             # per-selection wiring lines / ranges / beams
+var _colour_mode := "None"
+var _level_controls: Array = []   # controls shown only on the Level tab
+var _gltf_cache: Dictionary = {}  # glb path -> {doc, state, animated}
+var _colour_btn: OptionButton
 
 # Scene
 var _cam: Camera3D
@@ -101,6 +112,15 @@ func _ready() -> void:
 	if _args.has("tab"):
 		_tab = TABS[maxi(TABS.find(String(_args.tab).capitalize()), 0)]
 		_tab_btn.select(TABS.find(_tab))
+	if _args.has("show"):
+		for name in String(_args.show).split(","):
+			_show[name] = true
+	if _args.has("hide"):
+		for name in String(_args.hide).split(","):
+			_show[name] = false
+	if _args.has("colour"):
+		_colour_mode = String(_args.colour).capitalize()
+		_colour_btn.select(maxi(["None", "Team", "Group", "Class"].find(_colour_mode), 0))
 	if _args.has("yaw"):
 		_yaw = deg_to_rad(float(_args.yaw))
 	if _args.has("pitch"):
@@ -295,6 +315,24 @@ func _build_ui() -> void:
 		_show_paths = on
 		if is_instance_valid(_net_mesh):
 			_net_mesh.visible = on)
+	_level_controls.append(_opts_row.get_child(_opts_row.get_child_count() - 1))
+	for name: String in _show:
+		_add_toggle(name, _show[name], func(on: bool) -> void:
+			_show[name] = on
+			if name == "Animate":
+				_refresh_tab()
+			elif _overlays.has(name) and is_instance_valid(_overlays[name]):
+				_overlays[name].visible = on)
+		_level_controls.append(_opts_row.get_child(_opts_row.get_child_count() - 1))
+	var colour := OptionButton.new()
+	_colour_btn = colour
+	for c in ["None", "Team", "Group", "Class"]:
+		colour.add_item("Colour: " + c)
+	colour.item_selected.connect(func(i: int) -> void:
+		_colour_mode = ["None", "Team", "Group", "Class"][i]
+		_apply_colour())
+	_opts_row.add_child(colour)
+	_level_controls.append(colour)
 	_add_toggle("Wireframe", false, func(on: bool) -> void:
 		get_viewport().debug_draw = Viewport.DEBUG_DRAW_WIREFRAME if on else Viewport.DEBUG_DRAW_DISABLED)
 
@@ -452,6 +490,8 @@ func _refresh_tab() -> void:
 	_video_box.visible = _tab == "Video"
 	_tree.visible = _tab == "Data"
 	_opts_row.visible = not media
+	for c: Control in _level_controls:
+		c.visible = _tab == "Level"
 	_anim_btn.clear()
 	_anim_btn.visible = _tab == "Models"
 	_media_row.visible = _tab in ["Models", "Audio", "Video"]
@@ -492,6 +532,10 @@ func _refresh_tab() -> void:
 			_entries.append({"label": "(whole level)", "key": null})
 			for net: Dictionary in _nets:
 				_entries.append({"label": "Cnet %d  path · %d nodes · %d actors" % [net.id, net.node_count, net.get("actors", []).size()], "key": net})
+			for fn: Dictionary in _wiring.get("functions", []):
+				var targets: int = _wiring.edges.filter(func(e: Dictionary) -> bool: return e.from == -1 - int(fn.index)).size()
+				_entries.append({"label": "Level fn %d  every %.1fs · %d actor refs" % [fn.index, abs(float(fn.get("period_seconds", 0.0))), targets],
+					"key": {"level_fn": fn}})
 			for a in _actors:
 				var objs: Array = a.get("objects", [])
 				var name: String = _decoded.get(int(a.id), {}).get("class_name", "")
@@ -529,7 +573,7 @@ func _tab_help() -> String:
 		"Fonts":
 			return "Cfnt fonts: the extracted atlas, plus a sample rendered with the converted TTF."
 		"Level":
-			return "Terrain + every actor placed with level_layout.gd (the same code generate_scene.gd uses). Actors without a mesh are shown as coloured dots. Click one in the view or the list."
+			return "Terrain + every actor (level_layout.gd), Cnet paths, decals, trigger zones (yellow box = trigger, green = collision trigger, magenta = attached box, purple ring = spawner), ranges, height layers (R/G/B = Ctil channels) and the script wiring. Click an actor (or a 'Level fn' entry) to see what it sends and receives. The filter also hides non-matching actors in 3D."
 		"Audio":
 			return "Music (MGAV), SFX samples (Cvkb, raw at 11025 Hz), sfx_tones (each Cvkh tone at its in-game pitch) and voice clips (BGAV)."
 		"Video":
@@ -542,10 +586,21 @@ func _tab_help() -> String:
 func _fill_list() -> void:
 	_list.clear()
 	var q := _filter.text.strip_edges().to_lower()
+	var shown := {}
 	for e in _entries:
 		if q == "" or q in String(e.label).to_lower():
 			var i := _list.add_item(e.label)
 			_list.set_item_metadata(i, e)
+			if e.key is Dictionary and e.key.has("pos_x"):
+				shown[int(e.key.id)] = true
+	if _tab == "Level":
+		# The filter also hides non-matching actors (and their decals/zones) in 3D.
+		for id: int in _actor_nodes:
+			(_actor_nodes[id] as Node3D).visible = q == "" or shown.has(id)
+		for name in ["Decals", "Zones"]:
+			if _overlays.has(name) and is_instance_valid(_overlays[name]):
+				for n: Node3D in _overlays[name].get_children():
+					n.visible = q == "" or shown.has(int(n.get_meta("actor_id", -1)))
 
 
 func _reselect() -> void:
@@ -833,6 +888,10 @@ func _build_level() -> void:
 			var m := _mesh(d.path_join("objects/" + obj))
 			return m.get_aabb() if m else null)
 		var shown := 0
+		var aligned: Array = LevelLayout.ground_aligned_parts(a)
+		var normal: Vector3 = layout.ground_normal(node.position.x, node.position.z)
+		if -1 in aligned:
+			node.quaternion = LevelLayout.tilt_local(Quaternion.IDENTITY, node.quaternion, normal)
 		if LevelLayout.is_x1(a):
 			node.add_child(LevelLayout.assemble_x1(a, func(obj: String) -> Node3D:
 				return _gltf_scene(d.path_join("models/%s.glb" % obj.get_basename()))))
@@ -840,22 +899,30 @@ func _build_level() -> void:
 			objects = []
 		for i in objects.size():
 			var o: String = objects[i]
-			var mesh := _mesh(d.path_join("objects/" + o))
-			if mesh == null:
-				continue
-			var mi := MeshInstance3D.new()
-			mi.mesh = mesh
-			mi.position.y = offsets.get(o, 0.0)
-			mi.rotation_degrees.y = part_yaws.get(i, 0.0)
-			node.add_child(mi)
+			# Animated models (skeleton/morph) come from the glTF export and play their
+			# full timeline; static ones keep the OBJ (same coordinates).
+			var part: Node3D = _animated_part(d.path_join("models/%s.glb" % o.get_basename())) if _show.Animate else null
+			if part == null:
+				var mesh := _mesh(d.path_join("objects/" + o))
+				if mesh == null:
+					continue
+				var mi := MeshInstance3D.new()
+				mi.mesh = mesh
+				part = mi
+			part.position.y = offsets.get(o, 0.0)
+			part.rotation_degrees.y = part_yaws.get(i, 0.0)
+			if i in aligned:
+				part.quaternion = LevelLayout.tilt_local(node.quaternion, part.quaternion, normal)
+			node.add_child(part)
 			shown += 1
-		if shown == 0:
+		if shown == 0 and not (int(a["class"]) == 97 and _show.Decals):  # decals draw their own quad
 			var mi := MeshInstance3D.new()
 			mi.mesh = dot
 			mi.material_override = _flat_material(Color.from_hsv(fmod(int(a["class"]) * 0.137, 1.0), 0.8, 1.0))
 			mi.set_meta("no_style", true)
 			node.add_child(mi)
 	_build_nets(root, layout)
+	_build_overlays(root, layout)
 	# Frame the play area (where the actors are) rather than the border filler around it.
 	if _actor_nodes.size() > 1:
 		var box := AABB((_actor_nodes.values()[0] as Node3D).position, Vector3.ZERO)
@@ -863,6 +930,120 @@ func _build_level() -> void:
 			box = box.expand(n.position)
 		_frame_aabb = box.grow(4.0)
 	_style_meshes(root)
+	_apply_colour()
+
+
+func _animated_part(glb: String) -> Node3D:
+	## A playing instance of an animated glTF model, or null if it has no animation.
+	if not _gltf_cache.has(glb):
+		var entry := {"animated": false}
+		if FileAccess.file_exists(glb):
+			var doc := GLTFDocument.new()
+			var state := GLTFState.new()
+			if doc.append_from_file(glb, state) == OK and state.get_animations().size() > 0:
+				entry = {"animated": true, "doc": doc, "state": state}
+		_gltf_cache[glb] = entry
+	var c: Dictionary = _gltf_cache[glb]
+	if not c.animated:
+		return null
+	var scene := (c.doc as GLTFDocument).generate_scene(c.state) as Node3D
+	var players := scene.find_children("*", "AnimationPlayer", true, false)
+	if players.size() > 0:
+		var ap := players[0] as AnimationPlayer
+		var anim := "all_frames" if ap.has_animation("all_frames") else ap.get_animation_list()[0]
+		ap.get_animation(anim).loop_mode = Animation.LOOP_LINEAR
+		ap.autoplay = anim
+	return scene
+
+
+func _build_overlays(root: Node3D, layout: RefCounted) -> void:
+	var d := _ldir()
+	var decoded: Array = _decoded.values()
+	_overlays = {
+		"Decals": LevelOverlays.build_decals(decoded, _read_json(d.path_join("dcs.json")), d, layout),
+		"Zones": LevelOverlays.build_zones(decoded, _actor_nodes),
+		"Ranges": LevelOverlays.build_ranges(decoded, _actor_nodes),
+		"Heights": LevelOverlays.build_height_layers(_read_json(d.path_join("heightmap.json"))),
+	}
+	_wiring = LevelOverlays.build_wiring(decoded, _read_json(d.path_join("rpns.json")), _read_json(d.path_join("fun.json")))
+	_overlays["Wiring"] = LevelOverlays.build_wiring_lines(_wiring.edges, _actor_nodes)
+	# Spawners (Csac): a ring at each spawn point, shown with the zones.
+	var ring := ImmediateMesh.new()
+	ring.surface_begin(Mesh.PRIMITIVE_LINES)
+	ring.surface_set_color(Color(0.75, 0.4, 1.0))
+	for a: Dictionary in _actors:
+		var n: Node3D = _actor_nodes.get(int(a.id))
+		if a.kind != "Csac" or n == null:
+			continue
+		for i in 24:
+			ring.surface_add_vertex(n.position + Vector3(cos(TAU * i / 24.0), 0.1, sin(TAU * i / 24.0)) * 0.9)
+			ring.surface_add_vertex(n.position + Vector3(cos(TAU * (i + 1) / 24.0), 0.1, sin(TAU * (i + 1) / 24.0)) * 0.9)
+	ring.surface_end()
+	var rings := MeshInstance3D.new()
+	rings.mesh = ring
+	rings.material_override = LevelOverlays._line_material()
+	rings.set_meta("no_style", true)
+	_overlays.Zones.add_child(rings)
+	for name: String in _overlays:
+		_overlays[name].visible = _show.get(name, true)
+		root.add_child(_overlays[name])
+	_focus_fx = Node3D.new()
+	root.add_child(_focus_fx)
+
+
+func _apply_colour() -> void:
+	## Tint each actor's meshes by team / group / class (material overlay).
+	for id: int in _actor_nodes:
+		var overlay: Material = null
+		if _colour_mode != "None":
+			var rec: Dictionary = _decoded.get(id, {})
+			var v: Variant = {"Team": LevelOverlays.field(rec, "team"), "Group": LevelOverlays.field(rec, "group_id"),
+				"Class": rec.get("class_id")}[_colour_mode]
+			if v != null:
+				var m := StandardMaterial3D.new()
+				m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				m.albedo_color = Color.from_hsv(fmod(float(hash(str(v)) % 1000) / 1000.0, 1.0), 0.85, 1.0, 0.5)
+				overlay = m
+		for mi: MeshInstance3D in (_actor_nodes[id] as Node3D).find_children("*", "MeshInstance3D", true, false):
+			mi.material_overlay = overlay
+
+
+func _focus_level_fn(fn: Dictionary) -> void:
+	## Show a level function's script and point at every actor it references.
+	_marker.visible = false
+	for c in _focus_fx.get_children():
+		c.queue_free()
+	var im := ImmediateMesh.new()
+	im.surface_begin(Mesh.PRIMITIVE_LINES)
+	var box := AABB()
+	var first := true
+	var targets := PackedStringArray()
+	for e: Dictionary in _wiring.edges:
+		if e.from != -1 - int(fn.index):
+			continue
+		targets.append("#%d  %s" % [e.to, e.label])
+		var n: Node3D = _actor_nodes.get(e.to)
+		if n == null:
+			continue
+		im.surface_set_color(Color(0.2, 0.9, 1.0))
+		im.surface_add_vertex(n.position)
+		im.surface_add_vertex(n.position + Vector3(0, 10, 0))
+		box = AABB(n.position, Vector3.ZERO) if first else box.expand(n.position)
+		first = false
+	if first:
+		im.surface_add_vertex(Vector3.ZERO)
+		im.surface_add_vertex(Vector3.ZERO)
+	im.surface_end()
+	var beams := MeshInstance3D.new()
+	beams.mesh = im
+	beams.material_override = LevelOverlays._line_material()
+	_focus_fx.add_child(beams)
+	if not first:
+		_frame(box.grow(6.0))
+	_info.text = "[b]Level function %d[/b]  count %s · period %.2f s (%s)\n\n[b]Condition[/b]\n[code]%s[/code]\n[b]Action[/b]\n[code]%s[/code]\n\n[b]Actors referenced[/b] (cyan beams)\n%s" % [
+		fn.index, fn.get("count_meaning", fn.get("count")), abs(float(fn.get("period_seconds", 0.0))), fn.get("first_fire", ""),
+		"\n".join(fn.condition.get("pseudo", [])), "\n".join(fn.action.get("pseudo", [])), "\n".join(targets) if targets else "(none)"]
 
 
 func _build_nets(root: Node3D, layout: RefCounted) -> void:
@@ -926,6 +1107,9 @@ func _focus_actor(a: Variant) -> void:
 	if a is Dictionary and a.has("nodes"):
 		_focus_net(a)
 		return
+	if a is Dictionary and a.has("level_fn"):
+		_focus_level_fn(a.level_fn)
+		return
 	if not a is Dictionary:
 		_marker.visible = false
 		_frame(_frame_aabb)
@@ -938,12 +1122,35 @@ func _focus_actor(a: Variant) -> void:
 	_dist = 9.0
 	_update_camera()
 
+	# Wiring lines (outgoing orange, incoming cyan) and this actor's ranges.
+	if is_instance_valid(_focus_fx):
+		for c in _focus_fx.get_children():
+			c.queue_free()
+		_focus_fx.add_child(LevelOverlays.build_wiring_lines(_wiring.get("edges", []), _actor_nodes, int(a.id)))
+		_focus_fx.add_child(LevelOverlays.build_ranges(_decoded.values(), _actor_nodes, int(a.id)))
 	var same := _actors.filter(func(x: Dictionary) -> bool: return x["class"] == a["class"]).size()
 	var text := "[b]Actor #%d[/b]  %s  class %d  (%d of this class)\npos_x %.4f  pos_z %.4f  → world (%.1f, %.1f, %.1f)\nobjects: %s\ntextures: %s\n" % [
 		a.id, a.kind, a["class"], same, a.pos_x, a.pos_z, p.x, p.y, p.z,
 		", ".join(a.get("objects", [])), ", ".join(a.get("textures", []))]
-	if _decoded.has(int(a.id)):
-		text += "\n[b]Decoded[/b] (actors_decoded.json)\n[code]%s[/code]\n" % JSON.stringify(_decoded[int(a.id)], "  ")
+	var rec: Dictionary = _decoded.get(int(a.id), {})
+	if rec.get("spawn"):
+		var sp: Dictionary = rec.spawn
+		text += "\n[b]Spawner[/b] spawns %s every %.2f s · max %d alive · budget %s%s\n" % [rec.get("class_name", "?"),
+			float(sp.spawn_seconds), int(sp.max_alive), "unlimited" if sp.unlimited else str(sp.spawn_budget),
+			" · starts disabled" if sp.starts_disabled else ""]
+	for r: Array in LevelOverlays.ranges_of(rec):
+		text += "range circle %.1f units\n" % r[0]
+	var outgoing := PackedStringArray()
+	var incoming := PackedStringArray()
+	for e: Dictionary in _wiring.get("edges", []):
+		if e.from == int(a.id):
+			outgoing.append("→ #%d  %s" % [e.to, e.label])
+		elif e.to == int(a.id):
+			incoming.append("← %s  %s" % ["level fn %d" % (-1 - e.from) if e.from < 0 else "#%d" % e.from, e.label])
+	if outgoing or incoming:
+		text += "\n[b]Wiring[/b] (orange = sends, cyan = receives)\n%s\n" % "\n".join(outgoing + incoming)
+	if rec:
+		text += "\n[b]Decoded[/b] (actors_decoded.json)\n[code]%s[/code]\n" % JSON.stringify(rec, "  ")
 	var rows := PackedStringArray()
 	var params: Array = a.get("params", [])
 	for i in params.size():

@@ -168,12 +168,31 @@ in `decode_actors.py` as hypotheses.
     and no import step. `scripts/obj_loader.gd` is a runtime OBJ/MTL loader; glTF,
     PNG, WAV, TTF and Theora files load natively.
   - Categories: Models (glb with animation playback, OBJ fallback), Terrain, Textures,
-    Images (particles, loading screens, radio panels, front-end), Fonts, Level (terrain,
-    every actor and the Cnet paths; click an actor to inspect its decoded fields), Audio,
+    Images (particles, loading screens, radio panels, front-end), Fonts, Level, Audio,
     Video and Data (a tree of any JSON).
+  - **Level view**: terrain, every actor, and the Cnet paths. Overlays are built by
+    `scripts/level_overlays.gd`, each with its own toggle:
+    - Decals: class-97 quads from `dcs.json`. Ground decals look right; the orientation of
+      tilted ones (x/z rotation) is unverified.
+    - Zones: Trigger boxes (yellow), CollisionTrigger cylinders (green) and
+      AttachedCollisionBox boxes (magenta). Zones over 8×8 units are outlines only.
+      Spawners get purple rings.
+    - Ranges: engage/look circles. fov is always a full circle.
+    - Heights: the Ctil height channels as R/G/B points.
+    - Wiring: script → actor edges from `rpns.json`, `fun.json`, triggering actors and
+      attach links.
+    - Animate: animated actors use their glTF and loop `all_frames`.
+    - Colour: by team, group or class.
+    - Selecting an actor draws its wiring (orange = sends, cyan = receives) and its range,
+      and lists spawner details. "Level fn N" entries show a level function's script and
+      beam its target actors.
+    - The text filter also hides non-matching actors in 3D.
+    - Ground tilt (`level_layout.ground_aligned_parts`/`tilt_local`) is applied in both the
+      viewer and `generate_scene.gd`.
   - User args after `--` select a view and save a screenshot, e.g.
     `--level M2C --tab Level --item "Cnet 1 " --pitch 60 --shot /abs/out.png`.
-    Also `--anim N --seek 0.5` for animations.
+    Also `--anim N --seek 0.5` for animations, and
+    `--show Heights,Wiring --hide Decals --colour Team` for Level overlays.
 - `scripts/level_layout.gd` holds the actor placement shared by the generator and the
   viewer: heightmap sampling, game → Godot position, initial yaw, part stacking and the
   X1 assembly. Change placement there only.
@@ -185,8 +204,8 @@ in `decode_actors.py` as hypotheses.
     - Aircraft and negative prop/pickup values (random or spinning) are left unrotated.
     - This is derived from the code and not yet confirmed visually.
   - Classes 98/99 are weapon definitions and are not placed.
-  - Not implemented: the "align to terrain normal" flag (class 11 byte +17 bit 0, turret
-    base flags bit 0).
+  - Ground tilt follows the decoded "align to terrain normal" flags: DynamicProp
+    align_flags bit 0 (no level sets it) and turret base_flags bit 0 (27 turret bases).
 - `scripts/generate_scene.gd` is a headless generator. It builds `scenes/<LEVEL>_level.tscn`
   from `godot/assets/<LEVEL>/`, which `tools/sync_godot_assets.py` fills from `parsed/` for
   **all 14 levels with terrain** (every level except FE). These include `nets.json` and
@@ -256,7 +275,6 @@ each docstring). What's still open:
 - **Small leftovers:**
   - The Cctr payload is freed unread, so it can't be recovered from the executable.
   - Cvkh +10/+13 and Cnet `unknown_10` are never read by the game.
-  - The "align to terrain normal" flags aren't applied in Godot.
 - **Not yet confirmed by ear/eye:**
   - The SFX sample rates (extract_sfx.py writes 11025 Hz; Cvkh says 16/22 kHz for 734
     tones).

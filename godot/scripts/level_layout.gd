@@ -245,3 +245,33 @@ static func assemble_x1(actor: Dictionary, load_part: Callable) -> Node3D:
 			if not parts.has(role):
 				parts[role] = part
 	return root
+
+
+# ─── Ground alignment ─────────────────────────────────────────────────────────
+
+func ground_normal(x: float, z: float) -> Vector3:
+	## Terrain normal from the heightmap (same sampling as actor placement).
+	var e := 0.5
+	var dx := sample_y(x + e, z, true) - sample_y(x - e, z, true)
+	var dz := sample_y(x, z + e, true) - sample_y(x, z - e, true)
+	return Vector3(-dx / (2.0 * e), 1.0, -dz / (2.0 * e)).normalized()
+
+
+static func ground_aligned_parts(actor: Dictionary) -> Array:
+	## Which parts tilt to the terrain normal: [-1] = the whole actor, [i] = objects[i],
+	## [] = none. DynamicProp align_flags bit 0 (payload +17 = word 4 bits 8-15,
+	## init 0x8002dc94); turret base_flags bit 0 (payload +48 = word 12 low byte,
+	## base part = objects[1]).
+	var cls := int(actor.get("class", 0))
+	var params: Array = actor.get("params", [])
+	if cls == 11 and params.size() > 4 and (String(params[4]).hex_to_int() >> 8) & 1:
+		return [-1]
+	if cls in [8, 33, 36] and params.size() > 12 and String(params[12]).hex_to_int() & 1:
+		return [1]
+	return []
+
+
+static func tilt_local(parent_q: Quaternion, local_q: Quaternion, normal: Vector3) -> Quaternion:
+	## Local rotation that keeps a part's yaw but makes its global up the normal.
+	var tilt := Quaternion(Vector3.UP, normal)
+	return parent_q.inverse() * tilt * parent_q * local_q
