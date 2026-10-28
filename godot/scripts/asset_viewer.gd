@@ -20,6 +20,7 @@ extends Node3D
 const ObjLoader := preload("res://scripts/obj_loader.gd")
 const LevelLayout := preload("res://scripts/level_layout.gd")
 const LevelOverlays := preload("res://scripts/level_overlays.gd")
+const UvAnimator := preload("res://scripts/uv_animator.gd")
 
 const TABS := ["Models", "Terrain", "Textures", "Images", "Fonts", "Level", "Audio", "Video", "Data"]
 const PANEL_WIDTH := 360
@@ -442,6 +443,7 @@ func _read_json(path: String) -> Variant:
 
 func _load_level(level: String) -> void:
 	_level = level
+	UvAnimator.clear_cache()
 	_media_stop()
 	_actors = []
 	_decoded = {}
@@ -674,7 +676,9 @@ func _gltf_scene(path: String) -> Node3D:
 	var state := GLTFState.new()
 	if doc.append_from_file(path, state) != OK:
 		return null
-	return doc.generate_scene(state) as Node3D
+	var scene := doc.generate_scene(state) as Node3D
+	_attach_uv_animator(scene, UvAnimator.read_glb_uv_animations(path), path)
+	return scene
 
 
 func _show_gltf(path: String) -> void:
@@ -685,6 +689,8 @@ func _show_gltf(path: String) -> void:
 		_info.text = "Could not load %s" % path
 		return
 	var scene := doc.generate_scene(state) as Node3D
+	var uv_anims := UvAnimator.read_glb_uv_animations(path)
+	_attach_uv_animator(scene, uv_anims, path)
 	# No Flip Y here: export_gltf.py applies the root-bone rotation that the
 	# raw OBJ skips, so .glb models are already upright.
 	var holder := Node3D.new()
@@ -727,9 +733,10 @@ func _show_gltf(path: String) -> void:
 		if _anim_btn.item_count > 0:
 			_play_anim(0)
 	var b := aabb
-	_info.text = "[b]models/%s[/b] (glTF)\nverts %d · tris %d · skins %d · bones %d · morph targets %d\nsize (%.3f, %.3f, %.3f)\nanimations: %s\n" % [
+	_info.text = "[b]models/%s[/b] (glTF)\nverts %d · tris %d · skins %d · bones %d · morph targets %d\nsize (%.3f, %.3f, %.3f)\nanimations: %s\ntexture animations (3DTA): %s\n" % [
 		path.get_file(), verts, tris, skins, bones, morphs, b.size.x, b.size.y, b.size.z,
-		", ".join(anims) if anims else "none"] + _model_users(path.get_file().get_basename() + ".obj")
+		", ".join(anims) if anims else "none",
+		", ".join(uv_anims.map(func(u: Dictionary) -> String: return "%d frames × %.3fs" % [u.frames.size(), u.frame_duration_s])) if uv_anims else "none"] + _model_users(path.get_file().get_basename() + ".obj")
 
 
 func _play_anim(i: int) -> void:
@@ -934,19 +941,22 @@ func _build_level() -> void:
 
 
 func _animated_part(glb: String) -> Node3D:
-	## A playing instance of an animated glTF model, or null if it has no animation.
+	## A playing instance of an animated glTF model (skeleton/morph clips and/or
+	## 3DTA texture animation), or null if the model has neither.
 	if not _gltf_cache.has(glb):
 		var entry := {"animated": false}
 		if FileAccess.file_exists(glb):
+			var uv := UvAnimator.read_glb_uv_animations(glb)
 			var doc := GLTFDocument.new()
 			var state := GLTFState.new()
-			if doc.append_from_file(glb, state) == OK and state.get_animations().size() > 0:
-				entry = {"animated": true, "doc": doc, "state": state}
+			if doc.append_from_file(glb, state) == OK and (state.get_animations().size() > 0 or uv.size() > 0):
+				entry = {"animated": true, "doc": doc, "state": state, "uv": uv}
 		_gltf_cache[glb] = entry
 	var c: Dictionary = _gltf_cache[glb]
 	if not c.animated:
 		return null
 	var scene := (c.doc as GLTFDocument).generate_scene(c.state) as Node3D
+	_attach_uv_animator(scene, c.uv, glb)
 	var players := scene.find_children("*", "AnimationPlayer", true, false)
 	if players.size() > 0:
 		var ap := players[0] as AnimationPlayer
@@ -954,6 +964,16 @@ func _animated_part(glb: String) -> Node3D:
 		ap.get_animation(anim).loop_mode = Animation.LOOP_LINEAR
 		ap.autoplay = anim
 	return scene
+
+
+func _attach_uv_animator(scene: Node3D, anims: Array, key: String) -> void:
+	var mis := scene.find_children("*", "MeshInstance3D", true, false)
+	if anims.is_empty() or mis.is_empty():
+		return
+	var a := UvAnimator.new()
+	a.name = "UvAnimator"
+	a.setup(mis[0], anims, key)
+	scene.add_child(a)
 
 
 func _build_overlays(root: Node3D, layout: RefCounted) -> void:

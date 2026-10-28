@@ -122,7 +122,11 @@ order.
           (x 0.001652018 s), u16 0, u32 uv_data_offset, and
           u32 3DTL_offset + 4. A pool of u8vec2 (4 per frame) follows.
         Core glTF cannot express this, so it is stored decoded in
-        mesh.extras.fc_uv_animations.
+        mesh.extras.fc_uv_animations; each entry's "primitives" lists the
+        primitives holding its faces (animated faces get their own
+        primitive), whose UVs equal frame 0. 71 of 84 animations are pure
+        per-axis scale/offset; the rest skew slightly, so a player should
+        swap per-vertex UVs (match each vertex to its nearest frame-0 corner).
   3DAL  star colour animation: u32(1), then 8 bytes each: u8 face index,
         u8 speed, rgb0, rgb1. It only applies to STAR primitives, which
         are not exported, so it is not used here.
@@ -491,7 +495,7 @@ def _face_style(op0, ft):
 def _build_triangles(m, stats):
     """Expand 3DQL into triangle corners, exactly as extract_objects.py does.
 
-    Returns a list of (vis, bmp, rgba, reflective, [(vi, ni, uv), x3]).
+    Returns a list of (vis, bmp, rgba, reflective, [(vi, ni, uv), x3], face_type_offset).
     """
     tris = []
     env = bool(m["bits"] & 0x40)
@@ -514,7 +518,7 @@ def _build_triangles(m, stats):
             order = [[q[2], q[1], q[0]] for q in _QUAD]
         for o in order:
             corners = [(v[c], n[c], coords[c] if coords else None) for c in o]
-            tris.append((vis, bmp, rgba, refl, corners))
+            tris.append((vis, bmp, rgba, refl, corners, fto))
     return tris
 
 
@@ -731,24 +735,28 @@ def _export_one(m, res_id, level, tex_dir, out_path, stats):
     # ── unroll + dedupe vertices per material ──
     g = _Gltf()
     tex_cache = {}
+    # Faces whose face type has a 3DTA UV animation go into their own primitive
+    # (key[3] = animation index), so a viewer can rewrite just their UVs.
+    anim_of_fto = {a["face_type_offset"]: i for i, a in enumerate(m["ta"])}
     groups = {}
     for t in tris:
-        key = (t[1], t[0], t[3])
+        key = (t[1], t[0], t[3], anim_of_fto.get(t[5], -1) if len(t) > 5 else -1)
         groups.setdefault(key, []).append(t)
     # Sort like extract_objects (by bmp), then visibility.
-    order = sorted(groups, key=lambda k: (k[0] or 0, k[1], k[2]))
+    order = sorted(groups, key=lambda k: (k[0] or 0, k[1], k[2], k[3]))
 
     prims = []
+    anim_prims = {}    # 3DTA animation index -> primitive indices holding its faces
     morph_targets_all = []
     has_normals_src = bool(base_n)
     for key in order:
-        mat = _material(g, key, tex_dir, tex_cache, warn)
+        mat = _material(g, key[:3], tex_dir, tex_cache, warn)
         pos, nor, uvs, col, jnt, idx = [], [], [], [], [], []
         mp = [[] for _ in range(nframes_morph - 1)]
         mn = [[] for _ in range(nframes_morph - 1)]
         seen = {}
         use_uv = key[0] is not None and key[0] in tex_cache and tex_cache[key[0]] is not None
-        for ti, (vis, bmp, rgba, refl, corners) in enumerate(groups[key]):
+        for ti, (vis, bmp, rgba, refl, corners, *_) in enumerate(groups[key]):
             p3 = [base_v[c[0]] for c in corners]
             flat = _face_normal(*p3)
             for vi, ni, uv in corners:
@@ -795,6 +803,8 @@ def _export_one(m, res_id, level, tex_dir, out_path, stats):
                                 "NORMAL": g.accessor(mn[f], _FLOAT, "VEC3", 34962)}
                                for f in range(nframes_morph - 1)]
         prims.append(prim)
+        if key[3] >= 0:
+            anim_prims.setdefault(key[3], []).append(len(prims) - 1)
 
     mesh = {"name": f"cobj{res_id:03d}", "primitives": prims}
     mextras = {"fc_level": level, "fc_cobj": res_id, "fc_4dgi_bits": m["bits"],
@@ -802,7 +812,8 @@ def _export_one(m, res_id, level, tex_dir, out_path, stats):
     if placeholder:
         mextras["fc_placeholder"] = True
     if m["ta"]:
-        mextras["fc_uv_animations"] = m["ta"]
+        mextras["fc_uv_animations"] = [dict(a, primitives=anim_prims.get(i, []))
+                                       for i, a in enumerate(m["ta"])]
     if morph:
         mesh["weights"] = [0.0] * (nframes_morph - 1)
         mesh["extras"] = dict(mextras, targetNames=[f"frame{f}" for f in range(1, nframes_morph)])

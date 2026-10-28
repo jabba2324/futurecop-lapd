@@ -181,7 +181,14 @@ in `decode_actors.py` as hypotheses.
     - Heights: the Ctil height channels as R/G/B points.
     - Wiring: script → actor edges from `rpns.json`, `fun.json`, triggering actors and
       attach links.
-    - Animate: animated actors use their glTF and loop `all_frames`.
+    - Animate: animated actors use their glTF and loop `all_frames`. 3DTA texture
+      animations (lights, screens, water) play through `scripts/uv_animator.gd`.
+      - The exporter puts each animation's faces in their own primitive, and each vertex
+        follows its nearest frame-0 corner.
+      - 13 of the 84 animations skew slightly, so a material UV offset isn't enough.
+      - Frame meshes are built once per model and shared; rebuilding per instance made
+        LAX1 run at 6 frames/s instead of 145.
+      - The Models tab plays them too.
     - Colour: by team, group or class.
     - Selecting an actor draws its wiring (orange = sends, cyan = receives) and its range,
       and lists spawner details. "Level fn N" entries show a level function's script and
