@@ -293,6 +293,23 @@ in `decode_actors.py` as hypotheses.
     because the heightmap estimate can be a few units off (OVMP: by 2.5).
   - **Animation:** it plays the legs' real walk cycle while moving and returns to rest when
     it stops.
+  - **Sounds** (from the game's walker code; see the player.gd header):
+    - a positional motor loop per movement (forward 0x22, back 0x24, turn 0x25);
+    - step hits at the starts of tracks 39 and 41 (0x38 forward, 0x3a back);
+    - a stop sound when the movement changes or ends (0x32/0x34/0x35).
+    The ids are Cshd script ids, matched together with the positional flag, because the
+    2D and 3D tables reuse ids. They're all in the global table (bank 1), the same in
+    every level.
+  - **Camera:** the chase camera is NOT the game's. Its values were picked by eye: 40°
+    pitch, 2.54 up, 0.79 back, FOV 118. The game's standard view (`0x800569ec`,
+    decompiled) is:
+    - 29.0° pitch (330/4096 of a turn), looking at the player + 2.0 Godot units up;
+    - the camera about 4.75 above the look point and 8.6 behind (at player Y = 0; the
+      height term includes playerY/2);
+    - vertical FOV ≈ 26.4° (GTE H = 512 on a 320×240 screen);
+    - smoothing: yaw/pitch ease 1/32 per step, capped at ~105°/s and ~53°/s.
+    There are 7 selectable views, made from 20-byte presets at `0x8009ad08`. The
+    walker's other sounds: hover loops 0x28–0x2a, transform 0x15.
   - **Testing (2026-10-28):** a scripted walk test showed it lands on the floor in all
     14 levels and walks out of the start bay in most of them.
 - `scripts/music_loop.gd` is an AudioStreamPlayer that replays itself when the track finishes.

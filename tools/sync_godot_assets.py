@@ -50,6 +50,12 @@ def _mtl_textures(mtl_path):
     return out
 
 
+# The X1-Alpha's movement sounds, (Cshd script_id, positional), as godot/scripts/player.gd
+# plays them: loops 0x22/0x24/0x25, step hits 0x38/0x3a, stop sounds 0x32/0x34/0x35.
+_PLAYER_SOUNDS = {(0x22, True), (0x24, True), (0x25, True), (0x38, False), (0x3a, False),
+                  (0x32, False), (0x34, False), (0x35, False)}
+
+
 def _glb_needed(path):
     """True when a prop needs its .glb rather than the OBJ: animation clips, 3DTA texture
     animation, MIX/additive blended materials (the OBJ has no blend modes, so e.g.
@@ -92,12 +98,14 @@ def _wanted_files(level):
             for e in table.get("entries", []):
                 if e.get("dcs_id") in dcs_ids and e.get("texture"):
                     files.add(e["texture"])
+    # Plus the walker's sounds (player.gd: SOUNDS), by (script_id, positional).
     groups = {int(str(r["fields"]["BaseEntity.ambient_sound"]["value"])[6:]) for r in decoded
               if str(r["fields"].get("BaseEntity.ambient_sound", {}).get("value", "")).startswith("sound ")}
     if os.path.exists(os.path.join(src, "shd.json")):
         for t in json.load(open(os.path.join(src, "shd.json"))).get("tables", []):
             for e in t.get("entries", []):
-                if e.get("group_id") in groups and e.get("tone_wav"):
+                if e.get("tone_wav") and (e.get("group_id") in groups
+                                          or (e.get("script_id"), bool(e.get("positional"))) in _PLAYER_SOUNDS):
                     files.add(e["tone_wav"])
     particles = os.path.join(src, "particles")
     if os.path.isdir(particles):
