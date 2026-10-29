@@ -4,17 +4,30 @@
 ## opens the chosen one (Enter, double-click or the Walk button). While the scene
 ## loads (in the background) the level's original loading screen fills the window.
 ## In a level, Esc comes back here (player.gd).
+## Crime War levels first play their briefing movie (parsed/video/BRF*.ogv, from
+## extract_videos.py) while the scene loads; any key or click skips it. The game's
+## level table (SLUS_007.39 0x8009b4e4, 16 entries of 36 bytes: name, briefing movie,
+## after-mission movie, ...) gives the Precinct Assault maps no briefing, and LAX2
+## plays LAX1's (0x80083130 looks "lax2" up as "lax1").
 extends Control
 
 const SCENE_DIR := "res://scenes/"
 # Disc folders: raw CW/ and PA/ in the extracted PS1 disc.
 const CRIME_WAR := ["LAX1", "LAX2", "M1A1", "M2C", "M3A", "M3B", "M4A1", "OV", "UN"]
 const PRECINCT_ASSAULT := ["CONFT", "HK", "JOKE", "OVMP", "SLIM"]
+const BRIEFINGS := {
+	"LAX1": "BRFLAX", "LAX2": "BRFLAX", "M1A1": "BRFM1A1", "M2C": "BRFM2C",
+	"M3A": "BRFM3A", "M3B": "BRFM3B", "M4A1": "BRFM4A1", "OV": "BRFOV", "UN": "BRFUN",
+}
 
 var _list: ItemList
 var _preview: TextureRect
 var _caption: Label
 var _loading := ""   # scene path being loaded in the background
+var _briefing_toggle: CheckBox
+var _movie: VideoStreamPlayer   # the briefing while it plays
+var _movie_cover: Control
+var _movie_level := ""
 
 
 func _ready() -> void:
@@ -52,6 +65,11 @@ func _ready() -> void:
 	walk.add_theme_font_size_override("font_size", 22)
 	walk.pressed.connect(_open_selected)
 	left.add_child(walk)
+	_briefing_toggle = CheckBox.new()
+	_briefing_toggle.text = "Play the briefing first"
+	_briefing_toggle.button_pressed = true
+	_briefing_toggle.focus_mode = Control.FOCUS_NONE
+	left.add_child(_briefing_toggle)
 
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -99,6 +117,8 @@ func _on_selected(i: int) -> void:
 	var shot := "res://assets/%s/loading/%sLD.png" % [level, level]
 	_preview.texture = load(shot) if ResourceLoader.exists(shot) else null
 	_caption.text = "%s — %s" % [level, "Crime War" if level in CRIME_WAR else "Precinct Assault"]
+	if _briefing_path(level) != "":
+		_caption.text += " · briefing %s" % BRIEFINGS[level]
 
 
 func _open_selected() -> void:
@@ -108,9 +128,66 @@ func _open_selected() -> void:
 	var level: Variant = _list.get_item_metadata(sel[0])
 	if level == null or _loading != "":
 		return
-	_show_loading_screen(level)
 	_loading = SCENE_DIR + "%s_level.tscn" % level
 	ResourceLoader.load_threaded_request(_loading)
+	var movie := _briefing_path(level)
+	if _briefing_toggle.button_pressed and movie != "":
+		_play_briefing(movie, level)
+	else:
+		_show_loading_screen(level)
+
+
+## The extracted briefing movie for a level, or "" if it has none or isn't extracted.
+func _briefing_path(level: String) -> String:
+	if not BRIEFINGS.has(level):
+		return ""
+	var path := ProjectSettings.globalize_path("res://").path_join(
+		"../parsed/video/%s.ogv" % BRIEFINGS[level]).simplify_path()
+	return path if FileAccess.file_exists(path) else ""
+
+
+func _play_briefing(path: String, level: String) -> void:
+	_movie_cover = ColorRect.new()
+	(_movie_cover as ColorRect).color = Color.BLACK
+	_movie_cover.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_movie_cover)
+	var frame := AspectRatioContainer.new()
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	frame.ratio = 256.0 / 144.0   # the movies' frame size
+	_movie_cover.add_child(frame)
+	var stream := VideoStreamTheora.new()
+	stream.file = path
+	_movie = VideoStreamPlayer.new()
+	_movie.stream = stream
+	_movie.expand = true
+	_movie_level = level
+	_movie.finished.connect(_end_briefing)
+	frame.add_child(_movie)
+	var skip := Label.new()
+	skip.text = "Any key skips"
+	skip.modulate = Color(1, 1, 1, 0.5)
+	skip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
+	skip.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	skip.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_movie_cover.add_child(skip)
+	_movie.play()
+
+
+func _end_briefing() -> void:
+	if _movie == null:
+		return
+	_movie.stop()
+	_movie_cover.queue_free()
+	_movie = null
+	_show_loading_screen(_movie_level)
+
+
+func _input(event: InputEvent) -> void:
+	if _movie == null or not event.is_pressed() or event.is_echo():
+		return
+	if event is InputEventKey or event is InputEventMouseButton or event is InputEventJoypadButton:
+		get_viewport().set_input_as_handled()
+		_end_briefing()
 
 
 func _show_loading_screen(level: String) -> void:
@@ -129,8 +206,8 @@ func _show_loading_screen(level: String) -> void:
 
 
 func _process(_delta: float) -> void:
-	if _loading == "":
-		return
+	if _loading == "" or _movie != null:
+		return   # the scene switches once the briefing is over
 	match ResourceLoader.load_threaded_get_status(_loading):
 		ResourceLoader.THREAD_LOAD_LOADED:
 			get_tree().change_scene_to_packed(ResourceLoader.load_threaded_get(_loading))

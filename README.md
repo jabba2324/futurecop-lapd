@@ -65,7 +65,8 @@ prop through its damage states and destruction. L switches between the
 original PS1 lighting (the default) and real-time lighting, G toggles fog, M the minimap
 and O a debug overlay of trigger zones (labelled with what they trigger), paths and
 special floors. Reflective surfaces
-use the level's sphere map, and the level's loading screen shows while it loads. There are no enemies, scripts or
+use the level's sphere map, and the level's loading screen shows while it loads. Crime War
+levels play their briefing movie first, if the videos are extracted (any key skips). There are no enemies, scripts or
 objectives; it's for walking around the level. The `.tscn` files are committed, but
 they load `godot/assets/`, so run the pipeline first. Then run the project for a
 level-select menu, or open a level directly:

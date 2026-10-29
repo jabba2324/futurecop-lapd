@@ -231,6 +231,14 @@ in `decode_actors.py` as hypotheses.
   Crime War, PA = Precinct Assault). It previews each level's loading screen, synced to
   `assets/<L>/loading/`, and shows it full-screen while the chosen scene loads in the
   background (`ResourceLoader.load_threaded_request`). Esc in a level returns to it.
+  Crime War levels first play their briefing movie from `parsed/video/BRF*.ogv` (not
+  synced; skipped if not extracted; any key skips; a checkbox turns it off). The level
+  table at SLUS_007.39 0x8009b4e4 (16 × 36 bytes: name, briefing, after-mission movie,
+  ...; byte 0x21 = credits follow) gives PA maps no briefing, and "lax2" is looked up
+  as "lax1" (0x80083130). The `po*` after-mission movies aren't played.
+  - Headless/background runs can't screenshot 2D: the window isn't redrawn while hidden
+    (a counting Label stays frozen, also with --write-movie and x11), so check video
+    frames with `get_video_texture().get_image()` instead.
   - Linux: `godot` (Godot 4.6.3 in `~/.local/opt`).
   - Mac: `/Applications/Godot.app/Contents/MacOS/Godot`.
 - **Asset viewer**: `godot --path godot res://scenes/asset_viewer.tscn`
