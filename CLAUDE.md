@@ -142,6 +142,14 @@ in `decode_actors.py` as hypotheses.
   rotation, so skinned OBJs (e.g. the mech) look upside-down. The `.glb` export applies
   the root rotation, so **never flip `.glb` models**. Static and morph models are upright
   either way.
+- **X1 paint schemes:** each X1's `BaseEntity.uv_offset_x/_y` is added to the UVs of its
+  legs, cockpit and weapons (not beacon lights or pilot; 0x800597c0 → 0x80013aa0 →
+  primitive builder 0x800172a8). cbmp009 holds the paint twice: u + 128 is red in the
+  Precinct Assault levels (player 1) and black in Crime War (player 2; LAX1/LAX2 use
+  129). `LevelLayout.apply_uv_offset`, run by level_ambience.gd and the viewer.
+- Prop collision is a convex hull of each mesh's non-additive faces (additive faces are
+  light beams and glows, e.g. the CONFT lamps by the spawn); actors with BaseEntity
+  `disable_collision` get none (16 animated light props in each PA level, for one).
 - X1-Alpha (class 1) is five parts, in `objects` order in every level: legs (walk cycle,
   53 clips), cockpit (wing/hover transform), weapon (×2), beacon lights, pilot. They
   mount on the `.glb` `attach_N` empties (3DHS): cockpit on legs.attach_0 and lights on

@@ -805,7 +805,9 @@ func _style_meshes(node: Node) -> void:
 		if mi.mesh == null or mi.has_meta("no_style"):
 			continue
 		for s in mi.mesh.get_surface_count():
-			var src := mi.mesh.surface_get_material(s)
+			var src := mi.get_surface_override_material(s)   # e.g. an X1's paint offset
+			if src == null:
+				src = mi.mesh.surface_get_material(s)
 			if src is ShaderMaterial:
 				continue   # env-map shader (ObjLoader.apply_fc_materials) styles itself
 			var m: StandardMaterial3D = (src as StandardMaterial3D).duplicate() if src is StandardMaterial3D else StandardMaterial3D.new()
@@ -926,8 +928,10 @@ func _build_level() -> void:
 		if -1 in aligned:
 			node.quaternion = LevelLayout.tilt_local(Quaternion.IDENTITY, node.quaternion, normal)
 		if LevelLayout.is_x1(a):
-			node.add_child(LevelLayout.assemble_x1(a, func(obj: String) -> Node3D:
-				return _gltf_scene(d.path_join("models/%s.glb" % obj.get_basename()))))
+			var x1 := LevelLayout.assemble_x1(a, func(obj: String) -> Node3D:
+				return _gltf_scene(d.path_join("models/%s.glb" % obj.get_basename())))
+			node.add_child(x1)
+			LevelLayout.apply_uv_offset(x1, _decoded.get(int(a.id), {}))
 			shown = objects.size()
 			objects = []
 		for i in objects.size():

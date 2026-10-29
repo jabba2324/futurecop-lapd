@@ -15,6 +15,7 @@
 extends Node
 
 const EffectPlayer := preload("res://scripts/effect_player.gd")
+const TerrainCollision := preload("res://scripts/terrain_collision.gd")
 const RANGE := 8.0
 const STAGES := ["intact", "below 75 %", "below 50 %", "below 25 %", "destroyed"]
 const FIELDS := ["", "damage_75_effect", "damage_50_effect", "damage_25_effect", "destroy_effect"]
@@ -149,7 +150,9 @@ static func _add_wreck_collision(node: Node3D) -> void:
 			body.set_meta("wreck", true)
 			body.process_mode = Node.PROCESS_MODE_DISABLED
 			var cs := CollisionShape3D.new()
-			cs.shape = mi.mesh.create_convex_shape(true, true)
+			cs.shape = TerrainCollision.solid_hull(mi)
+			if cs.shape == null:
+				continue
 			cs.transform = node.global_transform.affine_inverse() * mi.global_transform
 			body.add_child(cs)
 			node.add_child(body)

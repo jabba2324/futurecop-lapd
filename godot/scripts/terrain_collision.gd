@@ -1,7 +1,8 @@
 ## Builds collision for a generated level at load time, so the scene files stay
 ## small: the stitched terrain becomes one concave shape (both faces collide,
 ## because the PS1 walls are single-sided), and each placed prop under
-## "Actors" gets a convex hull of its meshes. Attached to the scene's Terrain node.
+## "Actors" gets a convex hull of its meshes' solid (non-additive) faces, unless the
+## actor has BaseEntity disable_collision. Attached to the scene's Terrain node.
 ## Terrain surfaces whose material ends in "_pass" are left out: floors the game's
 ## ground probe ignores (surface byte 0x40, extract_terrain.py). Faces from "_see"
 ## materials (surface bit 0x80) are listed in see_through, by collision face index,
@@ -30,14 +31,36 @@ func _ready() -> void:
 	if actors == null:
 		return
 	for actor: Node in actors.get_children():
-		if not actor is Node3D or actor is CharacterBody3D or _skipped(actor):
-			continue
+		if not actor is Node3D or actor is CharacterBody3D or _skipped(actor) \
+				or actor.get_meta("no_collision", false):
+			continue   # no_collision: BaseEntity disable_collision (generate_scene.gd)
 		for mi: MeshInstance3D in actor.find_children("*", "MeshInstance3D", true, false):
 			if mi.mesh == null or mi.get_aabb().size.length() < 0.05 or not mi.is_visible_in_tree():
 				continue   # hidden: wreck models (generate_scene.gd) collide only once shown
-			# Convex hull per prop mesh: cheap and good enough to walk around.
-			var hull := mi.mesh.create_convex_shape(true, true)
-			_add_body(actor, "Collision", hull, (actor as Node3D).global_transform.affine_inverse() * mi.global_transform)
+			# Convex hull per prop mesh, cheap and good enough to walk around, of its
+			# solid faces only: additive ones ("_add") are light (beams, glows).
+			var hull := solid_hull(mi)
+			if hull:
+				_add_body(actor, "Collision", hull, (actor as Node3D).global_transform.affine_inverse() * mi.global_transform)
+
+
+static func solid_hull(mi: MeshInstance3D) -> ConvexPolygonShape3D:
+	## Convex hull of a mesh's non-additive surfaces, or null if it has none.
+	var pts := PackedVector3Array()
+	for s in mi.mesh.get_surface_count():
+		var mat := mi.get_active_material(s)
+		if mat and mat.resource_name.contains("_add"):
+			continue
+		pts.append_array(mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX])
+	if pts.size() < 4:
+		return null
+	var hull := ConvexPolygonShape3D.new()
+	var tmp := ArrayMesh.new()
+	var arr := []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = pts
+	tmp.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arr)
+	return tmp.create_convex_shape(true, true)
 
 
 func _solid_faces(mesh: Mesh) -> PackedVector3Array:

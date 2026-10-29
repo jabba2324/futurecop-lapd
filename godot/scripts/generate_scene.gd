@@ -204,10 +204,14 @@ func _add_actors(root: Node3D) -> bool:
 		return false
 
 	var wrecks := {}   # actor id -> its wreck models, hidden until destroyed
+	var no_collision := {}   # actor ids with BaseEntity disable_collision
 	var decoded: Variant = JSON.parse_string(FileAccess.get_file_as_string(_base + "actors_decoded.json"))
 	if decoded is Dictionary:
 		for rec: Dictionary in decoded.get("actors", []):
 			wrecks[int(rec.id)] = LevelLayout.destroyed_parts(rec)
+			var flags: Variant = rec.fields.get("BaseEntity.bitfield", {}).get("value")
+			if flags is Array and "disable_collision" in flags:
+				no_collision[int(rec.id)] = true
 
 	var placed := 0
 	var has_player := false
@@ -224,6 +228,8 @@ func _add_actors(root: Node3D) -> bool:
 		# Store class and id as metadata so they're visible in editor
 		actor_node.set_meta("actor_id", actor.id)
 		actor_node.set_meta("class",    cls)
+		if no_collision.has(int(actor.id)):
+			actor_node.set_meta("no_collision", true)   # terrain_collision.gd skips it
 		actor_node.position = _layout.actor_position(actor)
 		if is_player:
 			actor_node.position.y += 0.1  # drop onto the terrain collision at start

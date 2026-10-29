@@ -159,6 +159,7 @@ shader_type spatial;
 render_mode unshaded, cull_back%s;
 uniform sampler2D albedo_tex : source_color, filter_nearest;
 uniform sampler2D shine : source_color, filter_linear;
+uniform vec2 uv_offset;   // BaseEntity uv_offset (LevelLayout.apply_uv_offset)
 varying vec2 env_uv;
 void vertex() {
 	vec3 e = normalize((MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz);
@@ -168,7 +169,7 @@ void vertex() {
 	env_uv = vec2(r.x / m + 0.5, 0.5 - r.y / m);
 }
 void fragment() {
-	vec4 c = texture(albedo_tex, UV) * COLOR;
+	vec4 c = texture(albedo_tex, UV + uv_offset) * COLOR;
 	ALBEDO = c.rgb + texture(shine, env_uv).rgb * (1.0 - c.a);
 	%s
 }

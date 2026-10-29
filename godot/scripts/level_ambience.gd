@@ -69,6 +69,7 @@ func _ready() -> void:
 	_start_spawn_effects()
 	_add_decals()
 	_start_animations()
+	_paint_x1s()
 	_sounds = _sound_table()
 	_start_ambient_sounds()
 	_start_elevators()
@@ -172,6 +173,15 @@ func _start_animations() -> void:
 			if anim != "":
 				ap.get_animation(anim).loop_mode = Animation.LOOP_LINEAR
 				ap.play(anim)
+
+
+func _paint_x1s() -> void:
+	## Each X1's own paint scheme (LevelLayout.apply_uv_offset), after the glTF
+	## materials are converted: red in Precinct Assault, P2 black in Crime War.
+	for rec: Dictionary in _decoded:
+		var node := _actor_node(int(rec.id))
+		if int(rec.class_id) == 1 and node and node.get_node_or_null("X1"):
+			LevelLayout.apply_uv_offset(node.get_node("X1"), rec)
 
 
 func _under_x1(n: Node) -> bool:

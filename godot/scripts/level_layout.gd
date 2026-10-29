@@ -233,6 +233,38 @@ const X1_MOUNTS := {"cockpit": ["legs", ["attach_0"]], "weapon": ["cockpit", ["b
 	"beacon_lights": ["cockpit", ["attach_2"]], "pilot": ["cockpit", [""]]}
 
 
+const X1_PAINTED := ["legs", "cockpit", "weapon", "weapon_2"]
+
+
+static func apply_uv_offset(x1: Node, decoded: Dictionary) -> void:
+	## An X1's paint scheme (SLUS_007.39 0x800597c0): its BaseEntity uv_offset_x / _y
+	## (actor+0x92/0x93, set by 0x8002a5f4) is added to every textured UV of the legs,
+	## cockpit and weapons (0x80013aa0, primitive builder 0x800172a8), but not the
+	## beacon lights or pilot. cbmp009 holds the paint twice side by side: u + 128 is
+	## red in Precinct Assault levels and black in Crime War levels (player 2).
+	var ou := int(decoded.get("fields", {}).get("BaseEntity.uv_offset_x", {}).get("raw", 0))
+	var ov := int(decoded.get("fields", {}).get("BaseEntity.uv_offset_y", {}).get("raw", 0))
+	if ou == 0 and ov == 0:
+		return
+	var off := Vector2(ou, ov) / 255.0   # glTF UVs are texel / 255 (export_gltf.py)
+	for mi: MeshInstance3D in x1.find_children("*", "MeshInstance3D", true, false):
+		var n: Node = mi
+		while n and n != x1 and not (str(n.name) in X1_ROLES or str(n.name) in X1_PAINTED):
+			n = n.get_parent()
+		if n == null or not str(n.name) in X1_PAINTED or mi.mesh == null:
+			continue
+		for s in mi.mesh.get_surface_count():
+			var m := mi.get_active_material(s)
+			if m is BaseMaterial3D and (m as BaseMaterial3D).albedo_texture:
+				var d := m.duplicate() as BaseMaterial3D
+				d.uv1_offset = Vector3(off.x, off.y, 0.0)
+				mi.set_surface_override_material(s, d)
+			elif m is ShaderMaterial:
+				var d := m.duplicate() as ShaderMaterial
+				d.set_shader_parameter("uv_offset", off)
+				mi.set_surface_override_material(s, d)
+
+
 static func assemble_x1(actor: Dictionary, load_part: Callable) -> Node3D:
 	## load_part(obj_name: String) -> Node3D (a fresh instance of that part's .glb).
 	## Returns a node with the parts mounted, named by role. Unlike the raw OBJs,
