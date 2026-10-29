@@ -415,7 +415,7 @@ in `decode_actors.py` as hypotheses.
       (higher, never closer).
     - Transform cut-away: a random preset 9–16 with clear sight, held rigidly.
     - The zoom's rate isn't decoded (ZOOM_RATE is a guess).
-    The     walker's other sounds: hover loops 0x28–0x2a, transform 0x15.
+  - The walker's other sounds: hover loops 0x28–0x2a, transform 0x15.
   - **Testing (2026-10-28):** a scripted walk test showed it lands on the floor in all
     14 levels and walks out of the start bay in most of them.
 - `scripts/music_loop.gd` is an AudioStreamPlayer that replays itself when the track finishes.
