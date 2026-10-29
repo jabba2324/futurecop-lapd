@@ -300,14 +300,38 @@ in `decode_actors.py` as hypotheses.
     drops them.
 - `.tscn` rule: every `[ext_resource]` must come before any `[sub_resource]`, or the scene
   fails to load.
-- `scripts/player.gd` is the walker, a `CharacterBody3D`.
-  - **Controls:** W/S walk along the actor's **+Z** axis (the X1's forward), A/D turn,
-    Space transforms between walker and hover (see the X1 transform notes above).
-  - **Physics:** gravity, `move_and_slide`, and a 50° max floor angle.
+- `scripts/player.gd` is the walker, a `CharacterBody3D`. Every generated level scene
+  uses it.
+  - **Controls** (game default in brackets): W/S along the actor's **+Z** axis (the X1's
+    forward) [Up/Down], A/D turn [Left/Right], Q/E strafe [L2/R2], Shift slow walk [L1],
+    Space jump, or brake in hover [Triangle], T transform [L1+R1]. The extra actions
+    are added to the InputMap at run time.
+  - **Physics:** the game's own, decoded from SLUS_007.39. The header of player.gd
+    lists every constant and address. It runs in the game's 37.5 Hz steps
+    (`vel += cmd − vel·drag`):
+    - walker drag 37.5%: run 4.69 u/s, slow 1.95, strafe 3.13; turn 1.84 rad/s, slower
+      at speed;
+    - three jumps, chosen by a ground probe 1 unit ahead:
+      - standing 17→58→59→60;
+      - ledge climb 4→27;
+      - running 54/55→56/57, landing back into the run cycle;
+    - air: gravity 26 u/s², no turning, landing track 5;
+    - hover: 5% drag (15% braking, 37.5% at walls, idle ramp after 6 s), 9.4 u/s, the
+      turn rate ramps to 2.76 rad/s;
+    - steepest slope: 46°/41°/37° (run/strafe/slow), 32°/28° (hover/slow hover);
+    - step-up 0.46 walker, 0.96 hover;
+    - collision box (legs 3DBB): walker 0.52×0.64, hover 0.64×1.32. It replaces the
+      generator's capsule at run time.
+  - Tested headlessly: speeds, turn rate and running-jump airtime match the game
+    within a few %. The jump apexes come out ~10% low, a step-ordering difference.
+  - Not modelled: surface types (water, conveyors, damage floors), hard-landing
+    damage, the crouch, the game's wall push-back, aiming.
+  - Legs AnmD tracks that share a frame range are exported once. player.gd maps the
+    others through the `.glb` extras `duplicate_tracks` (e.g. landing track 5 = track 3).
   - **Spawn:** on its first physics frame it snaps onto the real ground with a raycast,
     because the heightmap estimate can be a few units off (OVMP: by 2.5).
-  - **Animation:** it plays the legs' real walk cycle while moving and returns to rest when
-    it stops.
+  - **Animation:** each gait plays its legs tracks: start → looping cycle, then a stop
+    track for strafes and rest otherwise. The table is `GAITS` in player.gd.
   - **Sounds** (from the game's walker code; see the player.gd header):
     - a positional motor loop per movement (forward 0x22, back 0x24, turn 0x25);
     - step hits at the starts of tracks 39 and 41 (0x38 forward, 0x3a back);
