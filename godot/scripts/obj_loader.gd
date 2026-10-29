@@ -117,9 +117,13 @@ static func _load_mtl(path: String) -> Dictionary:
 					var tex := load_texture(path.get_base_dir().path_join(line.substr(7).strip_edges()).simplify_path())
 					if tex:
 						cur.albedo_texture = tex
-						# PS1 colour-keyed texels come through as alpha 0.
-						cur.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-						cur.alpha_scissor_threshold = 0.5
+						# PS1 colour-keyed texels come through as alpha 0; semi-transparent
+						# terrain ("_mix", extract_terrain.py) blends 50/50 via alpha 128.
+						if cur.resource_name.contains("_mix"):
+							cur.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+						else:
+							cur.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+							cur.alpha_scissor_threshold = 0.5
 	return out
 
 

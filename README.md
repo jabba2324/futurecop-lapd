@@ -53,9 +53,14 @@ turn, Q/E strafe, Shift slow walk, Space jump (brake when hovering) and T transf
 between walker and hovercraft. The game's special floors work too: conveyors, damaging
 and deadly floors (a health readout shows; at zero the X1 explodes and restarts), slippery
 floors, and deep water, where the walker turns into a hovercraft. Walls push back and
-turn the X1 along them as in the game. Placed effects, decals, animated
-props and ambient sounds are included. L switches between the original PS1 lighting (the
-default) and real-time lighting, G toggles fog and M the minimap. Reflective surfaces
+turn the X1 along them as in the game, Shift+Space crouches and hard landings cost
+health. V cycles the game's seven camera views, and the camera backs off to its higher
+views when terrain blocks the line of sight (see-through walls don't count). Elevators
+run and carry the X1, pickups spin, and water is translucent and scrolls. Placed
+effects, decals, animated props and ambient sounds are included. L switches between the
+original PS1 lighting (the default) and real-time lighting, G toggles fog, M the minimap
+and O a debug overlay of trigger zones (labelled with what they trigger), paths and
+special floors. Reflective surfaces
 use the level's sphere map, and the level's loading screen shows while it loads. There are no enemies, scripts or
 objectives; it's for walking around the level. The `.tscn` files are committed, but
 they load `godot/assets/`, so run the pipeline first. Then run the project for a

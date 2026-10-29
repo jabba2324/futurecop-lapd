@@ -208,7 +208,7 @@ def extract_ctil(mis_path, out_dir):
             continue
 
         sect = tags[_TAG_SECT]
-        tris = _tris_from_sect(sect)
+        tris = _tris_from_sect(sect, _slfx_light(tags))
 
         if not tris:
             continue
@@ -345,7 +345,7 @@ def write_map(mis_path, out_dir):
             if _TAG_SECT not in tags:
                 continue
 
-            tris = _tris_from_sect(tags[_TAG_SECT])
+            tris = _tris_from_sect(tags[_TAG_SECT], _slfx_light(tags))
             for t in tris:
                 v0, v1, v2 = t[0], t[1], t[2]
                 cbmp_id = min(t[6], max_cbmp_id) if max_cbmp_id else t[6]
@@ -355,7 +355,7 @@ def write_map(mis_path, out_dir):
                     (v1[0] + wx_off, v1[1], v1[2] + wz_off),
                     (v2[0] + wx_off, v2[1], v2[2] + wz_off),
                     t[3], t[4], t[5], cbmp_id,
-                    t[7], t[8], t[9], t[10],
+                    t[7], t[8], t[9], t[10], t[11],
                 ))
                 used_bmps.add(cbmp_id)
 
@@ -379,11 +379,17 @@ def write_map(mis_path, out_dir):
         return uv_idx[uv]
 
     # key = position + vertex-color so shading differences create separate vertices
-    # Floors the game walks through get their own "_pass" material, so the Godot
-    # collision can leave them out (terrain_collision.gd).
+    # Material names: cbmpNNN, then "_mix" for semi-transparent polygons (the game's
+    # 50/50 blend), "_s<u>_<v>" for UV-scrolling ones (the chunk's scroll speeds),
+    # "_see" for polygons the camera's line of sight passes (surface bit 0x80) and
+    # "_pass" (always last) for floors the game walks through, which the Godot
+    # collision leaves out (terrain_collision.gd).
     tri_objs = [(_vi(t[0] + t[7]), _vi(t[1] + t[8]), _vi(t[2] + t[9]),
                  _ti(t[3]), _ti(t[4]), _ti(t[5]),
-                 f"cbmp{t[6]:03d}" + ("_pass" if _passes_through(t[10]) else "")) for t in all_tris]
+                 f"cbmp{t[6]:03d}" + ("_mix" if t[11][0] else "")
+                 + (f"_s{t[11][1][0]}_{t[11][1][1]}" if t[11][1] else "")
+                 + ("_see" if t[10][0] & _SEE_THROUGH else "")
+                 + ("_pass" if _passes_through(t[10]) else "")) for t in all_tris]
     mtls = sorted(set(t[6] for t in tri_objs))
 
     _write_surfaces(all_tris, os.path.join(terrain_dir, "surfaces.json"))
@@ -439,6 +445,7 @@ def _write_surfaces(all_tris, path):
 # bits are an enumeration, see godot/scripts/surfaces.gd.
 _FIRST_WALL = 0x47      # mesh types >= 0x47 are walls
 _PASS_THROUGH = 0x40
+_SEE_THROUGH = 0x80   # surface bit: the camera sees through it (0x80055ee8)
 
 
 def _passes_through(surface):
@@ -446,14 +453,38 @@ def _passes_through(surface):
     return is_floor and index != 0 and action & _PASS_THROUGH
 
 
-def _tris_from_sect(sect):
+_TAG_SLFX = 0x534C4658
+
+
+def _slfx_light(tags):
+    """PS1 colour (128 = x1) of the chunk's type-3 tiles, from its SLFX tag.
+
+    The game rebuilds a 16x16 per-cell light table from the SLFX word every frame
+    (0x800654f8) and type-3 tiles (water) take their corner colours from it
+    (0x800648e8). Noise mode (w >> 28 == 1): each cell runs a triangle wave
+    0..p..0, p random 64..127, light = (bright << k + wave) >> k with bright =
+    (w >> 8) & 0xff, k = w & 3; this returns its mean. Wave mode: background
+    (w >> 8) & 0xff plus a sine of about +-1. No SLFX: 128.
+    """
+    s = tags.get(_TAG_SLFX)
+    if not s:
+        return 0x80
+    w = struct.unpack_from("<I", s, 0)[0]
+    if w >> 28 == 1:
+        return ((w >> 8) & 0xFF) + (48 >> (w & 3))
+    return (w >> 8) & 0xFF
+
+
+def _tris_from_sect(sect, slfx_light=0x80):
     """Extract triangle list from a parsed SECT payload (shared by extract_ctil and write_map).
 
-    Each triangle is an 11-tuple:
-      (v0, v1, v2, uv0, uv1, uv2, cbmp_id, vc0, vc1, vc2, surface)
+    Each triangle is a 12-tuple:
+      (v0, v1, v2, uv0, uv1, uv2, cbmp_id, vc0, vc1, vc2, surface, blend)
     where vN = (wx, wy, wz), uvN = (u, v), vcN = (r, g, b) vertex-color in [0, 1] and
     surface = (action byte, action index, is_floor): the tile's polygon_action_types
     entry (see SURFACES below), the 2-bit index that picked it, and mesh type < 0x47.
+    blend = (semi, scroll): tile graphics bit 12 (semi-transparent, the GPU's ABR 0
+    50/50 blend) and, when bit 11 is set, the chunk's (u, v) scroll speeds (else None).
 
     Vertex colors encode the original PS1 shading so Blender can reproduce the lit
     appearance with: Base Color = texture × vertex_color (no extra ×2 needed, since the
@@ -473,6 +504,9 @@ def _tris_from_sect(sect):
 
     p += 1
     action_types = sect[p:p + 4]   # polygon_action_types: surface byte per action index
+    # The two signed bytes after the 84 are the chunk's UV scroll speeds (0x80065744):
+    # offset = (s * clock(300 Hz) >> 6) % 28 texels, u and v.
+    uv_scroll = struct.unpack_from("bb", sect, p + 4 + 84)
     p += 4 + 84 + 2
     mesh_lib_size = struct.unpack_from("<H", sect, p)[0]; p += 2
 
@@ -537,8 +571,12 @@ def _tris_from_sect(sect):
                     typ     = (bf >> 14) & 0x3
                     rect    = (bf >> 13) & 0x1
 
-                    if typ in (0, 3):   # Solid Mono / Lava Anim: uniform brightness
+                    if typ == 0:   # Solid Mono: uniform brightness
                         f = min(shading / 64.0, 1.0)
+                        vc = [(f, f, f)] * 4
+
+                    elif typ == 3:   # SLFX light table (water); shading only picks the layout
+                        f = min(slfx_light / 256.0, 1.0)
                         vc = [(f, f, f)] * 4
 
                     elif typ == 1:   # Dynamic Mono: per-vertex 6-bit brightness
@@ -574,6 +612,9 @@ def _tris_from_sect(sect):
                                     vc[3] = colors_arr[ter_sec]
 
                 cbmp_id = tex_idx + 1
+                blend = (False, None)
+                if gfx_idx < len(tg_bitfield):
+                    blend = (bool((bf >> 12) & 1), uv_scroll if (bf >> 11) & 1 else None)
 
                 def _uv(off, _tc=tc_idx, _tc_list=texture_cords):
                     if not _tc_list:
@@ -590,14 +631,14 @@ def _tris_from_sect(sect):
                 if len(pts) == 4:
                     tris.append((_v(pts[3]), _v(pts[1]), _v(pts[0]),
                                  _uv(3), _uv(1), _uv(0), cbmp_id,
-                                 vc[3], vc[1], vc[0], surface))
+                                 vc[3], vc[1], vc[0], surface, blend))
                     tris.append((_v(pts[3]), _v(pts[2]), _v(pts[1]),
                                  _uv(3), _uv(2), _uv(1), cbmp_id,
-                                 vc[3], vc[2], vc[1], surface))
+                                 vc[3], vc[2], vc[1], surface, blend))
                 else:
                     tris.append((_v(pts[2]), _v(pts[1]), _v(pts[0]),
                                  _uv(2), _uv(1), _uv(0), cbmp_id,
-                                 vc[2], vc[1], vc[0], surface))
+                                 vc[2], vc[1], vc[0], surface, blend))
     return tris
 
 

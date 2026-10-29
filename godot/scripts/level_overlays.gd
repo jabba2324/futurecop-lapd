@@ -8,6 +8,8 @@
 ##   height layers the three Ctil height channels as coloured points
 ##   wiring        who-messages-whom graph from actor scripts, level functions,
 ##                 trigger and attach references
+##   paths         Cnet path graphs (nets.json)
+##   floors        special floors (terrain/surfaces.json) by kind
 ## Sizes in the decoded data are fx12 game units; 1.0 = 8 Godot units.
 extends RefCounted
 
@@ -178,6 +180,98 @@ static func _outline(b: AABB) -> ImmediateMesh:
 		im.surface_add_vertex(b.get_endpoint(e[1]))
 	im.surface_end()
 	return im
+
+
+# ─── Paths ────────────────────────────────────────────────────────────────────
+
+static func build_nets(nets: Array, layout: RefCounted) -> Dictionary:
+	## Cnet AI path graphs (tools/extract_nets.py), one colour per net, a cross at each
+	## node. Nodes use the actors.json pos_x/pos_z convention, so they go through the
+	## same layout as actors. {mesh: MeshInstance3D, boxes: net id -> AABB}.
+	var boxes := {}
+	var im := ImmediateMesh.new()
+	im.surface_begin(Mesh.PRIMITIVE_LINES)
+	for net: Dictionary in nets:
+		var c := Color.from_hsv(fmod(int(net.id) * 0.173, 1.0), 0.9, 1.0)
+		var pts: Array[Vector3] = []
+		for n: Dictionary in net.nodes:
+			var p: Vector3 = layout.actor_position(n)
+			if n.get("height_world") != null:
+				p.y = float(n.height_world)
+			elif n.get("height_mode_name", "") == "raycast_low":
+				p.y = layout.sample_y(p.x, p.z, false)
+			pts.append(p + Vector3(0, 0.15, 0))
+		var box := AABB(pts[0], Vector3.ZERO) if pts else AABB()
+		im.surface_set_color(c)
+		for p in pts:
+			box = box.expand(p)
+			im.surface_add_vertex(p + Vector3(-0.2, 0, 0))
+			im.surface_add_vertex(p + Vector3(0.2, 0, 0))
+			im.surface_add_vertex(p + Vector3(0, 0, -0.2))
+			im.surface_add_vertex(p + Vector3(0, 0, 0.2))
+		for e: Array in net.edges:
+			im.surface_add_vertex(pts[int(e[0])])
+			im.surface_add_vertex(pts[int(e[1])])
+		boxes[int(net.id)] = box.grow(2.0)
+	if nets.is_empty():
+		im.surface_add_vertex(Vector3.ZERO)
+		im.surface_add_vertex(Vector3.ZERO)
+	im.surface_end()
+	var mi := MeshInstance3D.new()
+	mi.name = "Paths"
+	mi.mesh = im
+	mi.material_override = _line_material()   # paths stay visible through terrain
+	mi.set_meta("no_style", true)
+	return {"mesh": mi, "boxes": boxes}
+
+
+# ─── Special floors ───────────────────────────────────────────────────────────
+
+static func floor_color(action: int) -> Color:
+	## Overlay colour of a surface byte (& 0x3F), see surfaces.gd.
+	if action == 1:
+		return Color(0.1, 0.4, 1.0)        # deep water
+	if action == 2 or action == 10 or action == 11:
+		return Color(1.0, 0.0, 0.0)        # kills the walker
+	if action >= 3 and action <= 5:
+		return Color(0.6, 0.9, 1.0)        # low traction
+	if action >= 6 and action <= 13:
+		return Color(1.0, 0.5, 0.0)        # damaging
+	if action == 14 or action == 15:
+		return Color(1.0, 1.0, 0.2)        # Precinct Assault team zone
+	if action >= 0x20 and action <= 0x2f:
+		return Color(0.2, 1.0, 0.3)        # conveyor
+	return Color(1.0, 0.0, 1.0)
+
+
+static func build_floors(surfaces: Variant) -> MeshInstance3D:
+	## The special floors of terrain/surfaces.json as translucent colour, lifted a
+	## little off the terrain.
+	var verts := PackedVector3Array()
+	var cols := PackedColorArray()
+	if surfaces is Dictionary:
+		for t: Array in surfaces.get("tris", []):
+			var c := Color(floor_color(int(t[0]) & 0x3F), 0.45)
+			for i in 3:
+				verts.append(Vector3(t[1 + 3 * i], t[2 + 3 * i] + 0.03, t[3 + 3 * i]))
+				cols.append(c)
+	var mi := MeshInstance3D.new()
+	mi.name = "Floors"
+	mi.set_meta("no_style", true)
+	if verts.is_empty():
+		return mi
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_COLOR] = cols
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	mi.mesh = mesh
+	var m := _flat(Color(1, 1, 1, 0.99))
+	m.vertex_color_use_as_albedo = true
+	m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	mi.material_override = m
+	return mi
 
 
 # ─── Ranges ───────────────────────────────────────────────────────────────────

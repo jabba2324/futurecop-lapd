@@ -1,13 +1,17 @@
 ## Ambient scene dressing for a generated level scene (root of
-## scenes/<LEVEL>_level.tscn). Visual/audio only; nothing reacts to the player.
+## scenes/<LEVEL>_level.tscn). Visual/audio only; nothing reacts to the player
+## except elevators that wait for a rider.
 ##   - effects the level places at load, looping (effect_player.gd)
 ##   - class-97 decals (level_overlays.build_decals)
 ##   - prop animation clips (all_frames, looping) and 3DTA texture animations
 ##   - additive and env-mapped (sphere-map reflection) materials of .glb props
 ##     (ObjLoader.apply_fc_materials)
+##   - elevators (elevator.gd) move and carry the walker; item pickups spin
+##   - scrolling terrain (water) UVs
 ##   - ambient sounds: BaseEntity.ambient_sound → the Cshd entry with that
 ##     group_id → its tone WAV, looping 3D audio at the actor
 ##   - minimap (minimap.gd) of the heightmap, map icons and the walker; M toggles
+##   - debug overlay (debug_overlay.gd): trigger zones, paths, special floors; O toggles
 ##   - lighting: L toggles the PS1 look (baked terrain vertex colours ×2, unshaded,
 ##     no sun; the default) and real-time lighting; G toggles distance fog
 ## Reads res://assets/<LEVEL>/ (synced by tools/sync_godot_assets.py).
@@ -19,6 +23,8 @@ const LevelLayout := preload("res://scripts/level_layout.gd")
 const LevelOverlays := preload("res://scripts/level_overlays.gd")
 const ObjLoader := preload("res://scripts/obj_loader.gd")
 const Minimap := preload("res://scripts/minimap.gd")
+const DebugOverlay := preload("res://scripts/debug_overlay.gd")
+const Elevator := preload("res://scripts/elevator.gd")
 
 var _base := ""
 var _layout: RefCounted
@@ -29,17 +35,27 @@ var _lit_materials: Dictionary = {}   # MeshInstance3D -> [surface override mate
 var _hint: Label
 var _minimap: Control
 var _player: Node3D
+var _overlay: Node3D
+var _sounds: Dictionary = {}     # Cshd group_id -> entry
+var _spinning: Array = []        # [pickup node, yaw rad/s]
+var _scrolling: Array = []       # [terrain MeshInstance3D, surface, u speed, v speed]
+var _clock := 0.0
 
 
 func _ready() -> void:
 	_base = "res://assets/%s/" % name
-	var decoded: Variant = _json(_base + "actors_decoded.json")
-	_decoded = decoded.get("actors", []) if decoded is Dictionary else []
-	_layout = LevelLayout.new(FileAccess.get_file_as_string(_base + "heightmap.json"))
+	if _decoded.is_empty():   # the player may have asked first (view_zones)
+		var decoded: Variant = _json(_base + "actors_decoded.json")
+		_decoded = decoded.get("actors", []) if decoded is Dictionary else []
+		_layout = LevelLayout.new(FileAccess.get_file_as_string(_base + "heightmap.json"))
 	_start_effects()
 	_add_decals()
 	_start_animations()
+	_sounds = _sound_groups()
 	_start_ambient_sounds()
+	_start_elevators()
+	_start_pickups()
+	_start_terrain_scroll()
 	_add_hint()
 	_add_minimap()
 	# After the terrain collision and decals exist, so their materials get the look too.
@@ -114,7 +130,8 @@ func _under_x1(n: Node) -> bool:
 	return false
 
 
-func _start_ambient_sounds() -> void:
+func _sound_groups() -> Dictionary:
+	## Cshd group_id -> its first entry with a tone WAV.
 	var shd: Variant = _json(_base + "shd.json")
 	var by_group := {}
 	if shd is Dictionary:
@@ -122,18 +139,32 @@ func _start_ambient_sounds() -> void:
 			for e: Dictionary in t.get("entries", []):
 				if not by_group.has(int(e.group_id)) and e.get("tone_wav"):
 					by_group[int(e.group_id)] = e
+	return by_group
+
+
+func _sound(ref: Variant) -> AudioStream:
+	## The tone of a "sound N" field value, or null.
+	var r := str(ref)
+	if not r.begins_with("sound "):
+		return null
+	var e: Variant = _sounds.get(int(r.trim_prefix("sound ")))
+	if e == null or not ResourceLoader.exists(_base + e.tone_wav):
+		return null
+	return load(_base + e.tone_wav)
+
+
+func _start_ambient_sounds() -> void:
 	var root := Node3D.new()
 	root.name = "AmbientSounds"
 	add_child(root)
 	for rec: Dictionary in _decoded:
-		var ref := str(rec.fields.get("BaseEntity.ambient_sound", {}).get("value", ""))
-		if not ref.begins_with("sound "):
-			continue
-		var e: Variant = by_group.get(int(ref.trim_prefix("sound ")))
-		if e == null or not ResourceLoader.exists(_base + e.tone_wav):
+		if int(rec.class_id) == 10:
+			continue   # elevators loop theirs only while moving (elevator.gd)
+		var stream := _sound(rec.fields.get("BaseEntity.ambient_sound", {}).get("value", ""))
+		if stream == null:
 			continue
 		var s := AudioStreamPlayer3D.new()
-		s.stream = load(_base + e.tone_wav)
+		s.stream = stream
 		s.position = _actor_pos(rec) + Vector3(0, 0.5, 0)
 		s.unit_size = 3.0
 		s.max_distance = 35.0
@@ -141,6 +172,90 @@ func _start_ambient_sounds() -> void:
 		s.finished.connect(s.play)   # loop
 		s.autoplay = true
 		root.add_child(s)
+
+
+func view_zones() -> Array:
+	## Class-95 Triggers with bitfield 0x40, where the close camera views 5 and 6 are
+	## allowed (0x80031b40): [centre, half x, half z] in Godot units (fx12 size × 8 / 2;
+	## width runs along Godot x, length along z, as in level_overlays.build_zones).
+	var out := []
+	if _decoded.is_empty():
+		var decoded: Variant = _json("res://assets/%s/actors_decoded.json" % name)
+		_decoded = decoded.get("actors", []) if decoded is Dictionary else []
+		_layout = LevelLayout.new(FileAccess.get_file_as_string("res://assets/%s/heightmap.json" % name))
+	for rec: Dictionary in _decoded:
+		if int(rec.class_id) != 95 or not int(rec.fields.get("Trigger.bitfield", {}).get("raw", 0)) & 0x40:
+			continue
+		out.append([_actor_pos(rec), float(rec.fields["Trigger.width"].value) * 4.0,
+			float(rec.fields["Trigger.length"].value) * 4.0])
+	return out
+
+
+# ─── Elevators / pickups ──────────────────────────────────────────────────────
+
+func _actor_node(id: int) -> Node3D:
+	return get_node_or_null("Actors/Actor_%d" % id) as Node3D
+
+
+func _start_elevators() -> void:
+	## Runs after the first physics frame, so the terrain collision can be ray-cast.
+	await get_tree().physics_frame
+	for rec: Dictionary in _decoded:
+		var node := _actor_node(int(rec.id))
+		if int(rec.class_id) != 10 or node == null:
+			continue
+		var e := Elevator.new()
+		node.add_child(e)
+		e.setup(rec, node, _elevator_ground(node.global_position),
+			_sound(rec.fields.get("BaseEntity.ambient_sound", {}).get("value", "")),
+			_sound(rec.fields.get("Elevator.end_sound", {}).get("value", "")))
+
+
+func _elevator_ground(at: Vector3) -> float:
+	## The game's elevator ground probe (0x80066f78 from height 0): the highest
+	## terrain floor at or below +0x200 (0.0625) at this x/z, or the lowest floor if
+	## all are higher. Rays only see TerrainCollision (its _pass floors are already
+	## left out); props and the player are excluded.
+	var space := get_world_3d().direct_space_state
+	var exclude: Array[RID] = []
+	for b: CollisionObject3D in find_children("*", "CollisionObject3D", true, false):
+		if b.name != "TerrainCollision":
+			exclude.append(b.get_rid())
+	var floors: Array[float] = []
+	var y := 100.0
+	for i in 32:
+		var q := PhysicsRayQueryParameters3D.create(Vector3(at.x, y, at.z), Vector3(at.x, -100.0, at.z))
+		q.exclude = exclude
+		var hit := space.intersect_ray(q)
+		if hit.is_empty():
+			break
+		if hit.normal.y > 0.5:
+			floors.append(hit.position.y)
+		y = hit.position.y - 0.01
+	if floors.is_empty():
+		return at.y
+	for f in floors:   # top down
+		if f <= 0x200 / 8192.0:
+			return f
+	return floors[-1]
+
+
+func _start_pickups() -> void:
+	## Class-16 ItemPickups spin (0x8002fa20): rotation < 0 means spin at
+	## ((rotational_speed * 16) / 218) >> 4 BAM per 300 Hz tick, from yaw 0. They
+	## don't bob. Power-ups also flash (entity flag 0x2000000, 0.43 s on / off),
+	## which isn't drawn here.
+	for rec: Dictionary in _decoded:
+		var node := _actor_node(int(rec.id))
+		if int(rec.class_id) != 16 or node == null:
+			continue
+		if int(rec.fields.get("ItemPickup.rotation", {}).get("raw", 0)) >= 0:
+			continue
+		var rs := int(rec.fields.get("ItemPickup.rotational_speed", {}).get("raw", 0))
+		var bam_per_tick := floori(float(int(rs * 16 / 218.0)) / 16.0)
+		# Godot's yaw runs the other way (the map's x/z are the game's z/x).
+		_spinning.append([node, -bam_per_tick * 300.0 * TAU / 4096.0])
+		node.rotation.y = deg_to_rad(90.0)   # BAM 0 (level_layout._bam_to_degrees)
 
 
 # ─── Lighting / fog ───────────────────────────────────────────────────────────
@@ -153,9 +268,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_G:
 			_fog = not _fog
 			_apply_lighting()
+		elif event.keycode == KEY_O:
+			_toggle_overlay()
 		elif event.keycode == KEY_M and _minimap:
 			_minimap.visible = not _minimap.visible
 			_update_hint()
+
+
+func _toggle_overlay() -> void:
+	if _overlay == null:   # built on first use
+		_overlay = DebugOverlay.new()
+		_overlay.setup(_base, _decoded, _layout)
+		add_child(_overlay)
+	else:
+		_overlay.visible = not _overlay.visible
+	_update_hint()
 
 
 func _apply_lighting() -> void:
@@ -205,9 +332,10 @@ func _add_hint() -> void:
 
 func _update_hint() -> void:
 	if _hint:
-		_hint.text = "W/S move · A/D turn · Q/E strafe · Shift slow · Space jump/brake · T transform · L lighting: %s · G fog: %s · M map: %s · Esc menu" % [
+		_hint.text = "W/S move · A/D turn · Q/E strafe · Shift slow · Space jump/brake · Shift+Space crouch\nT transform · V view · L lighting: %s · G fog: %s · M map: %s · O overlay: %s · Esc menu" % [
 			"PS1" if _ps1_look else "lit", "on" if _fog else "off",
-			"on" if _minimap and _minimap.visible else "off"]
+			"on" if _minimap and _minimap.visible else "off",
+			"on" if _overlay and _overlay.visible else "off"]
 
 
 # ─── Minimap ──────────────────────────────────────────────────────────────────
@@ -237,6 +365,38 @@ func _add_minimap() -> void:
 	_minimap.setup(_json(_base + "heightmap.json"), icons)
 
 
-func _process(_delta: float) -> void:
+func _start_terrain_scroll() -> void:
+	## Terrain polygons with tile-graphics bit 11 (water) scroll their UVs by the
+	## chunk's two signed speeds; extract_terrain.py names them "_s<u>_<v>".
+	var mi := get_node_or_null("Terrain/TerrainMesh") as MeshInstance3D
+	if mi == null or mi.mesh == null:
+		return
+	for i in mi.mesh.get_surface_count():
+		var mat := mi.mesh.surface_get_material(i)
+		if mat == null:
+			continue
+		var m := RegEx.create_from_string("_s(-?\\d+)_(-?\\d+)").search(mat.resource_name)
+		if m:
+			_scrolling.append([mi, i, int(m.get_string(1)), int(m.get_string(2))])
+
+
+static func _scroll_texels(speed: int, ticks: int) -> int:
+	## 0x80065744: (s * clock >> 6) % 28 texels; s < 0 counts down from 27. (s > 0x20
+	## blinks between 0 and 28 in the game; no level uses it.)
+	if speed < 0:
+		return 27 - ((-speed * ticks) >> 6) % 28
+	return ((speed * ticks) >> 6) % 28
+
+
+func _process(delta: float) -> void:
+	_clock += delta
+	var ticks := int(_clock * 300.0)
+	for sc: Array in _scrolling:
+		var m := (sc[0] as MeshInstance3D).get_active_material(sc[1]) as BaseMaterial3D
+		if m:
+			# OBJ vt = u/255 and 1 - v/255, so v runs the other way in Godot.
+			m.uv1_offset = Vector3(_scroll_texels(sc[2], ticks) / 255.0, -_scroll_texels(sc[3], ticks) / 255.0, 0.0)
+	for sp: Array in _spinning:
+		(sp[0] as Node3D).rotation.y += sp[1] * delta
 	if _minimap and _minimap.visible and _player:
 		_minimap.set_camera(_player.global_position, _player.global_basis.z)   # X1 faces +Z

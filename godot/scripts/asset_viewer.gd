@@ -1158,40 +1158,9 @@ func _build_nets(root: Node3D, layout: RefCounted) -> void:
 	_nets = data.get("nets", []) if data is Dictionary else []
 	if _nets.is_empty():
 		return
-	var im := ImmediateMesh.new()
-	im.surface_begin(Mesh.PRIMITIVE_LINES)
-	for net: Dictionary in _nets:
-		var c := Color.from_hsv(fmod(int(net.id) * 0.173, 1.0), 0.9, 1.0)
-		var pts: Array[Vector3] = []
-		for n: Dictionary in net.nodes:
-			var p: Vector3 = layout.actor_position(n)
-			if n.get("height_world") != null:
-				p.y = float(n.height_world)
-			elif n.get("height_mode_name", "") == "raycast_low":
-				p.y = layout.sample_y(p.x, p.z, false)
-			pts.append(p + Vector3(0, 0.15, 0))
-		var box := AABB(pts[0], Vector3.ZERO) if pts else AABB()
-		im.surface_set_color(c)
-		for p in pts:
-			box = box.expand(p)
-			# Small cross at each node
-			im.surface_add_vertex(p + Vector3(-0.2, 0, 0))
-			im.surface_add_vertex(p + Vector3(0.2, 0, 0))
-			im.surface_add_vertex(p + Vector3(0, 0, -0.2))
-			im.surface_add_vertex(p + Vector3(0, 0, 0.2))
-		for e: Array in net.edges:
-			im.surface_add_vertex(pts[int(e[0])])
-			im.surface_add_vertex(pts[int(e[1])])
-		_net_boxes[int(net.id)] = box.grow(2.0)
-	im.surface_end()
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.vertex_color_use_as_albedo = true
-	mat.no_depth_test = true  # paths stay visible through terrain
-	_net_mesh = MeshInstance3D.new()
-	_net_mesh.mesh = im
-	_net_mesh.material_override = mat
-	_net_mesh.set_meta("no_style", true)
+	var built := LevelOverlays.build_nets(_nets, layout)
+	_net_boxes = built.boxes
+	_net_mesh = built.mesh
 	_net_mesh.visible = _show_paths
 	root.add_child(_net_mesh)
 

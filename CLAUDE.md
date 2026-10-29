@@ -117,6 +117,16 @@ in `decode_actors.py` as hypotheses.
   - Game x/z are the map's z/x.
   - `extract_terrain.py` writes `terrain/surfaces.json` (the special floor triangles) and
     gives the walk-through floors a `cbmpNNN_pass` material. Only JOKE and SLIM have them.
+- **Terrain material suffixes** (`extract_terrain.py`), in this order: `_mix`
+  (tile-graphics bit 12, semi-transparent: the GPU's 50/50 blend via the textures' alpha
+  128), `_s<u>_<v>` (bit 11, UV scroll by the chunk's two signed bytes after the 84-byte
+  block: `(s * clock300 >> 6) % 28` texels, 0x80065744), `_see` (surface bit 0x80) and
+  `_pass` (always last).
+- **Water** is tile type 3: its colour comes from the chunk's `SLFX` light table
+  (0x800654f8), not the shading byte (which is 0, so it used to render black). The
+  extractor uses the table's mean level (`_slfx_light`); the per-cell flicker of noise
+  mode isn't reproduced. Type-0 shading is still `/64` (×2 in Godot), which may be up to
+  2× brighter than the game's `shading & 0xfc` with 128 = ×1 (not checked).
 - **Y-inversion is only a skinned-model thing.** Skinned Cobj vertices are bone-relative,
   and the root bone carries a 180° rotation about (1,0,1). The OBJ export skips that
   rotation, so skinned OBJs (e.g. the mech) look upside-down. The `.glb` export applies
@@ -280,7 +290,7 @@ in `decode_actors.py` as hypotheses.
       This hasn't been checked against the game's own env-map code.
     - Before this, env-only models such as CONFT cobj063 (the arches on actors 360/362)
       drew near-black.
-  - The scene root runs `scripts/level_ambience.gd` (visual/audio only, nothing reacts):
+  - The scene root runs `scripts/level_ambience.gd` (visual/audio; only elevators react):
     - placed effects;
     - class-97 decals (only some levels have them, e.g. M2C 180, UN 88, M4A1 44);
     - looping `all_frames` clips on props (not on the X1 parts);
@@ -290,6 +300,17 @@ in `decode_actors.py` as hypotheses.
       WAV.
     - **Minimap** (bottom right; M toggles): `minimap.gd` from the viewer, tracking the
       walker with a heading tick.
+    - **Elevators** (`elevator.gd`, class 10): absolute stop heights from the ground
+      probe, the game's speeds and waits, ping-pong; the walker rides an
+      AnimatableBody3D (moved directly: moving its parent doesn't sync it). Trigger types
+      2/3/4 wait for script messages, so they stay put. Their ambient sound loops only
+      while moving. `tile_effect` is the top's surface byte.
+    - **Pickups** (class 16) spin at the decoded rate; they don't bob. The power-up
+      flash isn't drawn.
+    - **Water scroll:** `_s<u>_<v>` terrain materials get a per-frame `uv1_offset`.
+    - **Debug overlay** (O; `debug_overlay.gd`): trigger zones labelled with what their
+      scripts message, Cnet paths and special floors by colour, built with the
+      viewer's `level_overlays.gd` builders. It needs `rpns.json` and `fun.json`.
     - **Lighting:** L toggles the PS1 look (the default: unshaded, no sun, terrain vertex
       colours ×2 because PS1 colour 128 = full brightness) and real-time lit. G toggles
       fog. A hint line shows the keys.
@@ -303,7 +324,7 @@ in `decode_actors.py` as hypotheses.
     - a convex hull per prop mesh.
     It skips the player, because it runs before `player.gd`'s `_ready`. It uses the render
     mesh, not the game's own Ctil collision channels. It leaves out the `_pass` surfaces
-    (walk-through floors).
+    (walk-through floors) and records which faces are `_see` (camera line of sight).
   - Run `--import` first, because a `--script` run that finds textures used in 3D marks
     them for VRAM compression but never reimports them.
   - Parts mounted inside an instanced `.glb` need `set_editable_instance()`, or `pack()`
@@ -359,8 +380,13 @@ in `decode_actors.py` as hypotheses.
     - hover over water can't transform back;
     - wall bounce and turn;
     - 30 s tours in CONFT, LAX1, JOKE, OV and M3B.
-  - Not modelled: hard-landing damage, the crouch, aiming, the camera's see-through
-    polygons, and what surface bit 0x10 does (nothing in the EXE reads it).
+  - **Crouch:** Shift+Space with no forward/back (L1+Triangle): track 3 then hold 25,
+    no movement, turning allowed.
+  - **Hard landing:** above 0x50000 (0x80000 from tracks 56/57) the landing settle plays;
+    above 0x93333 it costs health by 0x80052f54 (`landing_damage()`): a terminal-speed
+    fall (0xC0000) is all 5000.
+  - Not modelled: aiming, hover hard landings, the crouch's sounds, and what surface bit
+    0x10 does (nothing in the EXE reads it).
   - Legs AnmD tracks that share a frame range are exported once. player.gd maps the
     others through the `.glb` extras `duplicate_tracks` (e.g. landing track 5 = track 3).
   - **Spawn:** on its first physics frame it snaps onto the real ground with a raycast,
@@ -374,17 +400,22 @@ in `decode_actors.py` as hypotheses.
     The ids are Cshd script ids, matched together with the positional flag, because the
     2D and 3D tables reuse ids. They're all in the global table (bank 1), the same in
     every level.
-  - **Camera:** player.gd drives the game's standard view, detached from the mech
-    (`top_level`). The generator only sets the lens: 26.4° vertical FOV, `KEEP_HEIGHT`.
-    Not modelled: the other views, the blocked-view fallback and the playerY/2 height
-    term. The game's standard view (`0x800569ec`, decompiled) is:
-    - 29.0° pitch (330/4096 of a turn), looking at the player + 2.0 Godot units up;
-    - the camera about 4.75 above the look point and 8.6 behind (at player Y = 0; the
-      height term includes playerY/2);
-    - vertical FOV ≈ 26.4° (GTE H = 512 on a 320×240 screen);
-    - smoothing: yaw/pitch ease 1/32 per step, capped at ~105°/s and ~53°/s.
-    There are 7 selectable views, made from 20-byte presets at `0x8009ad08`. The
-    walker's other sounds: hover loops 0x28–0x2a, transform 0x15.
+  - **Camera** (`game_camera.gd`, added by player.gd; the generator only sets the lens:
+    26.4° vertical FOV, `KEEP_HEIGHT`). From `0x800569ec`/`0x8005612c`:
+    - 7 views (V, the game's Select) from the mode table at `0x8009aec4`, each a preset
+      list (primary + fallbacks) and flags (zoom 0x100/300 dolly, fixed world yaw, line
+      of sight). Views 5/6 only inside class-95 Triggers with bitfield 0x40.
+    - Presets at `0x8009ad08` (20 bytes: yaw, pitch, height, look offset). Height
+      H(p) = max(4.5, 6.75 + 16(1 − (1 − (p−330)/600)²)); camera Y = H + Ys/2, look Y =
+      Ys + offset.y; distance = height difference × cot(pitch).
+    - Easing: pitch/yaw 1/32 per **150 Hz** step, capped 52.7°/s and 105.5°/s; Ys is a
+      cubic spring (`0x80056530`).
+    - Line of sight (`0x80055ee8`): terrain only; a see-through (0x80) first hit is
+      rechecked from the player. Blocked → every 0.4 s step to the next fallback
+      (higher, never closer).
+    - Transform cut-away: a random preset 9–16 with clear sight, held rigidly.
+    - The zoom's rate isn't decoded (ZOOM_RATE is a guess).
+    The     walker's other sounds: hover loops 0x28–0x2a, transform 0x15.
   - **Testing (2026-10-28):** a scripted walk test showed it lands on the floor in all
     14 levels and walks out of the start bay in most of them.
 - `scripts/music_loop.gd` is an AudioStreamPlayer that replays itself when the track finishes.

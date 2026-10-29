@@ -4,7 +4,8 @@
 ##
 ## Keys (game default in brackets): W/S forward/back [Up/Down], A/D turn [Left/Right],
 ## Q/E strafe [L2/R2], Shift slow walk [L1], Space jump / hover brake [Triangle],
-## T transform walker <-> hover [L1+R1], Esc back to the menu.
+## Shift+Space crouch [L1+Triangle], T transform walker <-> hover [L1+R1],
+## V camera view [Select], Esc back to the menu.
 ##
 ## Physics run in the game's own 37.5 Hz steps (8 clock units of 300 Hz), each doing
 ## vel += command − vel·drag; constants are game values converted to Godot units
@@ -40,10 +41,16 @@
 ## track 1 and legs track 13. Hover physics run from the start of either transform
 ## until the walker is back down.
 ##
-## The chase camera is the game's standard view (0x800569ec, preset 0 at 0x8009ad08):
-## pitched down 29° at a look point 2 units above the feet, from 8.57 behind and 4.75
-## above it. Yaw eases 1/32 per 60 Hz step, capped at ~105°/s; the look point follows
-## height with a small dead zone.
+## The camera is the game's (game_camera.gd): 7 views on V, line-of-sight fallbacks
+## that respect see-through polygons, and the transform cut-away.
+##
+## Crouch (state 9 of 0x800549f0): Shift+Space with no forward/back plays legs track 3
+## then holds track 25; the walker stops but can still turn. (The game also lowers its
+## hit box, which only matters for being shot.) Hard landing: touching down faster than
+## 0x50000 (5.86 u/s; 0x80000 from a running jump's hold tracks 56/57) settles with
+## track 5, and above 0x93333 (10.8 u/s) costs health (0x80052f54): T = (v − 0x93333) /
+## 0x2CCCD, f = 0.612·T (T ≤ 0.5), 0.866·T^1.5 (T ≤ 0.75), T² above, × max health; a fall
+## at the terminal 0xC0000 is T = 1, all of it.
 ##
 ## Special floors (surfaces.gd, from the terrain's surface bytes): conveyors move the
 ## body each step, damaging and deadly floors take health (5000, the X1-Alpha actor's),
@@ -65,11 +72,12 @@
 ## quarter of its turn rate. Godot's collision still stops the body at the wall
 ## surface (the game lets a corner sink in by up to a step's movement).
 ##
-## Not modelled: hard-landing damage, the crouch (Shift+Space), aiming, the camera's
-## see-through polygons (surface bit 0x80) and the other camera views.
+## Not modelled: aiming, the hovercraft's hard landings, the crouch's sounds (its
+## animation events 0x25/0x27 aren't matched to sounds).
 extends CharacterBody3D
 
 const EffectPlayer := preload("res://scripts/effect_player.gd")
+const GameCamera := preload("res://scripts/game_camera.gd")
 const Surfaces := preload("res://scripts/surfaces.gd")
 
 const STEP := 1.0 / 37.5                    # one game physics step
@@ -128,13 +136,11 @@ const RESPAWN_TIME := 2.0                   # not from the game
 # Walls
 const WALL_PUSH := 0x24000 * _G             # per axis, away from the wall
 const WALL_TURN := 8 * TAU / 4096.0         # rad per step towards the wall's direction
-# Camera
-const CAM_LOOK_UP := 2.0
-const CAM_UP := 4.75
-const CAM_BACK := 8.57
-const CAM_YAW_EASE := 1.0 / 32.0            # per 60 Hz step
-const CAM_YAW_MAX := deg_to_rad(105.0)      # rad/s
-const CAM_Y_DEAD_ZONE := 0.03               # 0x100 game units
+const HARD_LANDING_RUN := 0x80000 * _G      # landing from a running jump's hold
+const LANDING_DAMAGE_FROM := 0x93333 * _G
+const LANDING_DAMAGE_UNIT := 0x2CCCD * _G
+const CROUCH_TRACK := 3
+const CROUCH_HOLD := 25
 
 # Gaits: legs AnmD tracks and sounds (Cshd script ids). start → cycle (looping); "step"
 # plays on entering a step_on track; "restart" re-triggers the loop there; stop_track
@@ -183,8 +189,8 @@ var _air_steps := 0
 var _fall_speed := 0.0
 var _hover_turn := 0.0      # hover turn rate (game units, signed)
 var _idle_clock := 0.0      # hover: clock units without move input
-var _cam_yaw := 0.0
-var _cam_y := 0.0           # smoothed look-point height
+var _camera: GameCamera
+var _crouch := false
 var _surfaces: Surfaces
 var _surface := 0           # surface byte (& 0x3F) under the body, probed each frame
 var _conveyed := Vector3.ZERO   # conveyor movement waiting to be applied
@@ -220,7 +226,11 @@ func _ready() -> void:
 	_make_hud()
 	_cam = get_node_or_null("Camera") as Camera3D
 	if _cam:
-		_cam.top_level = true   # moves on its own, smoothed (see _update_camera)
+		_cam.top_level = true   # placed by game_camera.gd
+		_camera = GameCamera.new()
+		var zones: Array = owner.view_zones() if owner and owner.has_method("view_zones") else []
+		_camera.setup(self, _cam, zones)
+		add_child(_camera)
 	floor_snap_length = STEP_UP[false]
 	floor_max_angle = deg_to_rad(SLOPE.run)
 	# Legs are the "legs" part of the X1 assembly built by level_layout.gd. Direct
@@ -312,8 +322,8 @@ func _physics_process(delta: float) -> void:
 		_started = true
 		_spawn = global_transform
 		_snap_to_ground()
-		_cam_yaw = _heading()
-		_cam_y = global_position.y
+		if _camera:
+			_camera.reset(_heading(), global_position.y)
 	_update_hud(delta)
 	if _dead > 0.0:
 		_dead -= delta
@@ -397,8 +407,9 @@ func _walker_step() -> void:
 		if not busy:
 			var inp := _inputs()
 			var slow := Input.is_action_pressed("slow_walk")
-			cmd = global_basis.z * inp.x * (SLOW_CMD if slow else RUN_CMD) \
-				+ global_basis.x * inp.y * (SLOW_STRAFE_CMD if slow else STRAFE_CMD)
+			if not _crouching():
+				cmd = global_basis.z * inp.x * (SLOW_CMD if slow else RUN_CMD) \
+					+ global_basis.x * inp.y * (SLOW_STRAFE_CMD if slow else STRAFE_CMD)
 			var speed_factor := maxf(0.0, 1.0 - h.length() / (1048576.0 * _G))
 			rotate_y(_turn_input() * WALK_TURN * speed_factor)
 		if grip > 0:
@@ -410,6 +421,12 @@ func _walker_step() -> void:
 			h = Vector3.ZERO
 	velocity.x = h.x
 	velocity.z = h.z
+
+
+func _crouching() -> bool:
+	## L1 + Triangle with no forward/back (slow forward/back win; crouch beats strafe).
+	return Input.is_action_pressed("slow_walk") and Input.is_action_pressed("jump") \
+		and Input.get_axis("move_back", "move_forward") == 0.0
 
 
 func _would_drop(h: Vector3) -> bool:
@@ -557,15 +574,33 @@ func _update_landing() -> void:
 			velocity.z = 0.0
 			_set_motor(LAND_LOOP)
 			_play_track(5)
+		_hard_landing(HARD_LANDING_RUN if _jump.get("holding", false) else HARD_LANDING)
 	elif _jump.is_empty() and not is_on_floor() and _air_steps > 2 and _gait != "":
 		_stop_gait(false)   # walked off a ledge: legs to rest while falling
 	elif _jump.is_empty() and landed and _fall_speed > HARD_LANDING:
+		_hard_landing(HARD_LANDING)
 		_fall_speed = 0.0
 		_jump = {"kind": "fall", "phase": "land"}
 		_set_motor(LAND_LOOP)
 		_play_track(5)
 	if landed and _jump.is_empty():
 		_fall_speed = 0.0
+
+
+func _hard_landing(threshold: float) -> void:
+	if _fall_speed > threshold:
+		var dmg := landing_damage(_fall_speed)
+		if dmg > 0:
+			_hurt(dmg)
+
+
+static func landing_damage(speed: float) -> int:
+	## 0x80052f54: health lost landing at this speed (Godot u/s), at full MAX_HP.
+	if speed < LANDING_DAMAGE_FROM:
+		return 0
+	var t := (minf(speed, 0x300000 * _G) - LANDING_DAMAGE_FROM) / LANDING_DAMAGE_UNIT
+	var f := 0.61237 * t if t <= 0.5 else (0.86603 * pow(t, 1.5) if t <= 0.75 else t * t)
+	return int(MAX_HP * f)
 
 
 # ─── Gaits / leg animation / sounds ───────────────────────────────────────────
@@ -590,6 +625,13 @@ func _wanted_gait() -> String:
 func _update_gait() -> void:
 	if _legs_anim == null or not _jump.is_empty() or _t_dir != 0:
 		return
+	var crouch := is_on_floor() and _crouching()
+	if crouch != _crouch:
+		_crouch = crouch
+		_stop_gait(false)
+		_play_track(CROUCH_TRACK if crouch else 0, 0.0 if crouch else 0.2)
+	if _crouch:
+		return   # turning is allowed but keeps the crouch pose
 	var want := _wanted_gait()
 	if want == _gait:
 		return
@@ -621,6 +663,9 @@ func _on_legs_clip_finished(_name: StringName) -> void:
 		return
 	if not _jump.is_empty():
 		_jump_clip_finished()
+		return
+	if _crouch:
+		_play_track(CROUCH_HOLD)
 		return
 	if _gait == "":
 		return
@@ -815,10 +860,14 @@ func _update_transform(delta: float) -> void:
 func _probe_surface() -> void:
 	## The ground probe: the surface byte of the floor under the body (surfaces.gd).
 	_surface = 0
-	if _surfaces == null or _surfaces.is_empty():
+	if _surfaces == null:
 		return
 	var hit := _ray_down(global_position, Surfaces.PROBE_UP, 2.0)
-	if hit:
+	if hit and hit.collider.has_meta("tile_effect"):
+		# An elevator top (elevator.gd): its own surface byte when within reach.
+		if global_position.y - hit.position.y <= Surfaces.REACH:
+			_surface = hit.collider.get_meta("tile_effect")
+	elif hit:
 		_surface = _surfaces.action_at(global_position, hit.position.y)
 
 
@@ -896,6 +945,7 @@ func _respawn() -> void:
 	_wall_normal = Vector3.ZERO
 	_jump = {}
 	_gait = ""
+	_crouch = false
 	_hover = false
 	_t = 0.0
 	_t_dir = 0
@@ -1010,15 +1060,5 @@ func _heading() -> float:
 
 
 func _update_camera(delta: float) -> void:
-	if _cam == null:
-		return
-	var diff := wrapf(_heading() - _cam_yaw, -PI, PI)
-	var ease_step := diff * (1.0 - pow(1.0 - CAM_YAW_EASE, delta * 60.0))
-	_cam_yaw += clampf(ease_step, -CAM_YAW_MAX * delta, CAM_YAW_MAX * delta)
-	var dy := global_position.y - _cam_y
-	if absf(dy) > CAM_Y_DEAD_ZONE:
-		_cam_y += (dy - signf(dy) * CAM_Y_DEAD_ZONE) * (1.0 - pow(0.85, delta * 60.0))
-	var look := Vector3(global_position.x, _cam_y + CAM_LOOK_UP, global_position.z)
-	var fwd := Vector3(sin(_cam_yaw), 0.0, cos(_cam_yaw))
-	_cam.global_position = look - fwd * CAM_BACK + Vector3(0, CAM_UP, 0)
-	_cam.look_at(look, Vector3.UP)
+	if _camera:
+		_camera.update(delta, _heading(), _t, _t_dir != 0)

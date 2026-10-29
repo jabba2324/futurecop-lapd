@@ -3,7 +3,9 @@
 ## because the PS1 walls are single-sided), and each placed prop under
 ## "Actors" gets a convex hull of its meshes. Attached to the scene's Terrain node.
 ## Terrain surfaces whose material ends in "_pass" are left out: floors the game's
-## ground probe ignores (surface byte 0x40, extract_terrain.py).
+## ground probe ignores (surface byte 0x40, extract_terrain.py). Faces from "_see"
+## materials (surface bit 0x80) are listed in see_through, by collision face index,
+## for the camera's line-of-sight test (player.gd).
 extends Node3D
 
 @export var props_root: NodePath = ^"../Actors"
@@ -12,6 +14,9 @@ extends Node3D
 ## runs before player.gd's _ready, so group membership can't be relied on here.
 @export var skip_groups: PackedStringArray = ["player"]
 
+var see_through := PackedByteArray()   # per TerrainCollision face: 1 = camera sees through
+var terrain_body: StaticBody3D
+
 
 func _ready() -> void:
 	var terrain := get_node_or_null("TerrainMesh") as MeshInstance3D
@@ -19,7 +24,7 @@ func _ready() -> void:
 		var shape := ConcavePolygonShape3D.new()
 		shape.set_faces(_solid_faces(terrain.mesh))
 		shape.backface_collision = true
-		_add_body(self, "TerrainCollision", shape, Transform3D.IDENTITY)
+		terrain_body = _add_body(self, "TerrainCollision", shape, Transform3D.IDENTITY)
 
 	var actors := get_node_or_null(props_root)
 	if actors == null:
@@ -44,12 +49,20 @@ func _solid_faces(mesh: Mesh) -> PackedVector3Array:
 		var arrays := mesh.surface_get_arrays(s)
 		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] else PackedInt32Array()
+		var before := faces.size()
 		if idx.is_empty():
 			faces.append_array(verts)
 		else:
 			for i in idx:
 				faces.append(verts[i])
+		var see := 1 if mat and mat.resource_name.contains("_see") else 0
+		for f in (faces.size() - before) / 3:
+			see_through.append(see)
 	return faces
+
+
+func is_see_through(face_index: int) -> bool:
+	return face_index >= 0 and face_index < see_through.size() and see_through[face_index] == 1
 
 
 func _skipped(node: Node) -> bool:
@@ -59,7 +72,7 @@ func _skipped(node: Node) -> bool:
 	return false
 
 
-func _add_body(parent: Node, name: String, shape: Shape3D, xform: Transform3D) -> void:
+func _add_body(parent: Node, name: String, shape: Shape3D, xform: Transform3D) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.name = name
 	var cs := CollisionShape3D.new()
@@ -67,3 +80,4 @@ func _add_body(parent: Node, name: String, shape: Shape3D, xform: Transform3D) -
 	cs.transform = xform
 	body.add_child(cs)
 	parent.add_child(body)
+	return body

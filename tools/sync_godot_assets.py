@@ -16,6 +16,7 @@ it copies:
   models/<cobj>.glb (animated)       props whose model has animation clips or 3DTA
                                      texture animation (used instead of the OBJ)
   dcs.json + decal textures          class-97 decals (level_overlays.build_decals)
+  rpns.json, fun.json                actor scripts and level functions (debug overlay labels)
   shd.json + sfx_tones/*.wav         ambient sounds (BaseEntity.ambient_sound → the
                                      Cshd entry with that group_id → its tone WAV)
 Anything else under godot/assets/<LEVEL>/ (except Godot's *.import sidecars of
@@ -89,7 +90,7 @@ def _wanted_files(level):
             if a["class"] != _X1_CLASS:
                 files.update({f"objects/{name}.obj", f"objects/{name}.mtl"})
     files.add(f"loading/{level}LD.png")
-    files.update({"actors_decoded.json", "csfx.json", "dcs.json", "shd.json"})
+    files.update({"actors_decoded.json", "csfx.json", "dcs.json", "shd.json", "rpns.json", "fun.json"})
     files.add("textures/cbmp010.png")   # env-map sphere map (obj_loader.shine_texture)
     # Decal textures and ambient-sound WAVs actually referenced by the level.
     decoded = json.load(open(os.path.join(src, "actors_decoded.json"))).get("actors", [])

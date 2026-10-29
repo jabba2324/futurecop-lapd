@@ -169,6 +169,10 @@ func _add_terrain(root: Node3D) -> void:
 		if mat is StandardMaterial3D:
 			var m := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
 			m.cull_mode = BaseMaterial3D.CULL_DISABLED
+			# Semi-transparent polygons (water): the PS1's 50/50 blend, from the
+			# texture's alpha 128 on STP texels (extract_terrain.py names them "_mix").
+			if mat.resource_name.contains("_mix"):
+				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			mi.set_surface_override_material(i, m)
 
 	terrain_node.add_child(mi)
