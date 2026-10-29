@@ -51,9 +51,11 @@ def _mtl_textures(mtl_path):
 
 
 # The X1-Alpha's movement sounds, (Cshd script_id, positional), as godot/scripts/player.gd
-# plays them: loops 0x22/0x24/0x25, step hits 0x38/0x3a, stop sounds 0x32/0x34/0x35.
+# plays them: loops 0x22/0x24/0x25, step hits 0x38/0x3a, stop sounds 0x32/0x34/0x35,
+# hover loops 0x28/0x29 and the transform sound 0x15.
 _PLAYER_SOUNDS = {(0x22, True), (0x24, True), (0x25, True), (0x38, False), (0x3a, False),
-                  (0x32, False), (0x34, False), (0x35, False)}
+                  (0x32, False), (0x34, False), (0x35, False), (0x28, True), (0x29, True),
+                  (0x15, False)}
 
 
 def _glb_needed(path):

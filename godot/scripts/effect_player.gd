@@ -27,17 +27,18 @@ var _items: Array = []   # {node, age, life, kind, ...}
 var _rng := RandomNumberGenerator.new()
 
 
-static func build_registry(decoded: Array, csfx: Variant) -> Dictionary:
+static func build_registry(decoded: Array, csfx: Variant, table := 0) -> Dictionary:
 	## {effects: effect_id -> {cls, def}, damage_sets: set_id -> record}.
 	## Csfx table 0 (global effects) is overlaid with the level's own class 87–94
-	## effect-definition actors (decoded = actors_decoded.json "actors").
+	## effect-definition actors (decoded = actors_decoded.json "actors"). Table 1 is the
+	## player's effects (pass decoded = []), e.g. effect 4 at the X1's transform.
 	var effects := {}
 	var damage_sets := {}
 	if csfx is Array:
-		for table: Dictionary in csfx:
-			if int(table.get("table_index", 0)) != 0:
+		for tbl: Dictionary in csfx:
+			if int(tbl.get("table_index", 0)) != table:
 				continue
-			for r: Dictionary in table.get("records", []):
+			for r: Dictionary in tbl.get("records", []):
 				var cls := int(r.get("class", 0))
 				if cls < 87 or cls > 94 or cls == 91:
 					continue

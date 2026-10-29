@@ -211,7 +211,11 @@ static func is_x1(actor: Dictionary) -> bool:
 # cockpit on the legs' hips, a weapon on each cockpit gun mount, beacon lights on
 # the cockpit roof, pilot at the cockpit origin (hidden inside in walker mode).
 const X1_ROLES := ["legs", "cockpit", "weapon", "beacon_lights", "pilot"]
-const X1_MOUNTS := {"cockpit": ["legs", ["attach_0"]], "weapon": ["cockpit", ["attach_0", "attach_1"]],
+# Weapons follow cockpit skeleton bones, not its attach points (SLUS_007.39 0x80052960
+# copies the world matrix of bone record 4 to weapon 0 and record 2 to weapon 1, with no
+# extra offset or mirroring). Those end bones swing out as the cockpit transforms to
+# hover (cockpit track 2). "bone:NAME" mounts on a BoneAttachment3D.
+const X1_MOUNTS := {"cockpit": ["legs", ["attach_0"]], "weapon": ["cockpit", ["bone:bone_4", "bone:bone_2"]],
 	"beacon_lights": ["cockpit", ["attach_2"]], "pilot": ["cockpit", [""]]}
 
 
@@ -237,7 +241,9 @@ static func assemble_x1(actor: Dictionary, load_part: Callable) -> Node3D:
 			var parent: Node = root
 			if mounts[0] != "" and parts.has(mounts[0]):
 				parent = parts[mounts[0]]
-				if mount != "":
+				if mount.begins_with("bone:"):
+					parent = _bone_mount(parts[mounts[0]], mount.trim_prefix("bone:"))
+				elif mount != "":
 					parent = parts[mounts[0]].find_child(mount, true, false)
 					if parent == null:
 						parent = parts[mounts[0]]
@@ -245,6 +251,19 @@ static func assemble_x1(actor: Dictionary, load_part: Callable) -> Node3D:
 			if not parts.has(role):
 				parts[role] = part
 	return root
+
+
+static func _bone_mount(part: Node3D, bone: String) -> Node3D:
+	## A BoneAttachment3D following `bone` of the part's skeleton (the part itself if
+	## it has no such bone).
+	for sk: Skeleton3D in part.find_children("*", "Skeleton3D", true, false):
+		if sk.find_bone(bone) >= 0:
+			var at := BoneAttachment3D.new()
+			at.name = "mount_" + bone
+			at.bone_name = bone
+			sk.add_child(at)
+			return at
+	return part
 
 
 # ─── Ground alignment ─────────────────────────────────────────────────────────

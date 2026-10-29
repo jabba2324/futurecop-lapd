@@ -115,9 +115,23 @@ in `decode_actors.py` as hypotheses.
   either way.
 - X1-Alpha (class 1) is five parts, in `objects` order in every level: legs (walk cycle,
   53 clips), cockpit (wing/hover transform), weapon (×2), beacon lights, pilot. They
-  mount on the `.glb` `attach_N` empties (3DHS): cockpit on legs.attach_0, weapons on
-  cockpit.attach_0/1, lights on cockpit.attach_2. `level_layout.assemble_x1()` builds it.
+  mount on the `.glb` `attach_N` empties (3DHS): cockpit on legs.attach_0 and lights on
+  cockpit.attach_2. **The weapons are different.** They follow cockpit skeleton bones,
+  weapon 0 on `bone_4` and weapon 1 on `bone_2` (end bones under the side bones), via
+  `BoneAttachment3D`. The game copies those bones' world matrices (`0x80052960`), with
+  no offset or mirroring. Cockpit attach_0/1 sit at the front of the cockpit, where the
+  guns were wrongly hung before. `level_layout.assemble_x1()` builds it.
   The legs walk cycle is AnmD tracks 38→39→40→41 (looping); track 0 is rest.
+- X1 walker ↔ hover transform (`0x80055988`):
+  - Cockpit track 2 (f0–29) and legs track 12 (f330–359) play together over 1.37 s,
+    forwards to hover and backwards to walk.
+  - Holds: in hover, cockpit track 1 (f29) and legs track 13 (f359); in walker,
+    track 0 for both. Cockpit frame 0 = walker, 29 = hover.
+  - The body rises 0x1000 (0.5 Godot units). Plain sound 0x15 and player effect 4
+    (Csfx table 1, lightning) play at the start of either direction.
+  - Hover physics: thrust with 5% drag per 37.5 Hz step, steady 9.4 units/s, capped at
+    10.7. They run from the start of either transform until the walker has landed.
+  - Hover loops: positional 0x28 (idle) and 0x29 (moving or turning).
 - Actor placement: `pos × 8` world units, mapped as in `godot/scripts/level_layout.gd`.
   Cnet nodes use the same `pos_x`/`pos_z` convention (`raw/256`), and every pathed actor
   sits exactly on a node of its net.
@@ -287,7 +301,8 @@ in `decode_actors.py` as hypotheses.
 - `.tscn` rule: every `[ext_resource]` must come before any `[sub_resource]`, or the scene
   fails to load.
 - `scripts/player.gd` is the walker, a `CharacterBody3D`.
-  - **Controls:** W/S walk along the actor's **+Z** axis (the X1's forward), A/D turn.
+  - **Controls:** W/S walk along the actor's **+Z** axis (the X1's forward), A/D turn,
+    Space transforms between walker and hover (see the X1 transform notes above).
   - **Physics:** gravity, `move_and_slide`, and a 50° max floor angle.
   - **Spawn:** on its first physics frame it snaps onto the real ground with a raycast,
     because the heightmap estimate can be a few units off (OVMP: by 2.5).

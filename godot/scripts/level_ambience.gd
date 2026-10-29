@@ -205,7 +205,7 @@ func _add_hint() -> void:
 
 func _update_hint() -> void:
 	if _hint:
-		_hint.text = "W/S walk · A/D turn · L lighting: %s · G fog: %s · M map: %s · Esc menu" % [
+		_hint.text = "W/S walk · A/D turn · Space transform · L lighting: %s · G fog: %s · M map: %s · Esc menu" % [
 			"PS1" if _ps1_look else "lit", "on" if _fog else "off",
 			"on" if _minimap and _minimap.visible else "off"]
 
