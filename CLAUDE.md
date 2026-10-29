@@ -108,6 +108,15 @@ in `decode_actors.py` as hypotheses.
   well, because the 20-byte field truncates it.
 - Cobj vertices: `(-x, y, z) / 512`. Terrain: `world_y = channel_byte / 32`, and each Ctil
   chunk spans ±8 units.
+- **Surface bytes:** each Ctil has `polygon_action_types[4]` (after the heightmap and one
+  zero byte), and each tile polygon picks one with bits 13–14.
+  - Bit 0x80 makes the polygon see-through to the camera. Bit 0x40 marks a floor the game
+    walks through, unless its index is 0.
+  - The low six bits are an enumeration: water, kill, traction, damage, team zones and
+    conveyors. It's decoded in `godot/scripts/surfaces.gd`.
+  - Game x/z are the map's z/x.
+  - `extract_terrain.py` writes `terrain/surfaces.json` (the special floor triangles) and
+    gives the walk-through floors a `cbmpNNN_pass` material. Only JOKE and SLIM have them.
 - **Y-inversion is only a skinned-model thing.** Skinned Cobj vertices are bone-relative,
   and the root bone carries a 180° rotation about (1,0,1). The OBJ export skips that
   rotation, so skinned OBJs (e.g. the mech) look upside-down. The `.glb` export applies
@@ -293,7 +302,8 @@ in `decode_actors.py` as hypotheses.
       PS1 walls are single-sided;
     - a convex hull per prop mesh.
     It skips the player, because it runs before `player.gd`'s `_ready`. It uses the render
-    mesh, not the game's own Ctil collision channels.
+    mesh, not the game's own Ctil collision channels. It leaves out the `_pass` surfaces
+    (walk-through floors).
   - Run `--import` first, because a `--script` run that finds textures used in 3D marks
     them for VRAM compression but never reimports them.
   - Parts mounted inside an instanced `.glb` need `set_editable_instance()`, or `pack()`
@@ -324,8 +334,33 @@ in `decode_actors.py` as hypotheses.
       generator's capsule at run time.
   - Tested headlessly: speeds, turn rate and running-jump airtime match the game
     within a few %. The jump apexes come out ~10% low, a step-ordering difference.
-  - Not modelled: surface types (water, conveyors, damage floors), hard-landing
-    damage, the crouch, the game's wall push-back, aiming.
+  - **Special floors** (`surfaces.gd` and `assets/<LEVEL>/terrain/surfaces.json`). The
+    floor under the body is looked up each frame, picking the special floor triangle at
+    the raycast ground height. It's applied every step:
+    - conveyors move the body: 0.67, 1.34, 2.34 or 4.69 u/s;
+    - damage 8–32 per step, or a kill. Health is 5000 and shows bottom left. At zero
+      the X1 explodes (player effects 3 and 9, plain sound 0x41; not in water) and
+      respawns after 2 s;
+    - low traction scales the walker's command and drag;
+    - deep water: the default is `WATER_RESCUE`, where a walker turns to hover and a
+      hovercraft can't land. Sinking is the game's other setting. LAX2, M4A1, OV and HK
+      all start the player on deep water.
+  - **Walls:** for terrain walls taller than the step-up height, the next step removes
+    the velocity along the wall normal (snapped to x, z or a diagonal), applies 12.5%
+    drag and adds a 0x24000 per-axis push. The heading turns up to 8/4096 of a turn per
+    step towards the wall direction. A hovercraft touching anything gets a quarter of
+    its turn rate.
+  - Step-up uses the velocity from before `move_and_slide`, which zeroes it against a
+    head-on step.
+  - Tested headlessly:
+    - conveyor 1.34 u/s;
+    - damage 600 HP/s (16 per step);
+    - sinking 0.88 u/s, lost at 1.75;
+    - hover over water can't transform back;
+    - wall bounce and turn;
+    - 30 s tours in CONFT, LAX1, JOKE, OV and M3B.
+  - Not modelled: hard-landing damage, the crouch, aiming, the camera's see-through
+    polygons, and what surface bit 0x10 does (nothing in the EXE reads it).
   - Legs AnmD tracks that share a frame range are exported once. player.gd maps the
     others through the `.glb` extras `duplicate_tracks` (e.g. landing track 5 = track 3).
   - **Spawn:** on its first physics frame it snaps onto the real ground with a raycast,

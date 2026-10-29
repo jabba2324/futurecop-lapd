@@ -5,6 +5,7 @@ The generated level scenes reference res://assets/<LEVEL>/..., so these copies s
 committed. This script makes them reproducible instead of hand-copied. For each level
 it copies:
   terrain/map.obj + map.mtl          stitched terrain
+  terrain/surfaces.json              special floors (water, conveyors, damage), player.gd
   objects/<cobj>.obj + .mtl          only models referenced by placed actors
   models/<cobj>.glb                  X1-Alpha (class 1) parts, assembled from glTF
   textures/*.png                     every texture an included .mtl references
@@ -54,7 +55,7 @@ def _mtl_textures(mtl_path):
 # them: gait loops 0x22-0x25, steps 0x38/0x3a/0x3b/0x33, gait stops 0x32-0x35, jump
 # 0x26/0x36 and landing 0x27/0x37, hover loops 0x28-0x2a, transform 0x15.
 _PLAYER_SOUNDS = {(i, True) for i in (0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a)} | \
-                 {(i, False) for i in (0x38, 0x3a, 0x3b, 0x33, 0x32, 0x34, 0x35, 0x36, 0x37, 0x15)}
+                 {(i, False) for i in (0x38, 0x3a, 0x3b, 0x33, 0x32, 0x34, 0x35, 0x36, 0x37, 0x15, 0x2a, 0x41)}
 
 
 def _glb_needed(path):
@@ -75,7 +76,7 @@ def _glb_needed(path):
 
 def _wanted_files(level):
     src = os.path.join(_PARSED, level)
-    files = {"terrain/map.obj", "terrain/map.mtl", "actors.json", "heightmap.json", "nets.json"}
+    files = {"terrain/map.obj", "terrain/map.mtl", "terrain/surfaces.json", "actors.json", "heightmap.json", "nets.json"}
     with open(os.path.join(src, "actors.json")) as f:
         actors = json.load(f)["actors"]
     for a in actors:

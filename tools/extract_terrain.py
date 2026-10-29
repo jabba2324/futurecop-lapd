@@ -17,6 +17,7 @@ Coordinate mapping (from fc-mit TilResource::createPartial):
 Each chunk spans ±8 units in xz; chunks tile together to form the full map.
 """
 
+import json
 import os
 import struct
 import sys
@@ -354,7 +355,7 @@ def write_map(mis_path, out_dir):
                     (v1[0] + wx_off, v1[1], v1[2] + wz_off),
                     (v2[0] + wx_off, v2[1], v2[2] + wz_off),
                     t[3], t[4], t[5], cbmp_id,
-                    t[7], t[8], t[9],
+                    t[7], t[8], t[9], t[10],
                 ))
                 used_bmps.add(cbmp_id)
 
@@ -378,16 +379,22 @@ def write_map(mis_path, out_dir):
         return uv_idx[uv]
 
     # key = position + vertex-color so shading differences create separate vertices
+    # Floors the game walks through get their own "_pass" material, so the Godot
+    # collision can leave them out (terrain_collision.gd).
     tri_objs = [(_vi(t[0] + t[7]), _vi(t[1] + t[8]), _vi(t[2] + t[9]),
-                 _ti(t[3]), _ti(t[4]), _ti(t[5]), t[6]) for t in all_tris]
+                 _ti(t[3]), _ti(t[4]), _ti(t[5]),
+                 f"cbmp{t[6]:03d}" + ("_pass" if _passes_through(t[10]) else "")) for t in all_tris]
+    mtls = sorted(set(t[6] for t in tri_objs))
+
+    _write_surfaces(all_tris, os.path.join(terrain_dir, "surfaces.json"))
 
     map_obj = os.path.join(terrain_dir, "map.obj")
     map_mtl = os.path.join(terrain_dir, "map.mtl")
 
     with open(map_mtl, "w") as mf:
-        for cbid in sorted(used_bmps):
-            mf.write(f"newmtl cbmp{cbid:03d}\n")
-            mf.write(f"map_Kd ../textures/cbmp{cbid:03d}.png\n\n")
+        for mtl in mtls:
+            mf.write(f"newmtl {mtl}\n")
+            mf.write(f"map_Kd ../textures/{mtl[:7]}.png\n\n")
 
     with open(map_obj, "w") as of:
         content_ids = set(grid[r][c] for r in range(grid_h) for c in range(grid_w)
@@ -402,8 +409,7 @@ def write_map(mis_path, out_dir):
         for u, v in uv_list:
             of.write(f"vt {u/255.0:.6f} {1.0 - v/255.0:.6f}\n")
         current_mtl = None
-        for vi0, vi1, vi2, ti0, ti1, ti2, cbid in sorted(tri_objs, key=lambda t: t[6]):
-            mtl = f"cbmp{cbid:03d}"
+        for vi0, vi1, vi2, ti0, ti1, ti2, mtl in sorted(tri_objs, key=lambda t: t[6]):
             if mtl != current_mtl:
                 of.write(f"usemtl {mtl}\n")
                 current_mtl = mtl
@@ -413,12 +419,41 @@ def write_map(mis_path, out_dir):
     return True
 
 
+def _write_surfaces(all_tris, path):
+    """surfaces.json: the floor triangles whose surface byte does something to the
+    player (low six bits nonzero), in map.obj coordinates:
+      {"tris": [[action, x0, y0, z0, x1, y1, z1, x2, y2, z2], ...]}"""
+    out = []
+    for t in all_tris:
+        action, _index, is_floor = t[10]
+        if is_floor and action & 0x3F and not _passes_through(t[10]):
+            out.append([action] + [round(c, 4) for v in t[:3] for c in v])
+    with open(path, "w") as f:
+        json.dump({"tris": out}, f, separators=(",", ":"))
+    print(f"  surfaces.json  ({len(out)} special floor tris)")
+
+
+# Surface byte (polygon_action_types), decoded from SLUS_007.39 (ground probe
+# 0x80066f78, handler 0x80053188). 0x80: camera sees through it (no physics);
+# 0x40: a floor the ground probes ignore (unless its action index is 0); the low six
+# bits are an enumeration, see godot/scripts/surfaces.gd.
+_FIRST_WALL = 0x47      # mesh types >= 0x47 are walls
+_PASS_THROUGH = 0x40
+
+
+def _passes_through(surface):
+    action, index, is_floor = surface
+    return is_floor and index != 0 and action & _PASS_THROUGH
+
+
 def _tris_from_sect(sect):
     """Extract triangle list from a parsed SECT payload (shared by extract_ctil and write_map).
 
-    Each triangle is a 10-tuple:
-      (v0, v1, v2, uv0, uv1, uv2, cbmp_id, vc0, vc1, vc2)
-    where vN = (wx, wy, wz), uvN = (u, v), vcN = (r, g, b) vertex-color in [0, 1].
+    Each triangle is an 11-tuple:
+      (v0, v1, v2, uv0, uv1, uv2, cbmp_id, vc0, vc1, vc2, surface)
+    where vN = (wx, wy, wz), uvN = (u, v), vcN = (r, g, b) vertex-color in [0, 1] and
+    surface = (action byte, action index, is_floor): the tile's polygon_action_types
+    entry (see SURFACES below), the 2-bit index that picked it, and mesh type < 0x47.
 
     Vertex colors encode the original PS1 shading so Blender can reproduce the lit
     appearance with: Base Color = texture × vertex_color (no extra ×2 needed, since the
@@ -436,7 +471,9 @@ def _tris_from_sect(sect):
             row.append((c0, c1, c2))
         heightmap.append(row)
 
-    p += 1 + 4 + 84 + 2
+    p += 1
+    action_types = sect[p:p + 4]   # polygon_action_types: surface byte per action index
+    p += 4 + 84 + 2
     mesh_lib_size = struct.unpack_from("<H", sect, p)[0]; p += 2
 
     mesh_ref = []
@@ -451,7 +488,7 @@ def _tris_from_sect(sect):
     mesh_tiles = []
     for _ in range(mesh_lib_size):
         bf = struct.unpack_from("<I", sect, p)[0]; p += 4
-        mesh_tiles.append(((bf >> 1) & 0x3FF, (bf >> 15) & 0x7F, (bf >> 22) & 0x3FF))
+        mesh_tiles.append(((bf >> 1) & 0x3FF, (bf >> 15) & 0x7F, (bf >> 22) & 0x3FF, (bf >> 13) & 3))
 
     texture_cords = []
     for _ in range(tc_amount):
@@ -482,7 +519,8 @@ def _tris_from_sect(sect):
             tile_amount, tiles_start = mesh_ref[tx][ty]
             for t in range(tile_amount):
                 tile_idx = (tiles_start + t) % len(mesh_tiles)
-                tc_idx, mesh_type, gfx_idx = mesh_tiles[tile_idx]
+                tc_idx, mesh_type, gfx_idx, act_idx = mesh_tiles[tile_idx]
+                surface = (action_types[act_idx], act_idx, mesh_type < _FIRST_WALL)
 
                 if mesh_type >= len(_TILESET) or _TILESET[mesh_type] is None:
                     continue
@@ -552,14 +590,14 @@ def _tris_from_sect(sect):
                 if len(pts) == 4:
                     tris.append((_v(pts[3]), _v(pts[1]), _v(pts[0]),
                                  _uv(3), _uv(1), _uv(0), cbmp_id,
-                                 vc[3], vc[1], vc[0]))
+                                 vc[3], vc[1], vc[0], surface))
                     tris.append((_v(pts[3]), _v(pts[2]), _v(pts[1]),
                                  _uv(3), _uv(2), _uv(1), cbmp_id,
-                                 vc[3], vc[2], vc[1]))
+                                 vc[3], vc[2], vc[1], surface))
                 else:
                     tris.append((_v(pts[2]), _v(pts[1]), _v(pts[0]),
                                  _uv(2), _uv(1), _uv(0), cbmp_id,
-                                 vc[2], vc[1], vc[0]))
+                                 vc[2], vc[1], vc[0], surface))
     return tris
 
 

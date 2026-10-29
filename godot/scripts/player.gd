@@ -45,12 +45,32 @@
 ## above it. Yaw eases 1/32 per 60 Hz step, capped at ~105°/s; the look point follows
 ## height with a small dead zone.
 ##
-## Not modelled: surface types (water, conveyors, damage floors), hard-landing damage,
-## the crouch (Shift+Space), the game's wall push-back/heading deflection (Godot slides
-## along walls instead), aiming, and the other camera views.
+## Special floors (surfaces.gd, from the terrain's surface bytes): conveyors move the
+## body each step, damaging and deadly floors take health (5000, the X1-Alpha actor's),
+## low-traction floors cut the walker's grip, and deep water turns a walker into a
+## hovercraft and keeps it from transforming back (plain sound 0x2A). Which the game
+## does depends on a per-player setting (DAT_8009fa94+8, not identified; it also scales
+## health): with it at 0 a walker sinks instead (0xC0/step, lost 1.75 under the
+## surface after ~2 s). WATER_RESCUE picks; it is on because LAX2 and M4A1 start the
+## player on deep water, where sinking would lose it at once. When
+## health runs out the X1 explodes (player effects 3 and 9, plain sound 0x41; not in
+## water) and, unlike the game, comes back at its start point after RESPAWN_TIME.
+##
+## Walls (0x80052410 / 0x80052550 / 0x80052e28): the game's walls run along x, z or a
+## 45° diagonal. Running into one adds an impulse of 0x24000 per axis away from it
+## (half for the hovercraft, on low traction or in the air) on the next step, after
+## removing the velocity along the wall normal and 12.5 % drag: a small bounce. The
+## heading also turns towards the wall-parallel direction nearest to it by up to
+## 8/4096 of a turn per step. A hovercraft touching anything gets 37.5 % drag and a
+## quarter of its turn rate. Godot's collision still stops the body at the wall
+## surface (the game lets a corner sink in by up to a step's movement).
+##
+## Not modelled: hard-landing damage, the crouch (Shift+Space), aiming, the camera's
+## see-through polygons (surface bit 0x80) and the other camera views.
 extends CharacterBody3D
 
 const EffectPlayer := preload("res://scripts/effect_player.gd")
+const Surfaces := preload("res://scripts/surfaces.gd")
 
 const STEP := 1.0 / 37.5                    # one game physics step
 const _G := 37.5 / 256.0 / 8192.0           # game velocity units -> Godot units/s
@@ -95,6 +115,19 @@ const HOVER_BOX := Vector3(0.64, 0.7, 1.32)
 const TRANSFORM_SOUND := 0x15               # plain
 const TRANSFORM_EFFECT := 4                 # Csfx table 1
 const TRANSFORM_TIME := 65536.0 / 0xa0 / 300.0   # 1.365 s
+# Special floors, health
+const MAX_HP := 5000                        # X1-Alpha actor
+const PLAYER_INDEX := 0                     # player 1 (team zones 14/15)
+const WATER_RESCUE := true                  # false: a walker over water sinks instead
+const SINK_STEP := 0xC0 / 8192.0            # per step
+const SINK_DEPTH := 0x3800 / 8192.0         # lost this far under the water surface
+const WATER_BLOCKED_SOUND := 0x2a           # plain: transform refused over water
+const DEATH_EFFECTS := [3, 9]               # Csfx table 1
+const DEATH_SOUND := 0x41                   # plain
+const RESPAWN_TIME := 2.0                   # not from the game
+# Walls
+const WALL_PUSH := 0x24000 * _G             # per axis, away from the wall
+const WALL_TURN := 8 * TAU / 4096.0         # rad per step towards the wall's direction
 # Camera
 const CAM_LOOK_UP := 2.0
 const CAM_UP := 4.75
@@ -152,6 +185,18 @@ var _hover_turn := 0.0      # hover turn rate (game units, signed)
 var _idle_clock := 0.0      # hover: clock units without move input
 var _cam_yaw := 0.0
 var _cam_y := 0.0           # smoothed look-point height
+var _surfaces: Surfaces
+var _surface := 0           # surface byte (& 0x3F) under the body, probed each frame
+var _conveyed := Vector3.ZERO   # conveyor movement waiting to be applied
+var _hp := MAX_HP
+var _spawn: Transform3D
+var _sinking := false
+var _sunk := 0.0            # depth sunk under the water surface
+var _dead := 0.0            # seconds until respawn (0 = alive)
+var _wall_push := Vector3.ZERO  # impulse for the next step
+var _wall_normal := Vector3.ZERO    # last terrain wall hit (snapped), for the heading turn
+var _hud: Label
+var _hurt_flash := 0.0
 
 
 func _ready() -> void:
@@ -170,6 +215,9 @@ func _ready() -> void:
 		var f := FileAccess.open(_base + "csfx.json", FileAccess.READ)
 		if f:
 			_effects = EffectPlayer.build_registry([], JSON.parse_string(f.get_as_text()), 1).effects
+	if _base != "":
+		_surfaces = Surfaces.new(FileAccess.get_file_as_string(_base + "terrain/surfaces.json"))
+	_make_hud()
 	_cam = get_node_or_null("Camera") as Camera3D
 	if _cam:
 		_cam.top_level = true   # moves on its own, smoothed (see _update_camera)
@@ -262,19 +310,45 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	if not _started:
 		_started = true
+		_spawn = global_transform
 		_snap_to_ground()
 		_cam_yaw = _heading()
 		_cam_y = global_position.y
+	_update_hud(delta)
+	if _dead > 0.0:
+		_dead -= delta
+		if _dead <= 0.0:
+			_respawn()
+		return
 	_acc += delta
 	while _acc >= STEP:
 		_acc -= STEP
+		if _sinking:
+			_sink_step()
+			continue
+		_surface_step()
+		_turn_along_wall()
 		if _hover:
 			_hover_step()
 		else:
 			_walker_step()
+		if _dead > 0.0 or _sinking:
+			break
+	if _dead > 0.0 or _sinking:
+		_update_camera(delta)
+		return
 	_update_slope_limit()
+	# Conveyors move the body, not its velocity: added for this move only, so ramps and
+	# walls still apply and nothing carries over afterwards.
+	var belt := _conveyed / delta
+	_conveyed = Vector3.ZERO
+	var intended := Vector3(velocity.x, 0.0, velocity.z)   # before the slide clips it
+	velocity += belt
 	move_and_slide()
-	_step_up(delta)
+	velocity -= belt
+	_collect_wall_hits()
+	_step_up(delta, intended)
+	_probe_surface()
 	_update_transform(delta)
 	_update_landing()
 	if _hover:
@@ -301,6 +375,10 @@ func _turn_input() -> float:
 func _walker_step() -> void:
 	var airborne: bool = not is_on_floor() or (not _jump.is_empty() and _jump.phase == "air")
 	var h := Vector3(velocity.x, 0.0, velocity.z)
+	var grip := 0 if airborne else Surfaces.traction(_surface)
+	h = _apply_wall_push(h, 0.5 if airborne or grip > 0 else 1.0)
+	if _legs_anim:
+		_legs_anim.speed_scale = 4.0 - grip if grip > 0 else 1.0   # legs spin on low traction
 	if airborne:
 		# No thrust or turning in the air; light drag; gravity.
 		h *= 1.0 - AIR_DRAG
@@ -323,7 +401,11 @@ func _walker_step() -> void:
 				+ global_basis.x * inp.y * (SLOW_STRAFE_CMD if slow else STRAFE_CMD)
 			var speed_factor := maxf(0.0, 1.0 - h.length() / (1048576.0 * _G))
 			rotate_y(_turn_input() * WALK_TURN * speed_factor)
-		h += cmd - h * WALK_DRAG
+		if grip > 0:
+			# Low traction (0x80054590): command ×5s/128, drag (4−s)·0x6000/32.
+			h += cmd * (5.0 * grip / 128.0) - h * ((4 - grip) * 0x6000 / 32.0 / 65536.0)
+		else:
+			h += cmd - h * WALK_DRAG
 		if Input.is_action_pressed("slow_walk") and h.length() > 0.001 and _would_drop(h):
 			h = Vector3.ZERO
 	velocity.x = h.x
@@ -356,8 +438,10 @@ func _hover_step() -> void:
 	else:
 		cmd = global_basis.z * inp.x * (HOVER_SLOW_CMD if slow else HOVER_CMD) \
 			+ global_basis.x * inp.y * (HOVER_SLOW_STRAFE_CMD if slow else HOVER_STRAFE_CMD)
-	if is_on_wall():
+	var touching := is_on_wall()
+	if touching:
 		drag = HOVER_WALL_DRAG
+	h = _apply_wall_push(h, 0.5)
 	h += cmd - h * drag
 	h = h.limit_length(HOVER_MAX_SPEED)
 	velocity.x = h.x
@@ -369,14 +453,14 @@ func _hover_step() -> void:
 		_hover_turn = 0.0
 	if turn != 0.0:
 		_hover_turn = clampf(_hover_turn + turn * HOVER_TURN_RAMP * STEP, -HOVER_TURN_MAX, HOVER_TURN_MAX)
-	rotate_y(_hover_turn / 2.0 * TAU / 4096.0)
+	rotate_y(_hover_turn / (8.0 if touching else 2.0) * TAU / 4096.0)
 
 
-func _step_up(delta: float) -> void:
-	## Climb a low step the body ran into: up to 0.46 (walker) or 0.96 (hover).
+func _step_up(delta: float, h: Vector3) -> void:
+	## Climb a low step the body ran into: up to 0.46 (walker) or 0.96 (hover). h is
+	## the velocity before move_and_slide, which zeroes it against a head-on step.
 	if not is_on_wall() or not is_on_floor():
 		return
-	var h := Vector3(velocity.x, 0.0, velocity.z)
 	if h.length() < 0.05:
 		return
 	var up := Vector3(0, STEP_UP[_hover], 0)
@@ -664,6 +748,9 @@ func start_transform() -> void:
 	if not _hover and (not _jump.is_empty() or not is_on_floor()):
 		return
 	var to_hover := _t <= 0.0
+	if not to_hover and _surface == Surfaces.WATER:
+		_play(WATER_BLOCKED_SOUND)   # can't put the legs down in deep water
+		return
 	_t_dir = 1 if to_hover else -1
 	if to_hover:
 		_hover = true
@@ -721,6 +808,198 @@ func _update_transform(delta: float) -> void:
 		_play_track(0)
 		if _hover_motor:
 			_hover_motor.stop()
+
+
+# ─── Special floors / health ──────────────────────────────────────────────────
+
+func _probe_surface() -> void:
+	## The ground probe: the surface byte of the floor under the body (surfaces.gd).
+	_surface = 0
+	if _surfaces == null or _surfaces.is_empty():
+		return
+	var hit := _ray_down(global_position, Surfaces.PROBE_UP, 2.0)
+	if hit:
+		_surface = _surfaces.action_at(global_position, hit.position.y)
+
+
+func _surface_step() -> void:
+	## The handler (0x80053188), once per step, for the floor probed last.
+	if _surface == 0:
+		return
+	_conveyed += Surfaces.conveyor(_surface)
+	var dmg := Surfaces.damage(_surface, _hover, PLAYER_INDEX)
+	if dmg > 0:
+		_hurt(dmg)
+	if _surface == Surfaces.WATER and not _hover and _t_dir == 0 and _dead <= 0.0:
+		if WATER_RESCUE:
+			start_transform()
+		else:
+			_start_sinking()
+
+
+func _start_sinking() -> void:
+	_sinking = true
+	_sunk = 0.0
+	_jump = {}
+	velocity = Vector3.ZERO
+	_stop_gait(false)
+	_set_motor(-1)
+
+
+func _sink_step() -> void:
+	global_position.y -= SINK_STEP
+	_sunk += SINK_STEP
+	if _sunk > SINK_DEPTH:
+		_hp = 0
+		_die(true)
+
+
+func _hurt(dmg: int) -> void:
+	if _dead > 0.0:
+		return
+	_hp -= dmg
+	_hurt_flash = 0.25
+	if _hp <= 0:
+		_hp = 0
+		_die(false)
+
+
+func _die(in_water: bool) -> void:
+	## Out of health: the X1 explodes (not in water) and returns to its start point.
+	_dead = RESPAWN_TIME
+	_sinking = false
+	_set_motor(-1)
+	if _hover_motor:
+		_hover_motor.stop()
+	if not in_water:
+		_play(DEATH_SOUND)
+		for id: int in DEATH_EFFECTS:
+			if _effects.has(id):
+				var fx := EffectPlayer.new()
+				fx.setup(_effects[id], _effects, _base + "particles", false)
+				fx.top_level = true
+				add_child(fx)
+				fx.global_position = global_position
+				get_tree().create_timer(4.0).timeout.connect(fx.queue_free)
+	if _x1:
+		_x1.visible = false
+
+
+func _respawn() -> void:
+	_dead = 0.0
+	_hp = MAX_HP
+	global_transform = _spawn
+	velocity = Vector3.ZERO
+	_surface = 0
+	_conveyed = Vector3.ZERO
+	_wall_push = Vector3.ZERO
+	_wall_normal = Vector3.ZERO
+	_jump = {}
+	_gait = ""
+	_hover = false
+	_t = 0.0
+	_t_dir = 0
+	_hover_turn = 0.0
+	_idle_clock = 0.0
+	_set_box(WALKER_BOX)
+	if _x1:
+		_x1.position.y = 0.0
+		_x1.visible = true
+	if _cockpit_anim:
+		_cockpit_anim.play(_anim_named(_cockpit_anim, "track00_"))
+	_play_track(0)
+	_started = false   # re-snap to the ground, reset the camera
+
+
+func _make_hud() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	_hud = Label.new()
+	_hud.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	_hud.offset_left = 12
+	_hud.offset_top = -64
+	_hud.offset_bottom = -8
+	_hud.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_hud.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	_hud.add_theme_color_override("font_outline_color", Color.BLACK)
+	_hud.add_theme_constant_override("outline_size", 6)
+	layer.add_child(_hud)
+
+
+func _update_hud(delta: float) -> void:
+	if _hud == null:
+		return
+	_hurt_flash = maxf(0.0, _hurt_flash - delta)
+	var floor_name := "sinking" if _sinking else Surfaces.describe(_surface)
+	_hud.text = "Health %d / %d%s" % [_hp, MAX_HP, ("\nFloor: " + floor_name) if floor_name != "" else ""]
+	_hud.modulate = Color(1, 0.35, 0.3) if _hurt_flash > 0.0 or _dead > 0.0 else Color.WHITE
+
+
+# ─── Walls ────────────────────────────────────────────────────────────────────
+
+func _collect_wall_hits() -> void:
+	## After moving: the terrain walls touched this frame give next step's push-back
+	## (one per wall direction) and the direction the heading turns towards.
+	var push := Vector3.ZERO
+	var seen := {}
+	for i in get_slide_collision_count():
+		var c := get_slide_collision(i)
+		var body := c.get_collider() as Node
+		if body == null or body.name != "TerrainCollision":
+			continue
+		var n := c.get_normal()
+		if absf(n.y) > 0.7:
+			continue   # floor or ceiling
+		# Game walls run along x, z or a diagonal: snap to the nearest of the 8 normals.
+		var a := snappedf(atan2(n.x, n.z), PI / 4.0)
+		var sn := Vector3(sin(a), 0.0, cos(a))
+		var key := Vector2i(roundi(sn.x), roundi(sn.z))
+		if seen.has(key.abs()) or not _wall_above_step(-sn):
+			continue
+		seen[key.abs()] = true
+		push += Vector3(signf(roundf(sn.x * 2.0)), 0.0, signf(roundf(sn.z * 2.0))) * WALL_PUSH
+		_wall_normal = sn
+	if push != Vector3.ZERO:
+		_wall_push = push
+
+
+func _wall_above_step(dir: Vector3) -> bool:
+	## A wall counts only if it still stands at step-up height (the game's wall rays run
+	## above the feet; anything lower is a step).
+	var from := global_position + Vector3(0, STEP_UP[_hover] + 0.02, 0)
+	var q := PhysicsRayQueryParameters3D.create(from, from + dir * (HOVER_BOX.z if _hover else WALKER_BOX.z))
+	q.exclude = [get_rid()]
+	q.hit_back_faces = true
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	return not hit.is_empty() and (hit.collider as Node).name == "TerrainCollision"
+
+
+func _apply_wall_push(h: Vector3, scale: float) -> Vector3:
+	## The game's wall response (0x80052550): drop the velocity along the push, 12.5 %
+	## drag, then the push itself.
+	if _wall_push == Vector3.ZERO:
+		return h
+	var n := _wall_push.normalized()
+	h -= n * h.dot(n)
+	h -= h / 8.0
+	h += _wall_push * scale
+	_wall_push = Vector3.ZERO
+	if velocity.y > 0x100 * _G:
+		velocity.y = 0.0
+	return h
+
+
+func _turn_along_wall() -> void:
+	## 0x80052e28: after a wall hit, turn towards the nearer of the wall's two directions.
+	if _wall_normal == Vector3.ZERO:
+		return
+	var along := Vector3(-_wall_normal.z, 0.0, _wall_normal.x)
+	var fwd := global_basis.z
+	if fwd.dot(along) < 0.0:
+		along = -along
+	var diff := wrapf(atan2(along.x, along.z) - _heading(), -PI, PI)
+	rotate_y(clampf(diff, -WALL_TURN, WALL_TURN))
+	_wall_normal = Vector3.ZERO
 
 
 # ─── Camera ───────────────────────────────────────────────────────────────────

@@ -50,7 +50,10 @@ Level scenes: every level except FE has `godot/scenes/<LEVEL>_level.tscn`. Each 
 terrain with collision, all props as static scenery, and the X1-Alpha walker at player
 one's start, with the original game's movement physics and chase camera: W/S walk, A/D
 turn, Q/E strafe, Shift slow walk, Space jump (brake when hovering) and T transforms
-between walker and hovercraft. Placed effects, decals, animated
+between walker and hovercraft. The game's special floors work too: conveyors, damaging
+and deadly floors (a health readout shows; at zero the X1 explodes and restarts), slippery
+floors, and deep water, where the walker turns into a hovercraft. Walls push back and
+turn the X1 along them as in the game. Placed effects, decals, animated
 props and ambient sounds are included. L switches between the original PS1 lighting (the
 default) and real-time lighting, G toggles fog and M the minimap. Reflective surfaces
 use the level's sphere map, and the level's loading screen shows while it loads. There are no enemies, scripts or
