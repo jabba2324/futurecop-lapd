@@ -300,9 +300,10 @@ in `decode_actors.py` as hypotheses.
     The ids are Cshd script ids, matched together with the positional flag, because the
     2D and 3D tables reuse ids. They're all in the global table (bank 1), the same in
     every level.
-  - **Camera:** the chase camera is NOT the game's. Its values were picked by eye: 40°
-    pitch, 2.54 up, 0.79 back, FOV 118. The game's standard view (`0x800569ec`,
-    decompiled) is:
+  - **Camera:** player.gd drives the game's standard view, detached from the mech
+    (`top_level`). The generator only sets the lens: 26.4° vertical FOV, `KEEP_HEIGHT`.
+    Not modelled: the other views, the blocked-view fallback and the playerY/2 height
+    term. The game's standard view (`0x800569ec`, decompiled) is:
     - 29.0° pitch (330/4096 of a turn), looking at the player + 2.0 Godot units up;
     - the camera about 4.75 above the look point and 8.6 behind (at player Y = 0; the
       height term includes playerY/2);

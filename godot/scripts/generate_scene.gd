@@ -22,11 +22,9 @@ var _layout: RefCounted
 # Player collision: a capsule around the X1 legs (feet at y=0, ~0.9 units tall).
 const PLAYER_RADIUS := 0.28
 const PLAYER_HEIGHT := 0.9
-# Chase camera relative to the player actor: behind (-Z, the X1 faces +Z) and
-# above, pitched down 40°.
-const PLAYER_CAMERA := Transform3D(Basis(Vector3.UP, PI)) * Transform3D(Basis(Vector3(1, 0, 0),
-	Vector3(0, 0.7660445, -0.64278764), Vector3(0, 0.64278764, 0.7660445)), Vector3(0, 2.5363665, 0.7880659))
-const PLAYER_CAMERA_FOV := 117.99254
+# Chase camera: player.gd places and smooths it (the game's standard view); this is
+# just its lens, the PS1 projection (GTE H = 512 on a 240-line screen = 26.4° vertical).
+const PLAYER_CAMERA_FOV := 26.4
 
 
 func _init() -> void:
@@ -293,8 +291,7 @@ func _add_x1(actor_node: Node3D, actor: Dictionary, root: Node3D) -> void:
 		shape.owner = root
 		var cam := Camera3D.new()
 		cam.name = "Camera"
-		cam.transform = PLAYER_CAMERA
-		cam.keep_aspect = Camera3D.KEEP_WIDTH
+		cam.keep_aspect = Camera3D.KEEP_HEIGHT   # keep the PS1's vertical framing on wide screens
 		cam.fov = PLAYER_CAMERA_FOV
 		actor_node.add_child(cam)
 		cam.owner = root

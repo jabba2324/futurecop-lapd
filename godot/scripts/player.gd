@@ -10,11 +10,25 @@
 ##   back:    loop 0x24, steps 0x3a, stop 0x34   (the game uses tracks 44/45; we reuse 38-41)
 ##   turning: loop 0x25, stop 0x35               (no step: our turn doesn't animate the legs)
 ## Ids are Cshd script ids; the global table (bank 1) is the same in every level.
+##
+## The chase camera is the game's standard view (0x800569ec, preset 0 at 0x8009ad08):
+## pitched down 29° (330/4096 turn) at a look point 2 units above the feet, from 8.57
+## behind and 4.75 above that point (game units: look +0x4000, 1 Godot unit = 0x2000).
+## Its yaw eases 1/32 per 60 Hz step towards the heading, capped at ~105°/s; the
+## look point follows height changes with a small dead zone. Not modelled: the other
+## 6 views, the fallback presets when the view is blocked, and the playerY/2 term
+## in the game's camera height.
 extends CharacterBody3D
 
 const SPEED := 5.0
 const TURN_SPEED := 2.5
 const GRAVITY := 20.0
+const CAM_LOOK_UP := 2.0
+const CAM_UP := 4.75
+const CAM_BACK := 8.57
+const CAM_YAW_EASE := 1.0 / 32.0          # per 60 Hz step
+const CAM_YAW_MAX := deg_to_rad(105.0)    # rad/s
+const CAM_Y_DEAD_ZONE := 0.03             # 0x100 game units
 # Walk cycle of the X1-Alpha legs: AnmD tracks 38→39→40→41 chain frames 11–39
 # into a closed loop (next_track links, see tools/export_gltf.py). Track 0 is rest.
 const WALK_CHAIN := ["track38_", "track39_", "track40_", "track41_"]
@@ -32,10 +46,16 @@ var _sounds := {}        # [script_id, positional] -> AudioStream
 var _motor: AudioStreamPlayer3D
 var _sfx: AudioStreamPlayer
 var _movement := ""      # running motor loop: "", "forward", "back" or "turn"
+var _cam: Camera3D
+var _cam_yaw := 0.0
+var _cam_y := 0.0        # smoothed look-point height
 
 func _ready() -> void:
 	add_to_group("player")
 	_load_sounds()
+	_cam = get_node_or_null("Camera") as Camera3D
+	if _cam:
+		_cam.top_level = true   # moves on its own, smoothed (see _update_camera)
 	floor_snap_length = 0.3
 	floor_max_angle = deg_to_rad(50.0)
 	# Legs are the "legs" part of the X1 assembly built by level_layout.gd.
@@ -85,6 +105,8 @@ func _physics_process(delta: float) -> void:
 	if not _grounded_at_start:
 		_grounded_at_start = true
 		_snap_to_ground()
+		_cam_yaw = _heading()
+		_cam_y = global_position.y
 	if Input.is_action_pressed("move_left"):
 		rotate_y(TURN_SPEED * delta)
 	if Input.is_action_pressed("move_right"):
@@ -111,6 +133,27 @@ func _physics_process(delta: float) -> void:
 		elif not moving and _moving and _rest != "":
 			_legs_anim.play(_rest, 0.2)
 	_moving = moving
+	_update_camera(delta)
+
+
+func _heading() -> float:
+	var z := global_basis.z   # the X1 faces +Z
+	return atan2(z.x, z.z)
+
+
+func _update_camera(delta: float) -> void:
+	if _cam == null:
+		return
+	var diff := wrapf(_heading() - _cam_yaw, -PI, PI)
+	var ease_step := diff * (1.0 - pow(1.0 - CAM_YAW_EASE, delta * 60.0))
+	_cam_yaw += clampf(ease_step, -CAM_YAW_MAX * delta, CAM_YAW_MAX * delta)
+	var dy := global_position.y - _cam_y
+	if absf(dy) > CAM_Y_DEAD_ZONE:
+		_cam_y += (dy - signf(dy) * CAM_Y_DEAD_ZONE) * (1.0 - pow(0.85, delta * 60.0))
+	var look := Vector3(global_position.x, _cam_y + CAM_LOOK_UP, global_position.z)
+	var fwd := Vector3(sin(_cam_yaw), 0.0, cos(_cam_yaw))
+	_cam.global_position = look - fwd * CAM_BACK + Vector3(0, CAM_UP, 0)
+	_cam.look_at(look, Vector3.UP)
 
 func _on_clip_finished(_name: StringName) -> void:
 	# Advance along the walk chain while moving; the chain loops back to its start.
