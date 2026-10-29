@@ -15,6 +15,7 @@ var _hm_json: String
 var _out_scene: String
 
 const LevelLayout := preload("res://scripts/level_layout.gd")
+const SlfxWater := preload("res://scripts/slfx_water.gd")
 
 var _layout: RefCounted
 
@@ -166,9 +167,14 @@ func _add_terrain(root: Node3D) -> void:
 	# Disable backface culling so all wall surfaces are visible from any angle.
 	for i in range(mesh_res.get_surface_count()):
 		var mat := mesh_res.surface_get_material(i)
-		if mat is StandardMaterial3D:
+		var water := SlfxWater.material(mat)
+		if water:
+			mi.set_surface_override_material(i, water)
+		elif mat is StandardMaterial3D:
 			var m := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
 			m.cull_mode = BaseMaterial3D.CULL_DISABLED
+			# Vertex colours are the PS1 shading / 256 (128 = texture unchanged).
+			m.albedo_color = Color(2, 2, 2)
 			# Semi-transparent polygons (water): the PS1's 50/50 blend, from the
 			# texture's alpha 128 on STP texels (extract_terrain.py names them "_mix").
 			if mat.resource_name.contains("_mix"):

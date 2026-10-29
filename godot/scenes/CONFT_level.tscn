@@ -1,112 +1,145 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" path="res://scripts/level_ambience.gd" id="1_fslfg"]
-[ext_resource type="AudioStream" path="res://assets/CONFT/music/SkyCapUberAlles.wav" id="2_rhmv5"]
-[ext_resource type="Script" path="res://scripts/music_loop.gd" id="3_hsa1t"]
-[ext_resource type="Script" path="res://scripts/terrain_collision.gd" id="4_gev61"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/terrain/map.obj" id="5_cpj32"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp003.png" id="6_bwtyx"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp004.png" id="7_n6jnp"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp006.png" id="8_w8jn1"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp007.png" id="9_f0aw2"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp008.png" id="10_3mkbl"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj055.glb" id="11_hruty"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj061.obj" id="12_uw7yb"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj062.glb" id="13_k3qpk"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj063.glb" id="14_ul2hq"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj064.glb" id="15_f81qe"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj065.glb" id="16_rtovj"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj066.glb" id="17_618l6"]
-[ext_resource type="Script" path="res://scripts/player.gd" id="18_bbyjn"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj015.glb" id="19_yuwgg"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj015_cbmp009.png" id="20_327ok"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj016.glb" id="21_8vsxh"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj016_cbmp009.png" id="22_v8ftk"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj017.glb" id="23_1hiqd"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj017_cbmp009.png" id="24_barql"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj018.glb" id="25_fo1vs"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj018_cbmp009.png" id="26_32bmb"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj019.glb" id="27_yk5wc"]
-[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj019_cbmp009.png" id="28_apt2v"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj020.glb" id="29_nksbx"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj021.obj" id="30_6or2b"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj022.glb" id="31_2lkjj"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj023.obj" id="32_2h0vo"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj024.obj" id="33_up30k"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj025.obj" id="34_8gnof"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj026.obj" id="35_tpswm"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj027.obj" id="36_gdins"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj028.glb" id="37_kkpde"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj029.obj" id="38_wa2c4"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj030.obj" id="39_8w1ni"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj031.obj" id="40_m82xn"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj032.obj" id="41_fqs26"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj033.obj" id="42_bky73"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj034.obj" id="43_nvej3"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj035.obj" id="44_nhu0i"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj036.obj" id="45_amolk"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj037.obj" id="46_nriuq"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj038.obj" id="47_7leaa"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj039.obj" id="48_v3fl6"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj040.obj" id="49_kx7yd"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj041.obj" id="50_ggj5l"]
-[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj042.obj" id="51_pwq3i"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj056.glb" id="52_shom4"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj057.glb" id="53_nwcty"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj058.glb" id="54_eorkt"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj059.glb" id="55_36nj2"]
-[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj060.glb" id="56_j7idt"]
+[ext_resource type="Script" path="res://scripts/level_ambience.gd" id="1_hsa1t"]
+[ext_resource type="AudioStream" path="res://assets/CONFT/music/SkyCapUberAlles.wav" id="2_gev61"]
+[ext_resource type="Script" path="res://scripts/music_loop.gd" id="3_cpj32"]
+[ext_resource type="Script" path="res://scripts/terrain_collision.gd" id="4_bwtyx"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/terrain/map.obj" id="5_n6jnp"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp003.png" id="6_w8jn1"]
+[ext_resource type="Shader" path="res://shaders/slfx_water.gdshader" id="7_f0aw2"]
+[ext_resource type="Shader" path="res://shaders/slfx_water_mix.gdshader" id="8_3mkbl"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp004.png" id="9_hruty"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp006.png" id="10_uw7yb"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp007.png" id="11_k3qpk"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/textures/cbmp008.png" id="12_ul2hq"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj055.glb" id="13_f81qe"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj061.obj" id="14_rtovj"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj062.glb" id="15_618l6"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj063.glb" id="16_bbyjn"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj064.glb" id="17_yuwgg"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj065.glb" id="18_327ok"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj066.glb" id="19_8vsxh"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="20_v8ftk"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj015.glb" id="21_1hiqd"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj015_cbmp009.png" id="22_barql"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj016.glb" id="23_fo1vs"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj016_cbmp009.png" id="24_32bmb"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj017.glb" id="25_yk5wc"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj017_cbmp009.png" id="26_apt2v"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj018.glb" id="27_nksbx"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj018_cbmp009.png" id="28_6or2b"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj019.glb" id="29_2lkjj"]
+[ext_resource type="Texture2D" path="res://assets/CONFT/models/cobj019_cbmp009.png" id="30_2h0vo"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj020.glb" id="31_up30k"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj021.obj" id="32_8gnof"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj022.glb" id="33_tpswm"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj023.obj" id="34_gdins"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj024.obj" id="35_kkpde"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj025.obj" id="36_wa2c4"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj026.obj" id="37_8w1ni"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj027.obj" id="38_m82xn"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj028.glb" id="39_fqs26"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj029.obj" id="40_bky73"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj030.obj" id="41_nvej3"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj031.obj" id="42_nhu0i"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj032.obj" id="43_amolk"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj033.obj" id="44_nriuq"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj034.obj" id="45_7leaa"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj035.obj" id="46_v3fl6"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj036.obj" id="47_kx7yd"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj037.obj" id="48_ggj5l"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj038.obj" id="49_pwq3i"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj039.obj" id="50_shom4"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj040.obj" id="51_nwcty"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj041.obj" id="52_eorkt"]
+[ext_resource type="ArrayMesh" path="res://assets/CONFT/objects/cobj042.obj" id="53_36nj2"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj056.glb" id="54_j7idt"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj057.glb" id="55_7ld40"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj058.glb" id="56_gdk6x"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj059.glb" id="57_s0tbr"]
+[ext_resource type="PackedScene" path="res://assets/CONFT/models/cobj060.glb" id="58_rfhue"]
 
-[sub_resource type="Environment" id="Environment_7ld40"]
+[sub_resource type="Environment" id="Environment_psubm"]
 background_mode = 1
 background_color = Color(0.35, 0.45, 0.65, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.45, 0.5, 0.6, 1)
 ambient_light_energy = 0.6
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gdk6x"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5w40v"]
 resource_name = "cbmp003"
 cull_mode = 2
 vertex_color_is_srgb = true
-albedo_texture = ExtResource("6_bwtyx")
+albedo_color = Color(2, 2, 2, 1)
+albedo_texture = ExtResource("6_w8jn1")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s0tbr"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_nhrn0"]
+resource_name = "cbmp003_lfx01328010"
+render_priority = 0
+shader = ExtResource("7_f0aw2")
+shader_parameter/tex = ExtResource("6_w8jn1")
+shader_parameter/uv_offset = null
+shader_parameter/word = 20086800
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fh3cn"]
 resource_name = "cbmp003_mix"
 transparency = 1
 cull_mode = 2
 vertex_color_is_srgb = true
-albedo_texture = ExtResource("6_bwtyx")
+albedo_color = Color(2, 2, 2, 1)
+albedo_texture = ExtResource("6_w8jn1")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rfhue"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yjan2"]
+resource_name = "cbmp003_mix_lfx01328010"
+render_priority = 0
+shader = ExtResource("8_3mkbl")
+shader_parameter/tex = ExtResource("6_w8jn1")
+shader_parameter/uv_offset = null
+shader_parameter/word = 20086800
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pkgak"]
 resource_name = "cbmp004"
 cull_mode = 2
 vertex_color_is_srgb = true
-albedo_texture = ExtResource("7_n6jnp")
+albedo_color = Color(2, 2, 2, 1)
+albedo_texture = ExtResource("9_hruty")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_psubm"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m62mj"]
 resource_name = "cbmp006"
 cull_mode = 2
 vertex_color_is_srgb = true
-albedo_texture = ExtResource("8_w8jn1")
+albedo_color = Color(2, 2, 2, 1)
+albedo_texture = ExtResource("10_uw7yb")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5w40v"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1tdtx"]
+resource_name = "cbmp006_lfx01328010"
+render_priority = 0
+shader = ExtResource("7_f0aw2")
+shader_parameter/tex = ExtResource("10_uw7yb")
+shader_parameter/uv_offset = null
+shader_parameter/word = 20086800
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hi2jp"]
 resource_name = "cbmp007"
 cull_mode = 2
 vertex_color_is_srgb = true
-albedo_texture = ExtResource("9_f0aw2")
+albedo_color = Color(2, 2, 2, 1)
+albedo_texture = ExtResource("11_k3qpk")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nhrn0"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_osyg2"]
 resource_name = "cbmp007_mix"
 transparency = 1
 cull_mode = 2
 vertex_color_is_srgb = true
-albedo_texture = ExtResource("9_f0aw2")
+albedo_color = Color(2, 2, 2, 1)
+albedo_texture = ExtResource("11_k3qpk")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fh3cn"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_au0fh"]
 resource_name = "cbmp008"
 cull_mode = 2
 vertex_color_is_srgb = true
-albedo_texture = ExtResource("10_3mkbl")
+albedo_color = Color(2, 2, 2, 1)
+albedo_texture = ExtResource("12_ul2hq")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dfe5m"]
 resource_name = "cbmp009"
@@ -115,7 +148,7 @@ alpha_scissor_threshold = 0.25
 alpha_antialiasing_mode = 0
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("20_327ok")
+albedo_texture = ExtResource("22_barql")
 texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vc3td"]
@@ -123,7 +156,7 @@ resource_name = "cbmp009_mix"
 transparency = 4
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("20_327ok")
+albedo_texture = ExtResource("22_barql")
 texture_filter = 0
 metadata/extras = {
 "fc_blend": "mix"
@@ -203,7 +236,7 @@ alpha_scissor_threshold = 0.25
 alpha_antialiasing_mode = 0
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("22_v8ftk")
+albedo_texture = ExtResource("24_32bmb")
 texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_32215"]
@@ -213,7 +246,7 @@ alpha_scissor_threshold = 0.25
 alpha_antialiasing_mode = 0
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("22_v8ftk")
+albedo_texture = ExtResource("24_32bmb")
 texture_filter = 0
 metadata/extras = {
 "fc_environment_map": true
@@ -291,7 +324,7 @@ alpha_scissor_threshold = 0.25
 alpha_antialiasing_mode = 0
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("24_barql")
+albedo_texture = ExtResource("26_apt2v")
 texture_filter = 0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_8qvne"]
@@ -339,7 +372,7 @@ alpha_scissor_threshold = 0.25
 alpha_antialiasing_mode = 0
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("26_32bmb")
+albedo_texture = ExtResource("28_6or2b")
 texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ga0ot"]
@@ -349,7 +382,7 @@ alpha_scissor_threshold = 0.25
 alpha_antialiasing_mode = 0
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("26_32bmb")
+albedo_texture = ExtResource("28_6or2b")
 texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_banae"]
@@ -359,7 +392,7 @@ alpha_scissor_threshold = 0.25
 alpha_antialiasing_mode = 0
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("26_32bmb")
+albedo_texture = ExtResource("28_6or2b")
 texture_filter = 0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_qpcfe"]
@@ -796,7 +829,7 @@ alpha_scissor_threshold = 0.25
 alpha_antialiasing_mode = 0
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("28_apt2v")
+albedo_texture = ExtResource("30_2h0vo")
 texture_filter = 0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_kgx6l"]
@@ -5928,676 +5961,679 @@ _data = {
 &"track60_f245-245": SubResource("Animation_7p081")
 }
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_yjan2"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_2chkl"]
 radius = 0.28
 height = 0.9
 
-[node name="CONFT" type="Node3D" unique_id=1385982412]
-script = ExtResource("1_fslfg")
+[node name="CONFT" type="Node3D" unique_id=488918209]
+script = ExtResource("1_hsa1t")
 
-[node name="Music" type="AudioStreamPlayer" parent="." unique_id=1544594062]
-stream = ExtResource("2_rhmv5")
+[node name="Music" type="AudioStreamPlayer" parent="." unique_id=1929078885]
+stream = ExtResource("2_gev61")
 autoplay = true
-script = ExtResource("3_hsa1t")
+script = ExtResource("3_cpj32")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1718457812]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1232242459]
 transform = Transform3D(0.8660254, -0.38302222, 0.32139382, 0, 0.64278764, 0.76604444, -0.5, -0.66341394, 0.5566704, 0, 0, 0)
 light_energy = 1.5
 shadow_enabled = true
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1160574537]
-environment = SubResource("Environment_7ld40")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=470370811]
+environment = SubResource("Environment_psubm")
 
-[node name="Terrain" type="Node3D" parent="." unique_id=1462968109]
-script = ExtResource("4_gev61")
+[node name="Terrain" type="Node3D" parent="." unique_id=1361187996]
+script = ExtResource("4_bwtyx")
 skip_groups = PackedStringArray("player")
 
-[node name="TerrainMesh" type="MeshInstance3D" parent="Terrain" unique_id=1947414986]
-mesh = ExtResource("5_cpj32")
-surface_material_override/0 = SubResource("StandardMaterial3D_gdk6x")
-surface_material_override/1 = SubResource("StandardMaterial3D_s0tbr")
-surface_material_override/2 = SubResource("StandardMaterial3D_rfhue")
-surface_material_override/3 = SubResource("StandardMaterial3D_psubm")
-surface_material_override/4 = SubResource("StandardMaterial3D_5w40v")
-surface_material_override/5 = SubResource("StandardMaterial3D_nhrn0")
-surface_material_override/6 = SubResource("StandardMaterial3D_fh3cn")
+[node name="TerrainMesh" type="MeshInstance3D" parent="Terrain" unique_id=841310634]
+mesh = ExtResource("5_n6jnp")
+surface_material_override/0 = SubResource("StandardMaterial3D_5w40v")
+surface_material_override/1 = SubResource("ShaderMaterial_nhrn0")
+surface_material_override/2 = SubResource("StandardMaterial3D_fh3cn")
+surface_material_override/3 = SubResource("ShaderMaterial_yjan2")
+surface_material_override/4 = SubResource("StandardMaterial3D_pkgak")
+surface_material_override/5 = SubResource("StandardMaterial3D_m62mj")
+surface_material_override/6 = SubResource("ShaderMaterial_1tdtx")
+surface_material_override/7 = SubResource("StandardMaterial3D_hi2jp")
+surface_material_override/8 = SubResource("StandardMaterial3D_osyg2")
+surface_material_override/9 = SubResource("StandardMaterial3D_au0fh")
 
-[node name="Actors" type="Node3D" parent="." unique_id=1633475154]
+[node name="Actors" type="Node3D" parent="." unique_id=1092781552]
 
-[node name="Actor_83" type="Node3D" parent="Actors" unique_id=767295167]
+[node name="Actor_83" type="Node3D" parent="Actors" unique_id=1484479045]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -6.9688, 0.40625, 8.99)
 metadata/actor_id = 83.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_83" unique_id=557292733 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_83" unique_id=557292733 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_86" type="Node3D" parent="Actors" unique_id=1028878515]
+[node name="Actor_86" type="Node3D" parent="Actors" unique_id=523973619]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.9992, 0.40625, 11.9588)
 metadata/actor_id = 86.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_86" unique_id=1863494432 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_86" unique_id=1996451144 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_89" type="Node3D" parent="Actors" unique_id=793608644]
+[node name="Actor_89" type="Node3D" parent="Actors" unique_id=276887874]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -3.0312, 0.40625, 14.99)
 metadata/actor_id = 89.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_89" unique_id=66535048 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_89" unique_id=1151853694 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_92" type="Node3D" parent="Actors" unique_id=254143715]
+[node name="Actor_92" type="Node3D" parent="Actors" unique_id=1770531217]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -2.0008, 0.40625, 17.99)
 metadata/actor_id = 92.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_92" unique_id=581951318 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_92" unique_id=1984319009 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_94" type="Node3D" parent="Actors" unique_id=923857476]
+[node name="Actor_94" type="Node3D" parent="Actors" unique_id=177458664]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.0008, 0.40625, 17.9588)
 metadata/actor_id = 94.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_94" unique_id=920317289 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_94" unique_id=1858111480 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_96" type="Node3D" parent="Actors" unique_id=865051782]
+[node name="Actor_96" type="Node3D" parent="Actors" unique_id=43968029]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.9688, 0.40625, 14.99)
 metadata/actor_id = 96.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_96" unique_id=331309328 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_96" unique_id=1271790876 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_98" type="Node3D" parent="Actors" unique_id=1872594140]
+[node name="Actor_98" type="Node3D" parent="Actors" unique_id=1247629358]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.9688, 0.40625, 11.9588)
 metadata/actor_id = 98.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_98" unique_id=366221705 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_98" unique_id=1162113999 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_110" type="Node3D" parent="Actors" unique_id=234848271]
+[node name="Actor_110" type="Node3D" parent="Actors" unique_id=380810171]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 5.9688, 0.40625, 9.0212)
 metadata/actor_id = 110.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_110" unique_id=2143070602 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_110" unique_id=331106792 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_114" type="Node3D" parent="Actors" unique_id=1044077924]
+[node name="Actor_114" type="Node3D" parent="Actors" unique_id=1230138923]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4, 1.09375, 5.0212)
 metadata/actor_id = 114.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_114" unique_id=1063969560 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_114" unique_id=98290420 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_117" type="Node3D" parent="Actors" unique_id=1362566845]
+[node name="Actor_117" type="Node3D" parent="Actors" unique_id=1319329548]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.9688, 1.09375, 4.99)
 metadata/actor_id = 117.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_117" unique_id=2139075186 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_117" unique_id=1796867138 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_121" type="Node3D" parent="Actors" unique_id=750269778]
+[node name="Actor_121" type="Node3D" parent="Actors" unique_id=1065688458]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.0312, 1.5, 33.0212)
 metadata/actor_id = 121.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_121" unique_id=1853088730 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_121" unique_id=1378797998 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_123" type="Node3D" parent="Actors" unique_id=346404496]
+[node name="Actor_123" type="Node3D" parent="Actors" unique_id=249067949]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -31.0312, 1.5, 33.0212)
 metadata/actor_id = 123.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_123" unique_id=1005992455 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_123" unique_id=1984850472 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_125" type="Node3D" parent="Actors" unique_id=2038667585]
+[node name="Actor_125" type="Node3D" parent="Actors" unique_id=962510181]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4.0312, 1.09375, -37.9788)
 metadata/actor_id = 125.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_125" unique_id=1801725910 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_125" unique_id=1491572376 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_127" type="Node3D" parent="Actors" unique_id=570884304]
+[node name="Actor_127" type="Node3D" parent="Actors" unique_id=1251823097]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -5, 1.09375, -38.01)
 metadata/actor_id = 127.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_127" unique_id=416714794 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_127" unique_id=880816191 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_129" type="Node3D" parent="Actors" unique_id=1758801259]
+[node name="Actor_129" type="Node3D" parent="Actors" unique_id=582060288]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -6.9688, 0.40625, -42.01)
 metadata/actor_id = 129.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_129" unique_id=841219150 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_129" unique_id=1281469272 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_131" type="Node3D" parent="Actors" unique_id=1110647133]
+[node name="Actor_131" type="Node3D" parent="Actors" unique_id=1637975294]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.9992, 0.40625, -45.01)
 metadata/actor_id = 131.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_131" unique_id=2038475536 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_131" unique_id=1682512481 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_133" type="Node3D" parent="Actors" unique_id=1869111877]
+[node name="Actor_133" type="Node3D" parent="Actors" unique_id=238876280]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -2.9688, 0.40625, -48.01)
 metadata/actor_id = 133.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_133" unique_id=724791453 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_133" unique_id=972428213 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_135" type="Node3D" parent="Actors" unique_id=1324210243]
+[node name="Actor_135" type="Node3D" parent="Actors" unique_id=292643078]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 2.0312, 0.40625, -48.01)
 metadata/actor_id = 135.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_135" unique_id=1727247374 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_135" unique_id=583041926 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_137" type="Node3D" parent="Actors" unique_id=163412409]
+[node name="Actor_137" type="Node3D" parent="Actors" unique_id=653498706]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.9992, 0.40625, -45.0412)
 metadata/actor_id = 137.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_137" unique_id=635280989 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_137" unique_id=820015756 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_139" type="Node3D" parent="Actors" unique_id=2134366173]
+[node name="Actor_139" type="Node3D" parent="Actors" unique_id=1829962904]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 6.0312, 0.40625, -42.01)
 metadata/actor_id = 139.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_139" unique_id=687932343 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_139" unique_id=643138792 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_141" type="Node3D" parent="Actors" unique_id=929785664]
+[node name="Actor_141" type="Node3D" parent="Actors" unique_id=866755426]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.0008, 0.40625, -50.9788)
 metadata/actor_id = 141.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_141" unique_id=1595524013 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_141" unique_id=1494577457 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_143" type="Node3D" parent="Actors" unique_id=74323253]
+[node name="Actor_143" type="Node3D" parent="Actors" unique_id=1081976716]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -2.0008, 0.40625, -50.9788)
 metadata/actor_id = 143.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_143" unique_id=512511699 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_143" unique_id=712464542 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_159" type="Node3D" parent="Actors" unique_id=150923571]
+[node name="Actor_159" type="Node3D" parent="Actors" unique_id=2049702443]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 26.0312, 1.5, -66.01)
 metadata/actor_id = 159.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_159" unique_id=1229687823 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_159" unique_id=122654534 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_161" type="Node3D" parent="Actors" unique_id=1967455810]
+[node name="Actor_161" type="Node3D" parent="Actors" unique_id=717304206]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 30.0312, 1.5, -65.9788)
 metadata/actor_id = 161.0
 metadata/class = 96
 
-[node name="cobj055" type="Node3D" parent="Actors/Actor_161" unique_id=2099540810 instance=ExtResource("11_hruty")]
+[node name="cobj055" type="Node3D" parent="Actors/Actor_161" unique_id=1482655942 instance=ExtResource("13_f81qe")]
 
-[node name="Actor_335" type="Node3D" parent="Actors" unique_id=1644278205]
+[node name="Actor_335" type="Node3D" parent="Actors" unique_id=1549467603]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 33.0472, -2.40625, -16.4788)
 metadata/actor_id = 335.0
 metadata/class = 96
 
-[node name="cobj061" type="MeshInstance3D" parent="Actors/Actor_335" unique_id=415388454]
-mesh = ExtResource("12_uw7yb")
+[node name="cobj061" type="MeshInstance3D" parent="Actors/Actor_335" unique_id=957312227]
+mesh = ExtResource("14_rtovj")
 
-[node name="Actor_336" type="Node3D" parent="Actors" unique_id=863213091]
+[node name="Actor_336" type="Node3D" parent="Actors" unique_id=965020120]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -33.9528, -2.40625, -16.4788)
 metadata/actor_id = 336.0
 metadata/class = 96
 
-[node name="cobj061" type="MeshInstance3D" parent="Actors/Actor_336" unique_id=1781313832]
-mesh = ExtResource("12_uw7yb")
+[node name="cobj061" type="MeshInstance3D" parent="Actors/Actor_336" unique_id=50156399]
+mesh = ExtResource("14_rtovj")
 
-[node name="Actor_194" type="Node3D" parent="Actors" unique_id=703611979]
+[node name="Actor_194" type="Node3D" parent="Actors" unique_id=1171491420]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4696, 1.5, -67.8852)
 metadata/actor_id = 194.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_194" unique_id=1290063583 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_194" unique_id=1290063583 instance=ExtResource("15_618l6")]
 
-[node name="Actor_195" type="Node3D" parent="Actors" unique_id=396046757]
+[node name="Actor_195" type="Node3D" parent="Actors" unique_id=1186955316]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4696, 1.5, -67.8852)
 metadata/actor_id = 195.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_195" unique_id=1552326842 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_195" unique_id=1710748844 instance=ExtResource("15_618l6")]
 
-[node name="Actor_196" type="Node3D" parent="Actors" unique_id=514724031]
+[node name="Actor_196" type="Node3D" parent="Actors" unique_id=892774358]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5304, 1.5, -67.854)
 metadata/actor_id = 196.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_196" unique_id=1127445590 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_196" unique_id=514038586 instance=ExtResource("15_618l6")]
 
-[node name="Actor_197" type="Node3D" parent="Actors" unique_id=537216341]
+[node name="Actor_197" type="Node3D" parent="Actors" unique_id=822730631]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5304, 1.503363, -62.854)
 metadata/actor_id = 197.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_197" unique_id=405979206 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_197" unique_id=943005827 instance=ExtResource("15_618l6")]
 
-[node name="Actor_223" type="Node3D" parent="Actors" unique_id=648395055]
+[node name="Actor_223" type="Node3D" parent="Actors" unique_id=926706419]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4384, 1.5, -62.8852)
 metadata/actor_id = 223.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_223" unique_id=57322989 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_223" unique_id=2145282066 instance=ExtResource("15_618l6")]
 
-[node name="Actor_225" type="Node3D" parent="Actors" unique_id=865104909]
+[node name="Actor_225" type="Node3D" parent="Actors" unique_id=844802886]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5616, 1.59375, -70.854)
 metadata/actor_id = 225.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_225" unique_id=1195321169 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_225" unique_id=1269549861 instance=ExtResource("15_618l6")]
 
-[node name="Actor_249" type="Node3D" parent="Actors" unique_id=53118640]
+[node name="Actor_249" type="Node3D" parent="Actors" unique_id=2120156115]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5928, 1.59375, -70.7916)
 metadata/actor_id = 249.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_249" unique_id=1619020149 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_249" unique_id=1506347796 instance=ExtResource("15_618l6")]
 
-[node name="Actor_262" type="Node3D" parent="Actors" unique_id=988074828]
+[node name="Actor_262" type="Node3D" parent="Actors" unique_id=96624157]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.5304, 1.5, -66.854)
 metadata/actor_id = 262.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_262" unique_id=415881531 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_262" unique_id=1611181197 instance=ExtResource("15_618l6")]
 
-[node name="Actor_337" type="Node3D" parent="Actors" unique_id=402737675]
+[node name="Actor_337" type="Node3D" parent="Actors" unique_id=227789797]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.5616, 1.59375, -70.854)
 metadata/actor_id = 337.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_337" unique_id=1997275877 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_337" unique_id=1916201740 instance=ExtResource("15_618l6")]
 
-[node name="Actor_338" type="Node3D" parent="Actors" unique_id=1679022]
+[node name="Actor_338" type="Node3D" parent="Actors" unique_id=1326620492]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 32.8744, 1.5, -64.4788)
 metadata/actor_id = 338.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_338" unique_id=115931376 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_338" unique_id=798752598 instance=ExtResource("15_618l6")]
 
-[node name="Actor_339" type="Node3D" parent="Actors" unique_id=1299799012]
+[node name="Actor_339" type="Node3D" parent="Actors" unique_id=146264288]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 32.8112, 1.5, -61.9164)
 metadata/actor_id = 339.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_339" unique_id=430820318 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_339" unique_id=692698223 instance=ExtResource("15_618l6")]
 
-[node name="Actor_340" type="Node3D" parent="Actors" unique_id=281572501]
+[node name="Actor_340" type="Node3D" parent="Actors" unique_id=2119091980]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 31.8424, 2, -53.2604)
 metadata/actor_id = 340.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_340" unique_id=1572932479 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_340" unique_id=1968363775 instance=ExtResource("15_618l6")]
 
-[node name="Actor_341" type="Node3D" parent="Actors" unique_id=1791685238]
+[node name="Actor_341" type="Node3D" parent="Actors" unique_id=691235846]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 31.8432, 2, -48.8852)
 metadata/actor_id = 341.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_341" unique_id=576477984 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_341" unique_id=669140599 instance=ExtResource("15_618l6")]
 
-[node name="Actor_221" type="Node3D" parent="Actors" unique_id=2118225645]
+[node name="Actor_221" type="Node3D" parent="Actors" unique_id=318922134]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5312, 0.59375, -36.6036)
 metadata/actor_id = 221.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_221" unique_id=828415886 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_221" unique_id=331745102 instance=ExtResource("15_618l6")]
 
-[node name="Actor_222" type="Node3D" parent="Actors" unique_id=2114524141]
+[node name="Actor_222" type="Node3D" parent="Actors" unique_id=1856828032]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 19.7184, 0.59375, -28.4788)
 metadata/actor_id = 222.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_222" unique_id=752697081 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_222" unique_id=1159348204 instance=ExtResource("15_618l6")]
 
-[node name="Actor_263" type="Node3D" parent="Actors" unique_id=1373037275]
+[node name="Actor_263" type="Node3D" parent="Actors" unique_id=1365439115]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.4688, 0.59375, -20.51)
 metadata/actor_id = 263.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_263" unique_id=455212986 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_263" unique_id=1310438014 instance=ExtResource("15_618l6")]
 
-[node name="Actor_281" type="Node3D" parent="Actors" unique_id=1504776604]
+[node name="Actor_281" type="Node3D" parent="Actors" unique_id=214377479]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 21.4696, 0.59375, -12.3852)
 metadata/actor_id = 281.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_281" unique_id=1817813290 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_281" unique_id=952222522 instance=ExtResource("15_618l6")]
 
-[node name="Actor_342" type="Node3D" parent="Actors" unique_id=1183646534]
+[node name="Actor_342" type="Node3D" parent="Actors" unique_id=2144927468]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.4696, 1.59375, -70.854)
 metadata/actor_id = 342.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_342" unique_id=1957058846 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_342" unique_id=1207573212 instance=ExtResource("15_618l6")]
 
-[node name="Actor_343" type="Node3D" parent="Actors" unique_id=1132218008]
+[node name="Actor_343" type="Node3D" parent="Actors" unique_id=1157066680]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -38.844, 1.59375, -61.51)
 metadata/actor_id = 343.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_343" unique_id=700847149 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_343" unique_id=1905519187 instance=ExtResource("15_618l6")]
 
-[node name="Actor_344" type="Node3D" parent="Actors" unique_id=236029566]
+[node name="Actor_344" type="Node3D" parent="Actors" unique_id=1467305290]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -32.656, 2, -43.6972)
 metadata/actor_id = 344.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_344" unique_id=1277021434 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_344" unique_id=1429072838 instance=ExtResource("15_618l6")]
 
-[node name="Actor_345" type="Node3D" parent="Actors" unique_id=667685609]
+[node name="Actor_345" type="Node3D" parent="Actors" unique_id=278927034]
 transform = Transform3D(-0.7071068, 0, 0.7071067, 0, 1, 0, -0.7071067, 0, -0.7071068, -32.6568, 2, -48.3852)
 metadata/actor_id = 345.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_345" unique_id=85007939 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_345" unique_id=1283830990 instance=ExtResource("15_618l6")]
 
-[node name="Actor_178" type="Node3D" parent="Actors" unique_id=151030169]
+[node name="Actor_178" type="Node3D" parent="Actors" unique_id=228387193]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.468, 0.59375, -20.5412)
 metadata/actor_id = 178.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_178" unique_id=1955854901 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_178" unique_id=988054930 instance=ExtResource("15_618l6")]
 
-[node name="Actor_179" type="Node3D" parent="Actors" unique_id=1310469891]
+[node name="Actor_179" type="Node3D" parent="Actors" unique_id=940031840]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -22.5, 0.59375, -12.4476)
 metadata/actor_id = 179.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_179" unique_id=9612824 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_179" unique_id=701650419 instance=ExtResource("15_618l6")]
 
-[node name="Actor_183" type="Node3D" parent="Actors" unique_id=1307301316]
+[node name="Actor_183" type="Node3D" parent="Actors" unique_id=2100516691]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -20.5936, 0.59375, -4.4788)
 metadata/actor_id = 183.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_183" unique_id=1845177199 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_183" unique_id=1245958575 instance=ExtResource("15_618l6")]
 
-[node name="Actor_187" type="Node3D" parent="Actors" unique_id=952666178]
+[node name="Actor_187" type="Node3D" parent="Actors" unique_id=374922995]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -12.5, 0.59375, 3.6148)
 metadata/actor_id = 187.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_187" unique_id=1494434112 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_187" unique_id=326002811 instance=ExtResource("15_618l6")]
 
-[node name="Actor_346" type="Node3D" parent="Actors" unique_id=719718014]
+[node name="Actor_346" type="Node3D" parent="Actors" unique_id=1593677608]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 31.8136, 2, 10.7084)
 metadata/actor_id = 346.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_346" unique_id=1890804707 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_346" unique_id=747168251 instance=ExtResource("15_618l6")]
 
-[node name="Actor_347" type="Node3D" parent="Actors" unique_id=1134982904]
+[node name="Actor_347" type="Node3D" parent="Actors" unique_id=1930871702]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 31.8128, 2, 15.1148)
 metadata/actor_id = 347.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_347" unique_id=1460175169 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_347" unique_id=1398065650 instance=ExtResource("15_618l6")]
 
-[node name="Actor_348" type="Node3D" parent="Actors" unique_id=153288465]
+[node name="Actor_348" type="Node3D" parent="Actors" unique_id=1873752758]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 37.8128, 1.59375, 28.4588)
 metadata/actor_id = 348.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_348" unique_id=1254573414 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_348" unique_id=1165051828 instance=ExtResource("15_618l6")]
 
-[node name="Actor_349" type="Node3D" parent="Actors" unique_id=623773669]
+[node name="Actor_349" type="Node3D" parent="Actors" unique_id=1340843894]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 36.5312, 1.59375, 37.834)
 metadata/actor_id = 349.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_349" unique_id=147702127 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_349" unique_id=109875607 instance=ExtResource("15_618l6")]
 
-[node name="Actor_350" type="Node3D" parent="Actors" unique_id=1899165781]
+[node name="Actor_350" type="Node3D" parent="Actors" unique_id=1954060027]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 5.5624, 1.5, 34.8652)
 metadata/actor_id = 350.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_350" unique_id=1252840371 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_350" unique_id=1578387941 instance=ExtResource("15_618l6")]
 
-[node name="Actor_351" type="Node3D" parent="Actors" unique_id=611045652]
+[node name="Actor_351" type="Node3D" parent="Actors" unique_id=364439621]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 4.5, 1.5, 29.8652)
 metadata/actor_id = 351.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_351" unique_id=1795504212 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_351" unique_id=1135540600 instance=ExtResource("15_618l6")]
 
-[node name="Actor_352" type="Node3D" parent="Actors" unique_id=865936876]
+[node name="Actor_352" type="Node3D" parent="Actors" unique_id=329830833]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0.5624, 1.5, 34.834)
 metadata/actor_id = 352.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_352" unique_id=1570915267 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_352" unique_id=683089658 instance=ExtResource("15_618l6")]
 
-[node name="Actor_353" type="Node3D" parent="Actors" unique_id=1182374165]
+[node name="Actor_353" type="Node3D" parent="Actors" unique_id=777438592]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -4.4376, 1.5, 34.834)
 metadata/actor_id = 353.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_353" unique_id=1586204495 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_353" unique_id=2126462306 instance=ExtResource("15_618l6")]
 
-[node name="Actor_354" type="Node3D" parent="Actors" unique_id=1012392690]
+[node name="Actor_354" type="Node3D" parent="Actors" unique_id=811083227]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -20.4688, 1.5, 33.8652)
 metadata/actor_id = 354.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_354" unique_id=96931580 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_354" unique_id=1685960136 instance=ExtResource("15_618l6")]
 
-[node name="Actor_355" type="Node3D" parent="Actors" unique_id=661825778]
+[node name="Actor_355" type="Node3D" parent="Actors" unique_id=609937366]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -33.8432, 1.5, 31.49)
 metadata/actor_id = 355.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_355" unique_id=1921933512 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_355" unique_id=553208426 instance=ExtResource("15_618l6")]
 
-[node name="Actor_356" type="Node3D" parent="Actors" unique_id=416218863]
+[node name="Actor_356" type="Node3D" parent="Actors" unique_id=1451206591]
 transform = Transform3D(-0.7071068, 0, 0.7071067, 0, 1, 0, -0.7071067, 0, -0.7071068, -33.8432, 1.5, 29.646)
 metadata/actor_id = 356.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_356" unique_id=1577891948 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_356" unique_id=76471206 instance=ExtResource("15_618l6")]
 
-[node name="Actor_357" type="Node3D" parent="Actors" unique_id=1185105484]
+[node name="Actor_357" type="Node3D" parent="Actors" unique_id=468784147]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -37.4688, 1.59375, 37.834)
 metadata/actor_id = 357.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_357" unique_id=1716591208 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_357" unique_id=645853289 instance=ExtResource("15_618l6")]
 
-[node name="Actor_358" type="Node3D" parent="Actors" unique_id=274051288]
+[node name="Actor_358" type="Node3D" parent="Actors" unique_id=823725818]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -32.8432, 2, 20.2404)
 metadata/actor_id = 358.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_358" unique_id=1280803460 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_358" unique_id=565467933 instance=ExtResource("15_618l6")]
 
-[node name="Actor_359" type="Node3D" parent="Actors" unique_id=214308468]
+[node name="Actor_359" type="Node3D" parent="Actors" unique_id=708402228]
 transform = Transform3D(-0.7071068, 0, 0.7071067, 0, 1, 0, -0.7071067, 0, -0.7071068, -32.8432, 2, 15.834)
 metadata/actor_id = 359.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_359" unique_id=1948473819 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_359" unique_id=1777707554 instance=ExtResource("15_618l6")]
 
-[node name="Actor_360" type="Node3D" parent="Actors" unique_id=2079810291]
+[node name="Actor_360" type="Node3D" parent="Actors" unique_id=633551889]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.9696, 0.59375, -21.0724)
 metadata/actor_id = 360.0
 metadata/class = 96
 
-[node name="cobj063" type="Node3D" parent="Actors/Actor_360" unique_id=1981540460 instance=ExtResource("14_ul2hq")]
+[node name="cobj063" type="Node3D" parent="Actors/Actor_360" unique_id=1981540460 instance=ExtResource("16_bbyjn")]
 
-[node name="Actor_361" type="Node3D" parent="Actors" unique_id=51638426]
+[node name="Actor_361" type="Node3D" parent="Actors" unique_id=1835719819]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -25.9696, 0.59375, -11.9476)
 metadata/actor_id = 361.0
 metadata/class = 96
 
-[node name="cobj063" type="Node3D" parent="Actors/Actor_361" unique_id=494459841 instance=ExtResource("14_ul2hq")]
+[node name="cobj063" type="Node3D" parent="Actors/Actor_361" unique_id=2020838210 instance=ExtResource("16_bbyjn")]
 
-[node name="Actor_362" type="Node3D" parent="Actors" unique_id=2040450041]
+[node name="Actor_362" type="Node3D" parent="Actors" unique_id=734752266]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 25.0304, 0.59375, -11.9476)
 metadata/actor_id = 362.0
 metadata/class = 96
 
-[node name="cobj063" type="Node3D" parent="Actors/Actor_362" unique_id=838787886 instance=ExtResource("14_ul2hq")]
+[node name="cobj063" type="Node3D" parent="Actors/Actor_362" unique_id=972769048 instance=ExtResource("16_bbyjn")]
 
-[node name="Actor_363" type="Node3D" parent="Actors" unique_id=487222913]
+[node name="Actor_363" type="Node3D" parent="Actors" unique_id=271938393]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0296, 0.59375, -21.0724)
 metadata/actor_id = 363.0
 metadata/class = 96
 
-[node name="cobj063" type="Node3D" parent="Actors/Actor_363" unique_id=1384680919 instance=ExtResource("14_ul2hq")]
+[node name="cobj063" type="Node3D" parent="Actors/Actor_363" unique_id=1975379168 instance=ExtResource("16_bbyjn")]
 
-[node name="Actor_364" type="Node3D" parent="Actors" unique_id=10807114]
+[node name="Actor_364" type="Node3D" parent="Actors" unique_id=1558318619]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 28.1568, 0.59375, -17.9476)
 metadata/actor_id = 364.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_364" unique_id=1373256507 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_364" unique_id=1906275379 instance=ExtResource("15_618l6")]
 
-[node name="Actor_365" type="Node3D" parent="Actors" unique_id=536907472]
+[node name="Actor_365" type="Node3D" parent="Actors" unique_id=2031295746]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 28.1256, 0.59375, -15.0724)
 metadata/actor_id = 365.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_365" unique_id=562929702 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_365" unique_id=1446541250 instance=ExtResource("15_618l6")]
 
-[node name="Actor_366" type="Node3D" parent="Actors" unique_id=991325653]
+[node name="Actor_366" type="Node3D" parent="Actors" unique_id=637864733]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -29.1248, 0.59375, -14.9788)
 metadata/actor_id = 366.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_366" unique_id=1340963498 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_366" unique_id=631562674 instance=ExtResource("15_618l6")]
 
-[node name="Actor_367" type="Node3D" parent="Actors" unique_id=1454195081]
+[node name="Actor_367" type="Node3D" parent="Actors" unique_id=2079573789]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -29.1248, 0.59375, -18.0412)
 metadata/actor_id = 367.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_367" unique_id=866111613 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_367" unique_id=1811969204 instance=ExtResource("15_618l6")]
 
-[node name="Actor_368" type="Node3D" parent="Actors" unique_id=674364839]
+[node name="Actor_368" type="Node3D" parent="Actors" unique_id=1542420237]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 17.5, 1.5, -67.51)
 metadata/actor_id = 368.0
 metadata/class = 96
 
-[node name="cobj064" type="Node3D" parent="Actors/Actor_368" unique_id=229912044 instance=ExtResource("15_f81qe")]
+[node name="cobj064" type="Node3D" parent="Actors/Actor_368" unique_id=229912044 instance=ExtResource("17_yuwgg")]
 
-[node name="Actor_369" type="Node3D" parent="Actors" unique_id=651689573]
+[node name="Actor_369" type="Node3D" parent="Actors" unique_id=284432438]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 33.2808, 1.5, -67.51)
 metadata/actor_id = 369.0
 metadata/class = 96
 
-[node name="cobj064" type="Node3D" parent="Actors/Actor_369" unique_id=1985637126 instance=ExtResource("15_f81qe")]
+[node name="cobj064" type="Node3D" parent="Actors/Actor_369" unique_id=995865937 instance=ExtResource("17_yuwgg")]
 
-[node name="Actor_370" type="Node3D" parent="Actors" unique_id=348547613]
+[node name="Actor_370" type="Node3D" parent="Actors" unique_id=1042234288]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 20.2808, 0.59375, -37.3228)
 metadata/actor_id = 370.0
 metadata/class = 96
 
-[node name="cobj064" type="Node3D" parent="Actors/Actor_370" unique_id=784960912 instance=ExtResource("15_f81qe")]
+[node name="cobj064" type="Node3D" parent="Actors/Actor_370" unique_id=1347681749 instance=ExtResource("17_yuwgg")]
 
-[node name="Actor_282" type="Node3D" parent="Actors" unique_id=623001481]
+[node name="Actor_282" type="Node3D" parent="Actors" unique_id=167310363]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -21.6248, 0.59375, -37.3852)
 metadata/actor_id = 282.0
 metadata/class = 96
 
-[node name="cobj064" type="Node3D" parent="Actors/Actor_282" unique_id=1335325311 instance=ExtResource("15_f81qe")]
+[node name="cobj064" type="Node3D" parent="Actors/Actor_282" unique_id=509693805 instance=ExtResource("17_yuwgg")]
 
-[node name="Actor_164" type="Node3D" parent="Actors" unique_id=1933024611]
+[node name="Actor_164" type="Node3D" parent="Actors" unique_id=1584850996]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -21.6872, 0.59375, 4.5212)
 metadata/actor_id = 164.0
 metadata/class = 96
 
-[node name="cobj064" type="Node3D" parent="Actors/Actor_164" unique_id=1248718408 instance=ExtResource("15_f81qe")]
+[node name="cobj064" type="Node3D" parent="Actors/Actor_164" unique_id=1076701725 instance=ExtResource("17_yuwgg")]
 
-[node name="Actor_177" type="Node3D" parent="Actors" unique_id=94316085]
+[node name="Actor_177" type="Node3D" parent="Actors" unique_id=1935862812]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 20.3128, 0.59375, 4.5524)
 metadata/actor_id = 177.0
 metadata/class = 96
 
-[node name="cobj064" type="Node3D" parent="Actors/Actor_177" unique_id=1932598081 instance=ExtResource("15_f81qe")]
+[node name="cobj064" type="Node3D" parent="Actors/Actor_177" unique_id=1994423909 instance=ExtResource("17_yuwgg")]
 
-[node name="Actor_200" type="Node3D" parent="Actors" unique_id=1627345451]
+[node name="Actor_200" type="Node3D" parent="Actors" unique_id=536341265]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -18.7816, 1.5, 34.5836)
 metadata/actor_id = 200.0
 metadata/class = 96
 
-[node name="cobj064" type="Node3D" parent="Actors/Actor_200" unique_id=2130557712 instance=ExtResource("15_f81qe")]
+[node name="cobj064" type="Node3D" parent="Actors/Actor_200" unique_id=1647124901 instance=ExtResource("17_yuwgg")]
 
-[node name="Actor_201" type="Node3D" parent="Actors" unique_id=437646025]
+[node name="Actor_201" type="Node3D" parent="Actors" unique_id=2033976011]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -34.6872, 1.5, 34.5524)
 metadata/actor_id = 201.0
 metadata/class = 96
 
-[node name="cobj064" type="Node3D" parent="Actors/Actor_201" unique_id=1418364071 instance=ExtResource("15_f81qe")]
+[node name="cobj064" type="Node3D" parent="Actors/Actor_201" unique_id=415929960 instance=ExtResource("17_yuwgg")]
 
-[node name="Actor_218" type="Node3D" parent="Actors" unique_id=1901377800]
+[node name="Actor_218" type="Node3D" parent="Actors" unique_id=1830489967]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 34.5624, -0.204836, -27.51)
 metadata/actor_id = 218.0
 metadata/class = 96
 
-[node name="cobj065" type="Node3D" parent="Actors/Actor_218" unique_id=919155648 instance=ExtResource("16_rtovj")]
+[node name="cobj065" type="Node3D" parent="Actors/Actor_218" unique_id=919155648 instance=ExtResource("18_327ok")]
 
-[node name="Actor_219" type="Node3D" parent="Actors" unique_id=2015204043]
+[node name="Actor_219" type="Node3D" parent="Actors" unique_id=2111868183]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 34.5, -0.2975, -27.51)
 metadata/actor_id = 219.0
 metadata/class = 96
 
-[node name="cobj066" type="Node3D" parent="Actors/Actor_219" unique_id=1023782850 instance=ExtResource("17_618l6")]
+[node name="cobj066" type="Node3D" parent="Actors/Actor_219" unique_id=1023782850 instance=ExtResource("19_8vsxh")]
 
-[node name="Actor_283" type="Node3D" parent="Actors" unique_id=190463461]
+[node name="Actor_283" type="Node3D" parent="Actors" unique_id=510971989]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 11.5312, 0.59375, 3.646)
 metadata/actor_id = 283.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_283" unique_id=92245296 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_283" unique_id=1279498824 instance=ExtResource("15_618l6")]
 
-[node name="Actor_371" type="Node3D" parent="Actors" unique_id=2087401407]
+[node name="Actor_371" type="Node3D" parent="Actors" unique_id=972878692]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 19.6872, 0.59375, -4.4788)
 metadata/actor_id = 371.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_371" unique_id=1552725787 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_371" unique_id=508880165 instance=ExtResource("15_618l6")]
 
-[node name="Actor_372" type="Node3D" parent="Actors" unique_id=21845822]
+[node name="Actor_372" type="Node3D" parent="Actors" unique_id=2003848894]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.4688, 0.59375, -36.6036)
 metadata/actor_id = 372.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_372" unique_id=1938709418 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_372" unique_id=1126897667 instance=ExtResource("15_618l6")]
 
-[node name="Actor_373" type="Node3D" parent="Actors" unique_id=610838297]
+[node name="Actor_373" type="Node3D" parent="Actors" unique_id=1497780601]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -20.5624, 0.59375, -28.4788)
 metadata/actor_id = 373.0
 metadata/class = 96
 
-[node name="cobj062" type="Node3D" parent="Actors/Actor_373" unique_id=1507551860 instance=ExtResource("13_k3qpk")]
+[node name="cobj062" type="Node3D" parent="Actors/Actor_373" unique_id=165464003 instance=ExtResource("15_618l6")]
 
-[node name="Actor_374" type="Node3D" parent="Actors" unique_id=1800254148]
+[node name="Actor_374" type="Node3D" parent="Actors" unique_id=1459575261]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -35.4376, -0.18908432, -5.4788)
 metadata/actor_id = 374.0
 metadata/class = 96
 
-[node name="cobj065" type="Node3D" parent="Actors/Actor_374" unique_id=1553989821 instance=ExtResource("16_rtovj")]
+[node name="cobj065" type="Node3D" parent="Actors/Actor_374" unique_id=1500303525 instance=ExtResource("18_327ok")]
 
-[node name="Actor_375" type="Node3D" parent="Actors" unique_id=1697617180]
+[node name="Actor_375" type="Node3D" parent="Actors" unique_id=1171383184]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -35.5, -0.2807, -5.4788)
 metadata/actor_id = 375.0
 metadata/class = 96
 
-[node name="cobj066" type="Node3D" parent="Actors/Actor_375" unique_id=1361961993 instance=ExtResource("17_618l6")]
+[node name="cobj066" type="Node3D" parent="Actors/Actor_375" unique_id=489413402 instance=ExtResource("19_8vsxh")]
 
-[node name="Actor_12" type="CharacterBody3D" parent="Actors" unique_id=26517145]
+[node name="Actor_12" type="CharacterBody3D" parent="Actors" unique_id=1596101060]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14.2824, 1.0190625, -65.51)
-script = ExtResource("18_bbyjn")
+script = ExtResource("20_v8ftk")
 metadata/actor_id = 12.0
 metadata/class = 1
 
-[node name="X1" type="Node3D" parent="Actors/Actor_12" unique_id=1557197838]
+[node name="X1" type="Node3D" parent="Actors/Actor_12" unique_id=1563063335]
 
-[node name="legs" parent="Actors/Actor_12/X1" unique_id=1636159263 instance=ExtResource("19_yuwgg")]
+[node name="legs" parent="Actors/Actor_12/X1" unique_id=1636159263 instance=ExtResource("21_1hiqd")]
 
 [node name="Skeleton3D" parent="Actors/Actor_12/X1/legs/cobj015/armature" parent_id_path=PackedInt32Array(1636159263, 398708541) index="0" unique_id=1557239]
 bones/0/name = "bone_0"
@@ -6730,7 +6766,7 @@ metadata/extras = {
 "fc_vertex_index": 111.0
 }
 
-[node name="cockpit" parent="Actors/Actor_12/X1/legs/cobj015/attach_0" index="0" unique_id=506377194 instance=ExtResource("21_8vsxh")]
+[node name="cockpit" parent="Actors/Actor_12/X1/legs/cobj015/attach_0" index="0" unique_id=506377194 instance=ExtResource("23_fo1vs")]
 
 [node name="Skeleton3D" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature" parent_id_path=PackedInt32Array(506377194, 449109715) index="0" unique_id=1601664925]
 bones/0/name = "bone_0"
@@ -6843,10 +6879,10 @@ metadata/extras = {
 mesh = SubResource("ArrayMesh_5em5n")
 skin = SubResource("Skin_42n27")
 
-[node name="mount_bone_4" type="BoneAttachment3D" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D" index="1" unique_id=780972893]
+[node name="mount_bone_4" type="BoneAttachment3D" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D" index="1" unique_id=1789630244]
 bone_name = "bone_4"
 
-[node name="weapon" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_4" unique_id=462899420 instance=ExtResource("23_1hiqd")]
+[node name="weapon" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_4" unique_id=462899420 instance=ExtResource("25_yk5wc")]
 
 [node name="cobj017_mesh" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_4/weapon/cobj017" parent_id_path=PackedInt32Array(462899420, 97113797) index="0" unique_id=1288017888]
 mesh = SubResource("ArrayMesh_ia17n")
@@ -6858,16 +6894,16 @@ metadata/extras = {
 "fc_vertex_index": 32.0
 }
 
-[node name="mount_bone_2" type="BoneAttachment3D" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D" index="2" unique_id=1800424475]
+[node name="mount_bone_2" type="BoneAttachment3D" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D" index="2" unique_id=1433031465]
 bone_name = "bone_2"
 
-[node name="weapon_2" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2" unique_id=670549131 instance=ExtResource("23_1hiqd")]
+[node name="weapon_2" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2" unique_id=1985109171 instance=ExtResource("25_yk5wc")]
 
-[node name="cobj017_mesh" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2/weapon_2/cobj017" parent_id_path=PackedInt32Array(670549131, 97113797) index="0" unique_id=1288017888]
+[node name="cobj017_mesh" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2/weapon_2/cobj017" parent_id_path=PackedInt32Array(1985109171, 97113797) index="0" unique_id=1288017888]
 mesh = SubResource("ArrayMesh_ia17n")
 skeleton = NodePath("")
 
-[node name="attach_0" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2/weapon_2/cobj017" parent_id_path=PackedInt32Array(670549131, 97113797) index="1" unique_id=1902303573]
+[node name="attach_0" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2/weapon_2/cobj017" parent_id_path=PackedInt32Array(1985109171, 97113797) index="1" unique_id=1902303573]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.083984375)
 metadata/extras = {
 "fc_vertex_index": 32.0
@@ -6891,7 +6927,7 @@ metadata/extras = {
 "fc_vertex_index": 9.0
 }
 
-[node name="beacon_lights" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2" index="0" unique_id=720268619 instance=ExtResource("25_fo1vs")]
+[node name="beacon_lights" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2" index="0" unique_id=720268619 instance=ExtResource("27_nksbx")]
 
 [node name="cobj018_mesh" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2/beacon_lights/cobj018" parent_id_path=PackedInt32Array(720268619, 903122387) index="0" unique_id=230756818]
 mesh = SubResource("ArrayMesh_8me12")
@@ -6918,7 +6954,7 @@ metadata/extras = {
 [node name="AnimationPlayer" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit" index="1" unique_id=261015020]
 libraries/ = SubResource("AnimationLibrary_hgcov")
 
-[node name="pilot" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit" unique_id=1279932388 instance=ExtResource("27_yk5wc")]
+[node name="pilot" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit" unique_id=1279932388 instance=ExtResource("29_2lkjj")]
 
 [node name="cobj019_mesh" parent="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit/pilot/cobj019" parent_id_path=PackedInt32Array(1279932388, 2013847004) index="0" unique_id=1679557016]
 mesh = SubResource("ArrayMesh_8xeji")
@@ -6939,23 +6975,23 @@ metadata/extras = {
 [node name="AnimationPlayer" parent="Actors/Actor_12/X1/legs" index="1" unique_id=785698345]
 libraries/ = SubResource("AnimationLibrary_eie4m")
 
-[node name="Collision" type="CollisionShape3D" parent="Actors/Actor_12" unique_id=1463435879]
+[node name="Collision" type="CollisionShape3D" parent="Actors/Actor_12" unique_id=1836710478]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
-shape = SubResource("CapsuleShape3D_yjan2")
+shape = SubResource("CapsuleShape3D_2chkl")
 
-[node name="Camera" type="Camera3D" parent="Actors/Actor_12" unique_id=1094850783]
+[node name="Camera" type="Camera3D" parent="Actors/Actor_12" unique_id=779113461]
 fov = 26.4
 
-[node name="Actor_16" type="Node3D" parent="Actors" unique_id=914870731]
+[node name="Actor_16" type="Node3D" parent="Actors" unique_id=1702705868]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 13.2496, 0.91875, 32.49)
 metadata/actor_id = 16.0
 metadata/class = 1
 
-[node name="X1" type="Node3D" parent="Actors/Actor_16" unique_id=34846961]
+[node name="X1" type="Node3D" parent="Actors/Actor_16" unique_id=1474293760]
 
-[node name="legs" parent="Actors/Actor_16/X1" unique_id=615367860 instance=ExtResource("19_yuwgg")]
+[node name="legs" parent="Actors/Actor_16/X1" unique_id=626737098 instance=ExtResource("21_1hiqd")]
 
-[node name="Skeleton3D" parent="Actors/Actor_16/X1/legs/cobj015/armature" parent_id_path=PackedInt32Array(615367860, 398708541) index="0" unique_id=1557239]
+[node name="Skeleton3D" parent="Actors/Actor_16/X1/legs/cobj015/armature" parent_id_path=PackedInt32Array(626737098, 398708541) index="0" unique_id=1557239]
 bones/0/name = "bone_0"
 bones/0/parent = -1
 bones/0/rest = Transform3D(0, 1.2246469e-16, 1, 6.617445e-24, -1, 1.2246469e-16, 1, 0, 0, 0, 0.49609375, 0)
@@ -7080,15 +7116,15 @@ metadata/extras = {
 mesh = SubResource("ArrayMesh_loqur")
 skin = SubResource("Skin_45k4a")
 
-[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015" parent_id_path=PackedInt32Array(615367860, 660411087) index="1" unique_id=1493373380]
+[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015" parent_id_path=PackedInt32Array(626737098, 660411087) index="1" unique_id=1493373380]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7402344, 0.15625)
 metadata/extras = {
 "fc_vertex_index": 111.0
 }
 
-[node name="cockpit" parent="Actors/Actor_16/X1/legs/cobj015/attach_0" index="0" unique_id=822688544 instance=ExtResource("21_8vsxh")]
+[node name="cockpit" parent="Actors/Actor_16/X1/legs/cobj015/attach_0" index="0" unique_id=1625488810 instance=ExtResource("23_fo1vs")]
 
-[node name="Skeleton3D" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature" parent_id_path=PackedInt32Array(822688544, 449109715) index="0" unique_id=1601664925]
+[node name="Skeleton3D" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature" parent_id_path=PackedInt32Array(1625488810, 449109715) index="0" unique_id=1601664925]
 bones/0/name = "bone_0"
 bones/0/parent = -1
 bones/0/rest = Transform3D(0, 3.140185e-16, 1, -1.5700926e-16, -1, 3.140185e-16, 1, -1.5700926e-16, 0, 0, 0, 0)
@@ -7199,73 +7235,73 @@ metadata/extras = {
 mesh = SubResource("ArrayMesh_5em5n")
 skin = SubResource("Skin_42n27")
 
-[node name="mount_bone_4" type="BoneAttachment3D" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D" index="1" unique_id=719064081]
+[node name="mount_bone_4" type="BoneAttachment3D" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D" index="1" unique_id=1328040932]
 bone_name = "bone_4"
 
-[node name="weapon" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_4" unique_id=260558408 instance=ExtResource("23_1hiqd")]
+[node name="weapon" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_4" unique_id=26256017 instance=ExtResource("25_yk5wc")]
 
-[node name="cobj017_mesh" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_4/weapon/cobj017" parent_id_path=PackedInt32Array(260558408, 97113797) index="0" unique_id=1288017888]
+[node name="cobj017_mesh" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_4/weapon/cobj017" parent_id_path=PackedInt32Array(26256017, 97113797) index="0" unique_id=1288017888]
 mesh = SubResource("ArrayMesh_ia17n")
 skeleton = NodePath("")
 
-[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_4/weapon/cobj017" parent_id_path=PackedInt32Array(260558408, 97113797) index="1" unique_id=1902303573]
+[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_4/weapon/cobj017" parent_id_path=PackedInt32Array(26256017, 97113797) index="1" unique_id=1902303573]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.083984375)
 metadata/extras = {
 "fc_vertex_index": 32.0
 }
 
-[node name="mount_bone_2" type="BoneAttachment3D" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D" index="2" unique_id=1528061810]
+[node name="mount_bone_2" type="BoneAttachment3D" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D" index="2" unique_id=146956649]
 bone_name = "bone_2"
 
-[node name="weapon_2" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2" unique_id=1468994577 instance=ExtResource("23_1hiqd")]
+[node name="weapon_2" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2" unique_id=919879116 instance=ExtResource("25_yk5wc")]
 
-[node name="cobj017_mesh" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2/weapon_2/cobj017" parent_id_path=PackedInt32Array(1468994577, 97113797) index="0" unique_id=1288017888]
+[node name="cobj017_mesh" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2/weapon_2/cobj017" parent_id_path=PackedInt32Array(919879116, 97113797) index="0" unique_id=1288017888]
 mesh = SubResource("ArrayMesh_ia17n")
 skeleton = NodePath("")
 
-[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2/weapon_2/cobj017" parent_id_path=PackedInt32Array(1468994577, 97113797) index="1" unique_id=1902303573]
+[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/armature/Skeleton3D/mount_bone_2/weapon_2/cobj017" parent_id_path=PackedInt32Array(919879116, 97113797) index="1" unique_id=1902303573]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.083984375)
 metadata/extras = {
 "fc_vertex_index": 32.0
 }
 
-[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016" parent_id_path=PackedInt32Array(822688544, 108269987) index="1" unique_id=1663452271]
+[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016" parent_id_path=PackedInt32Array(1625488810, 108269987) index="1" unique_id=1663452271]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05078125, -0.01953125, 0.359375)
 metadata/extras = {
 "fc_vertex_index": 21.0
 }
 
-[node name="attach_1" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016" parent_id_path=PackedInt32Array(822688544, 108269987) index="2" unique_id=899083092]
+[node name="attach_1" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016" parent_id_path=PackedInt32Array(1625488810, 108269987) index="2" unique_id=899083092]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05078125, -0.01953125, 0.359375)
 metadata/extras = {
 "fc_vertex_index": 25.0
 }
 
-[node name="attach_2" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016" parent_id_path=PackedInt32Array(822688544, 108269987) index="3" unique_id=891663400]
+[node name="attach_2" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016" parent_id_path=PackedInt32Array(1625488810, 108269987) index="3" unique_id=891663400]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18359375, 0.03125)
 metadata/extras = {
 "fc_vertex_index": 9.0
 }
 
-[node name="beacon_lights" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2" index="0" unique_id=1392471319 instance=ExtResource("25_fo1vs")]
+[node name="beacon_lights" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2" index="0" unique_id=1842438011 instance=ExtResource("27_nksbx")]
 
-[node name="cobj018_mesh" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2/beacon_lights/cobj018" parent_id_path=PackedInt32Array(1392471319, 903122387) index="0" unique_id=230756818]
+[node name="cobj018_mesh" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2/beacon_lights/cobj018" parent_id_path=PackedInt32Array(1842438011, 903122387) index="0" unique_id=230756818]
 mesh = SubResource("ArrayMesh_8me12")
 skeleton = NodePath("")
 
-[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2/beacon_lights/cobj018" parent_id_path=PackedInt32Array(1392471319, 903122387) index="1" unique_id=2103462949]
+[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2/beacon_lights/cobj018" parent_id_path=PackedInt32Array(1842438011, 903122387) index="1" unique_id=2103462949]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.001953125, 0.0546875, -0.078125)
 metadata/extras = {
 "fc_vertex_index": 24.0
 }
 
-[node name="attach_1" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2/beacon_lights/cobj018" parent_id_path=PackedInt32Array(1392471319, 903122387) index="2" unique_id=1253442603]
+[node name="attach_1" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2/beacon_lights/cobj018" parent_id_path=PackedInt32Array(1842438011, 903122387) index="2" unique_id=1253442603]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14257813, 0.052734375, -0.072265625)
 metadata/extras = {
 "fc_vertex_index": 0.0
 }
 
-[node name="attach_2" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2/beacon_lights/cobj018" parent_id_path=PackedInt32Array(1392471319, 903122387) index="3" unique_id=893327602]
+[node name="attach_2" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/cobj016/attach_2/beacon_lights/cobj018" parent_id_path=PackedInt32Array(1842438011, 903122387) index="3" unique_id=893327602]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14453125, 0.052734375, -0.072265625)
 metadata/extras = {
 "fc_vertex_index": 2.0
@@ -7274,19 +7310,19 @@ metadata/extras = {
 [node name="AnimationPlayer" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit" index="1" unique_id=261015020]
 libraries/ = SubResource("AnimationLibrary_hgcov")
 
-[node name="pilot" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit" unique_id=778858759 instance=ExtResource("27_yk5wc")]
+[node name="pilot" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit" unique_id=59684025 instance=ExtResource("29_2lkjj")]
 
-[node name="cobj019_mesh" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/pilot/cobj019" parent_id_path=PackedInt32Array(778858759, 2013847004) index="0" unique_id=1679557016]
+[node name="cobj019_mesh" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/pilot/cobj019" parent_id_path=PackedInt32Array(59684025, 2013847004) index="0" unique_id=1679557016]
 mesh = SubResource("ArrayMesh_8xeji")
 skeleton = NodePath("")
 
-[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/pilot/cobj019" parent_id_path=PackedInt32Array(778858759, 2013847004) index="1" unique_id=1752205087]
+[node name="attach_0" parent="Actors/Actor_16/X1/legs/cobj015/attach_0/cockpit/pilot/cobj019" parent_id_path=PackedInt32Array(59684025, 2013847004) index="1" unique_id=1752205087]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11328125, -0.01171875)
 metadata/extras = {
 "fc_vertex_index": 68.0
 }
 
-[node name="attach_1" parent="Actors/Actor_16/X1/legs/cobj015" parent_id_path=PackedInt32Array(615367860, 660411087) index="2" unique_id=597857951]
+[node name="attach_1" parent="Actors/Actor_16/X1/legs/cobj015" parent_id_path=PackedInt32Array(626737098, 660411087) index="2" unique_id=597857951]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.021484375, 0.6328125, -0.21289063)
 metadata/extras = {
 "fc_vertex_index": 18.0
@@ -7295,1387 +7331,1387 @@ metadata/extras = {
 [node name="AnimationPlayer" parent="Actors/Actor_16/X1/legs" index="1" unique_id=785698345]
 libraries/ = SubResource("AnimationLibrary_eie4m")
 
-[node name="Actor_18" type="Node3D" parent="Actors" unique_id=153659525]
+[node name="Actor_18" type="Node3D" parent="Actors" unique_id=1855280905]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 1.5304, 1.5, 29.5836)
 metadata/actor_id = 18.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_18" unique_id=324149698 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_18" unique_id=324149698 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_18" unique_id=247990611]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_18" unique_id=1918758043]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_19" type="Node3D" parent="Actors" unique_id=768098502]
+[node name="Actor_19" type="Node3D" parent="Actors" unique_id=51893761]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -12.4072, 1.529, 30.5836)
 metadata/actor_id = 19.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_19" unique_id=559321668 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_19" unique_id=491562490 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_19" unique_id=740909039]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_19" unique_id=1496467751]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_20" type="Node3D" parent="Actors" unique_id=190525137]
+[node name="Actor_20" type="Node3D" parent="Actors" unique_id=1150533546]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -2.468, 1.5, 29.5212)
 metadata/actor_id = 20.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_20" unique_id=1655940257 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_20" unique_id=1103769024 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_20" unique_id=1083380651]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_20" unique_id=353108992]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_21" type="Node3D" parent="Actors" unique_id=1862026838]
+[node name="Actor_21" type="Node3D" parent="Actors" unique_id=2026129043]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 4.5624, 0, 26.5524)
 metadata/actor_id = 21.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_21" unique_id=456615845 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_21" unique_id=735707708 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_21" unique_id=1453941389]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_21" unique_id=533747922]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_22" type="Node3D" parent="Actors" unique_id=2052002959]
+[node name="Actor_22" type="Node3D" parent="Actors" unique_id=1935928312]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -18.5, 1.5, 31.5524)
 metadata/actor_id = 22.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_22" unique_id=243257825 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_22" unique_id=2093487657 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_22" unique_id=215515921]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_22" unique_id=712560937]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_25" type="Node3D" parent="Actors" unique_id=328520519]
+[node name="Actor_25" type="Node3D" parent="Actors" unique_id=1829627503]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -5.4072, 0, 26.49)
 metadata/actor_id = 25.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_25" unique_id=1594016137 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_25" unique_id=1698959863 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_25" unique_id=387304284]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_25" unique_id=533662161]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_26" type="Node3D" parent="Actors" unique_id=36011790]
+[node name="Actor_26" type="Node3D" parent="Actors" unique_id=1579431642]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4392, 1.5, -62.5412)
 metadata/actor_id = 26.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_26" unique_id=1190807337 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_26" unique_id=1703642227 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_26" unique_id=1534190888]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_26" unique_id=359969430]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_27" type="Node3D" parent="Actors" unique_id=1795019472]
+[node name="Actor_27" type="Node3D" parent="Actors" unique_id=352364436]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.5, 1.5, -64.51)
 metadata/actor_id = 27.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_27" unique_id=293853835 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_27" unique_id=1214609274 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_27" unique_id=1754262252]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_27" unique_id=337188785]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_28" type="Node3D" parent="Actors" unique_id=1601435021]
+[node name="Actor_28" type="Node3D" parent="Actors" unique_id=1412626502]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5624, 1.5, -62.5724)
 metadata/actor_id = 28.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_28" unique_id=1141224915 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_28" unique_id=1037850362 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_28" unique_id=376113317]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_28" unique_id=629337688]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_29" type="Node3D" parent="Actors" unique_id=1507108352]
+[node name="Actor_29" type="Node3D" parent="Actors" unique_id=368640907]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5624, 1.5, -63.4788)
 metadata/actor_id = 29.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_29" unique_id=522099356 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_29" unique_id=1085527791 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_29" unique_id=415252641]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_29" unique_id=1116986287]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_30" type="Node3D" parent="Actors" unique_id=1988053542]
+[node name="Actor_30" type="Node3D" parent="Actors" unique_id=1480822252]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0, -59.4476)
 metadata/actor_id = 30.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_30" unique_id=527634399 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_30" unique_id=2020853204 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_30" unique_id=1477533954]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_30" unique_id=2080985440]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_31" type="Node3D" parent="Actors" unique_id=904862923]
+[node name="Actor_31" type="Node3D" parent="Actors" unique_id=1657685225]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5608, 0, -59.4164)
 metadata/actor_id = 31.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_31" unique_id=1381690207 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_31" unique_id=1199596890 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_31" unique_id=2078491240]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_31" unique_id=1543605315]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_33" type="Node3D" parent="Actors" unique_id=1269303237]
+[node name="Actor_33" type="Node3D" parent="Actors" unique_id=147050308]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4376, -1.1491919, 19.1148)
 metadata/actor_id = 33.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_33" unique_id=942500545 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_33" unique_id=942500545 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_34" type="Node3D" parent="Actors" unique_id=1919537425]
+[node name="Actor_34" type="Node3D" parent="Actors" unique_id=564984064]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5624, -1.1076615, -51.6972)
 metadata/actor_id = 34.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_34" unique_id=2034452149 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_34" unique_id=395726894 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_100" type="Node3D" parent="Actors" unique_id=1921829429]
+[node name="Actor_100" type="Node3D" parent="Actors" unique_id=1794264308]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5624, 0.2059782, -19.4476)
 metadata/actor_id = 100.0
 metadata/class = 16
 
-[node name="cobj023" type="MeshInstance3D" parent="Actors/Actor_100" unique_id=1756295314]
-mesh = ExtResource("32_2h0vo")
+[node name="cobj023" type="MeshInstance3D" parent="Actors/Actor_100" unique_id=1455018593]
+mesh = ExtResource("34_gdins")
 
-[node name="Actor_101" type="Node3D" parent="Actors" unique_id=1159749952]
+[node name="Actor_101" type="Node3D" parent="Actors" unique_id=1372225926]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.3752, 0.190235, -19.51)
 metadata/actor_id = 101.0
 metadata/class = 16
 
-[node name="cobj024" type="MeshInstance3D" parent="Actors/Actor_101" unique_id=1862546034]
-mesh = ExtResource("33_up30k")
+[node name="cobj024" type="MeshInstance3D" parent="Actors/Actor_101" unique_id=1629542875]
+mesh = ExtResource("35_kkpde")
 
-[node name="Actor_102" type="Node3D" parent="Actors" unique_id=385303695]
+[node name="Actor_102" type="Node3D" parent="Actors" unique_id=135046907]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.3128, 0.1875, -13.51)
 metadata/actor_id = 102.0
 metadata/class = 16
 
-[node name="cobj025" type="MeshInstance3D" parent="Actors/Actor_102" unique_id=1163278519]
-mesh = ExtResource("34_8gnof")
+[node name="cobj025" type="MeshInstance3D" parent="Actors/Actor_102" unique_id=1477136860]
+mesh = ExtResource("36_wa2c4")
 
-[node name="Actor_103" type="Node3D" parent="Actors" unique_id=288741343]
+[node name="Actor_103" type="Node3D" parent="Actors" unique_id=45503757]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6248, 0.2212428, -13.6348)
 metadata/actor_id = 103.0
 metadata/class = 16
 
-[node name="cobj026" type="MeshInstance3D" parent="Actors/Actor_103" unique_id=1822107732]
-mesh = ExtResource("35_tpswm")
+[node name="cobj026" type="MeshInstance3D" parent="Actors/Actor_103" unique_id=500103441]
+mesh = ExtResource("37_8w1ni")
 
-[node name="Actor_145" type="Node3D" parent="Actors" unique_id=455389308]
+[node name="Actor_145" type="Node3D" parent="Actors" unique_id=1737571353]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.564, -1.40625, -48.3852)
 metadata/actor_id = 145.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_145" unique_id=805371847 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_145" unique_id=136533044 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_146" type="Node3D" parent="Actors" unique_id=938430629]
+[node name="Actor_146" type="Node3D" parent="Actors" unique_id=1336864864]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.4992, 1.1768, -48.0884)
 metadata/actor_id = 146.0
 metadata/class = 11
 
-[node name="cobj027" type="MeshInstance3D" parent="Actors/Actor_146" unique_id=1672115474]
-mesh = ExtResource("36_gdins")
+[node name="cobj027" type="MeshInstance3D" parent="Actors/Actor_146" unique_id=1349704928]
+mesh = ExtResource("38_m82xn")
 
-[node name="Actor_155" type="Node3D" parent="Actors" unique_id=1555470216]
+[node name="Actor_155" type="Node3D" parent="Actors" unique_id=1920216410]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.564, -1.40625, -48.3852)
 metadata/actor_id = 155.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_155" unique_id=1416961368 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_155" unique_id=610434609 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_157" type="Node3D" parent="Actors" unique_id=881305149]
+[node name="Actor_157" type="Node3D" parent="Actors" unique_id=1665612675]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.124, 0.3125, -53.0724)
 metadata/actor_id = 157.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_157" unique_id=404754996 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_157" unique_id=1909326455 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_157" unique_id=609783066]
-mesh = ExtResource("30_6or2b")
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_157" unique_id=1646232510]
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_158" type="Node3D" parent="Actors" unique_id=1929278755]
+[node name="Actor_158" type="Node3D" parent="Actors" unique_id=1937252190]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 26.9384, 0.3125, -43.9476)
 metadata/actor_id = 158.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_158" unique_id=530028688 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_158" unique_id=200110453 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_158" unique_id=191170494]
-mesh = ExtResource("30_6or2b")
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_158" unique_id=839406345]
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_85" type="Node3D" parent="Actors" unique_id=1296771032]
+[node name="Actor_85" type="Node3D" parent="Actors" unique_id=1839256671]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.124, 0.3125, -53.1348)
 metadata/actor_id = 85.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_85" unique_id=322274770 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_85" unique_id=1045006885 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_85" unique_id=1713736229]
-mesh = ExtResource("30_6or2b")
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_85" unique_id=1319307985]
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_162" type="Node3D" parent="Actors" unique_id=997196039]
+[node name="Actor_162" type="Node3D" parent="Actors" unique_id=1368636347]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.0616, 0.3125, -44.01)
 metadata/actor_id = 162.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_162" unique_id=824670540 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_162" unique_id=802211975 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_162" unique_id=1891342553]
-mesh = ExtResource("30_6or2b")
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_162" unique_id=1945602424]
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_74" type="Node3D" parent="Actors" unique_id=1408419946]
+[node name="Actor_74" type="Node3D" parent="Actors" unique_id=324319765]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -33.2344, 1.0424, -48.9788)
 metadata/actor_id = 74.0
 metadata/class = 11
 
-[node name="cobj027" type="MeshInstance3D" parent="Actors/Actor_74" unique_id=805688553]
-mesh = ExtResource("36_gdins")
+[node name="cobj027" type="MeshInstance3D" parent="Actors/Actor_74" unique_id=313577359]
+mesh = ExtResource("38_m82xn")
 
-[node name="Actor_174" type="Node3D" parent="Actors" unique_id=854414604]
+[node name="Actor_174" type="Node3D" parent="Actors" unique_id=1752587782]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.5, -1.40625, -48.2604)
 metadata/actor_id = 174.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_174" unique_id=683066585 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_174" unique_id=1245222647 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_175" type="Node3D" parent="Actors" unique_id=939183323]
+[node name="Actor_175" type="Node3D" parent="Actors" unique_id=1412316246]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.5, -1.40625, -48.2604)
 metadata/actor_id = 175.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_175" unique_id=553397368 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_175" unique_id=985548943 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_180" type="Node3D" parent="Actors" unique_id=1674888361]
+[node name="Actor_180" type="Node3D" parent="Actors" unique_id=1589443338]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9384, 0.3125, -53.1348)
 metadata/actor_id = 180.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_180" unique_id=702831109 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_180" unique_id=836845382 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_180" unique_id=288694550]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_180" unique_id=1582986567]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_176" type="Node3D" parent="Actors" unique_id=81291868]
+[node name="Actor_176" type="Node3D" parent="Actors" unique_id=1711747964]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9384, 0.3125, -53.0724)
 metadata/actor_id = 176.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_176" unique_id=1628519753 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_176" unique_id=1660849974 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_176" unique_id=354716974]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_176" unique_id=2136216917]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_184" type="Node3D" parent="Actors" unique_id=2102137916]
+[node name="Actor_184" type="Node3D" parent="Actors" unique_id=508095348]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9384, 0.3125, -44.01)
 metadata/actor_id = 184.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_184" unique_id=1981712829 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_184" unique_id=1696387684 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_184" unique_id=259575941]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_184" unique_id=447598878]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_182" type="Node3D" parent="Actors" unique_id=1096904544]
+[node name="Actor_182" type="Node3D" parent="Actors" unique_id=1770554122]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9384, 0.3125, -44.01)
 metadata/actor_id = 182.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_182" unique_id=1034428336 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_182" unique_id=1032152937 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_182" unique_id=1793998057]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_182" unique_id=1210126641]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_186" type="Node3D" parent="Actors" unique_id=2123182799]
+[node name="Actor_186" type="Node3D" parent="Actors" unique_id=982374252]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -33.2808, 1.012, 15.006)
 metadata/actor_id = 186.0
 metadata/class = 11
 
-[node name="cobj027" type="MeshInstance3D" parent="Actors/Actor_186" unique_id=1942320028]
-mesh = ExtResource("36_gdins")
+[node name="cobj027" type="MeshInstance3D" parent="Actors/Actor_186" unique_id=2090208678]
+mesh = ExtResource("38_m82xn")
 
-[node name="Actor_198" type="Node3D" parent="Actors" unique_id=478238356]
+[node name="Actor_198" type="Node3D" parent="Actors" unique_id=1610388225]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9384, 0.3125, 10.99)
 metadata/actor_id = 198.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_198" unique_id=621637163 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_198" unique_id=1364656835 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_198" unique_id=1055683600]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_198" unique_id=247513552]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_199" type="Node3D" parent="Actors" unique_id=1448737962]
+[node name="Actor_199" type="Node3D" parent="Actors" unique_id=1358211349]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9992, 0.3125, 10.99)
 metadata/actor_id = 199.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_199" unique_id=432583034 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_199" unique_id=1407762567 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_199" unique_id=1156683105]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_199" unique_id=665405594]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_202" type="Node3D" parent="Actors" unique_id=1571346084]
+[node name="Actor_202" type="Node3D" parent="Actors" unique_id=842558568]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9992, 0.3125, 20.1772)
 metadata/actor_id = 202.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_202" unique_id=1552084084 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_202" unique_id=1945051760 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_202" unique_id=1345970600]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_202" unique_id=1743316855]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_203" type="Node3D" parent="Actors" unique_id=1913891282]
+[node name="Actor_203" type="Node3D" parent="Actors" unique_id=2145315782]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9384, 0.3125, 20.1772)
 metadata/actor_id = 203.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_203" unique_id=515225939 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_203" unique_id=1606883655 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_203" unique_id=886078013]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_203" unique_id=1270511378]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_91" type="Node3D" parent="Actors" unique_id=1338274417]
+[node name="Actor_91" type="Node3D" parent="Actors" unique_id=156655875]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.1864, -1.40625, 15.0524)
 metadata/actor_id = 91.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_91" unique_id=1630570887 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_91" unique_id=1136537322 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_99" type="Node3D" parent="Actors" unique_id=1593514870]
+[node name="Actor_99" type="Node3D" parent="Actors" unique_id=601361257]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.1864, -1.40625, 15.0524)
 metadata/actor_id = 99.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_99" unique_id=1849013347 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_99" unique_id=875040316 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_206" type="Node3D" parent="Actors" unique_id=332354933]
+[node name="Actor_206" type="Node3D" parent="Actors" unique_id=989104484]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.6264, -1.40625, 15.9276)
 metadata/actor_id = 206.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_206" unique_id=1973506492 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_206" unique_id=1828092617 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_207" type="Node3D" parent="Actors" unique_id=732578603]
+[node name="Actor_207" type="Node3D" parent="Actors" unique_id=872658006]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.6264, -1.40625, 15.9276)
 metadata/actor_id = 207.0
 metadata/class = 9
 
-[node name="cobj022" type="Node3D" parent="Actors/Actor_207" unique_id=1829299922 instance=ExtResource("31_2lkjj")]
+[node name="cobj022" type="Node3D" parent="Actors/Actor_207" unique_id=174000756 instance=ExtResource("33_tpswm")]
 
-[node name="Actor_208" type="Node3D" parent="Actors" unique_id=1105390257]
+[node name="Actor_208" type="Node3D" parent="Actors" unique_id=284945550]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.6096, 1.1448, 15.9276)
 metadata/actor_id = 208.0
 metadata/class = 11
 
-[node name="cobj027" type="MeshInstance3D" parent="Actors/Actor_208" unique_id=361117396]
-mesh = ExtResource("36_gdins")
+[node name="cobj027" type="MeshInstance3D" parent="Actors/Actor_208" unique_id=1489975299]
+mesh = ExtResource("38_m82xn")
 
-[node name="Actor_217" type="Node3D" parent="Actors" unique_id=281674125]
+[node name="Actor_217" type="Node3D" parent="Actors" unique_id=2049779222]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.2504, 0.3125, 11.1148)
 metadata/actor_id = 217.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_217" unique_id=1609466389 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_217" unique_id=668574997 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_217" unique_id=860686449]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_217" unique_id=969309281]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_220" type="Node3D" parent="Actors" unique_id=2143201171]
+[node name="Actor_220" type="Node3D" parent="Actors" unique_id=458224704]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.1256, 0.3125, 11.0524)
 metadata/actor_id = 220.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_220" unique_id=1610632825 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_220" unique_id=1266467473 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_220" unique_id=556833532]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_220" unique_id=1447709216]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_45" type="Node3D" parent="Actors" unique_id=1743106537]
+[node name="Actor_45" type="Node3D" parent="Actors" unique_id=388840014]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.0008, 0.3125, 20.1148)
 metadata/actor_id = 45.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_45" unique_id=2145077180 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_45" unique_id=2096467662 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_45" unique_id=1177827575]
-mesh = ExtResource("30_6or2b")
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_45" unique_id=581257109]
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_224" type="Node3D" parent="Actors" unique_id=806378562]
+[node name="Actor_224" type="Node3D" parent="Actors" unique_id=1145503196]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.0008, 0.3125, 20.0524)
 metadata/actor_id = 224.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_224" unique_id=454586060 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_224" unique_id=1083138050 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_224" unique_id=1826205199]
-mesh = ExtResource("30_6or2b")
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_224" unique_id=8370923]
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_245" type="Node3D" parent="Actors" unique_id=666518571]
+[node name="Actor_245" type="Node3D" parent="Actors" unique_id=1953021119]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 36.3128, 0, -42.8228)
 metadata/actor_id = 245.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_245" unique_id=894818883 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_245" unique_id=894818883 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_246" type="Node3D" parent="Actors" unique_id=1185246353]
+[node name="Actor_246" type="Node3D" parent="Actors" unique_id=309576456]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -37.1248, 0, -54.1348)
 metadata/actor_id = 246.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_246" unique_id=825545502 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_246" unique_id=557624480 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_247" type="Node3D" parent="Actors" unique_id=1775278353]
+[node name="Actor_247" type="Node3D" parent="Actors" unique_id=2063608687]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 0, 10.0524)
 metadata/actor_id = 247.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_247" unique_id=162537358 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_247" unique_id=747789533 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_248" type="Node3D" parent="Actors" unique_id=2115789697]
+[node name="Actor_248" type="Node3D" parent="Actors" unique_id=1647005783]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 25.9384, 0.0585812, 9.9276)
 metadata/actor_id = 248.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_248" unique_id=702791378 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_248" unique_id=1293115538 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_250" type="Node3D" parent="Actors" unique_id=1229674316]
+[node name="Actor_250" type="Node3D" parent="Actors" unique_id=522649696]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -26.7496, 0.0284856, -54.1348)
 metadata/actor_id = 250.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_250" unique_id=1471888121 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_250" unique_id=1842065303 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_251" type="Node3D" parent="Actors" unique_id=1122739582]
+[node name="Actor_251" type="Node3D" parent="Actors" unique_id=557857010]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -26.7496, 0.0300456, -42.8852)
 metadata/actor_id = 251.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_251" unique_id=1119385568 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_251" unique_id=295489942 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_252" type="Node3D" parent="Actors" unique_id=671444145]
+[node name="Actor_252" type="Node3D" parent="Actors" unique_id=702906825]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -37.1248, 0.5192, -42.7596)
 metadata/actor_id = 252.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_252" unique_id=1154828404 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_252" unique_id=837883661 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_253" type="Node3D" parent="Actors" unique_id=1490172721]
+[node name="Actor_253" type="Node3D" parent="Actors" unique_id=545877853]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 25.9376, 0.0355003, -42.7596)
 metadata/actor_id = 253.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_253" unique_id=2047517427 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_253" unique_id=690281455 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_254" type="Node3D" parent="Actors" unique_id=907654882]
+[node name="Actor_254" type="Node3D" parent="Actors" unique_id=107836542]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 26, 0.0765625, -54.01)
 metadata/actor_id = 254.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_254" unique_id=883265958 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_254" unique_id=1154165969 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_255" type="Node3D" parent="Actors" unique_id=1723378006]
+[node name="Actor_255" type="Node3D" parent="Actors" unique_id=864864145]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 36.3752, 0.8552, -54.0724)
 metadata/actor_id = 255.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_255" unique_id=561949385 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_255" unique_id=833638013 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_256" type="Node3D" parent="Actors" unique_id=49322157]
+[node name="Actor_256" type="Node3D" parent="Actors" unique_id=1605117597]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 25.9392, 0.0356301, 21.2404)
 metadata/actor_id = 256.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_256" unique_id=656989088 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_256" unique_id=1011789557 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_257" type="Node3D" parent="Actors" unique_id=606620291]
+[node name="Actor_257" type="Node3D" parent="Actors" unique_id=883031113]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 36.3136, 0, 21.2404)
 metadata/actor_id = 257.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_257" unique_id=1903568462 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_257" unique_id=231852378 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_258" type="Node3D" parent="Actors" unique_id=647036422]
+[node name="Actor_258" type="Node3D" parent="Actors" unique_id=1192516739]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 36.2512, 0.7304, 9.8652)
 metadata/actor_id = 258.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_258" unique_id=1510495578 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_258" unique_id=46699706 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_259" type="Node3D" parent="Actors" unique_id=649062971]
+[node name="Actor_259" type="Node3D" parent="Actors" unique_id=1759703146]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.0624, 0.6456, 21.1772)
 metadata/actor_id = 259.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_259" unique_id=871661854 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_259" unique_id=1937590539 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_260" type="Node3D" parent="Actors" unique_id=779722919]
+[node name="Actor_260" type="Node3D" parent="Actors" unique_id=50411947]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.7504, 0.0285769, 9.8652)
 metadata/actor_id = 260.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_260" unique_id=961389907 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_260" unique_id=1332067956 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_261" type="Node3D" parent="Actors" unique_id=2102915461]
+[node name="Actor_261" type="Node3D" parent="Actors" unique_id=242477239]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.688, 0.0226305, 21.1148)
 metadata/actor_id = 261.0
 metadata/class = 11
 
-[node name="cobj028" type="Node3D" parent="Actors/Actor_261" unique_id=1612851010 instance=ExtResource("37_kkpde")]
+[node name="cobj028" type="Node3D" parent="Actors/Actor_261" unique_id=211593445 instance=ExtResource("39_fqs26")]
 
-[node name="Actor_147" type="Node3D" parent="Actors" unique_id=1740862769]
+[node name="Actor_147" type="Node3D" parent="Actors" unique_id=1861743515]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 33.6256, 0.3125, -45.5724)
 metadata/actor_id = 147.0
 metadata/class = 11
 
-[node name="cobj029" type="MeshInstance3D" parent="Actors/Actor_147" unique_id=680528420]
-mesh = ExtResource("38_wa2c4")
+[node name="cobj029" type="MeshInstance3D" parent="Actors/Actor_147" unique_id=102612627]
+mesh = ExtResource("40_bky73")
 
-[node name="Actor_168" type="Node3D" parent="Actors" unique_id=2127823903]
+[node name="Actor_168" type="Node3D" parent="Actors" unique_id=1136028310]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -34.5632, 0.3125, -51.51)
 metadata/actor_id = 168.0
 metadata/class = 11
 
-[node name="cobj029" type="MeshInstance3D" parent="Actors/Actor_168" unique_id=1511226048]
-mesh = ExtResource("38_wa2c4")
+[node name="cobj029" type="MeshInstance3D" parent="Actors/Actor_168" unique_id=983697160]
+mesh = ExtResource("40_bky73")
 
-[node name="Actor_190" type="Node3D" parent="Actors" unique_id=975161521]
+[node name="Actor_190" type="Node3D" parent="Actors" unique_id=949469900]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -34.4376, 0.3125, 12.49)
 metadata/actor_id = 190.0
 metadata/class = 11
 
-[node name="cobj029" type="MeshInstance3D" parent="Actors/Actor_190" unique_id=531688815]
-mesh = ExtResource("38_wa2c4")
+[node name="cobj029" type="MeshInstance3D" parent="Actors/Actor_190" unique_id=1162918321]
+mesh = ExtResource("40_bky73")
 
-[node name="Actor_212" type="Node3D" parent="Actors" unique_id=1453659812]
+[node name="Actor_212" type="Node3D" parent="Actors" unique_id=84491985]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 33.6872, 0.3125, 18.49)
 metadata/actor_id = 212.0
 metadata/class = 11
 
-[node name="cobj029" type="MeshInstance3D" parent="Actors/Actor_212" unique_id=24516693]
-mesh = ExtResource("38_wa2c4")
+[node name="cobj029" type="MeshInstance3D" parent="Actors/Actor_212" unique_id=1529276782]
+mesh = ExtResource("40_bky73")
 
-[node name="Actor_75" type="Node3D" parent="Actors" unique_id=1941782578]
+[node name="Actor_75" type="Node3D" parent="Actors" unique_id=1724747251]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 8.2504, 2.3125, -65.9164)
 metadata/actor_id = 75.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_75" unique_id=131141053]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_75" unique_id=1790809690]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_173" type="Node3D" parent="Actors" unique_id=885308384]
+[node name="Actor_173" type="Node3D" parent="Actors" unique_id=300417654]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -35, 2, -45.4476)
 metadata/actor_id = 173.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_173" unique_id=857257556]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_173" unique_id=1094504515]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_87" type="Node3D" parent="Actors" unique_id=270496931]
+[node name="Actor_87" type="Node3D" parent="Actors" unique_id=618049902]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -35.8752, 2, 18.5524)
 metadata/actor_id = 87.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_87" unique_id=492461819]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_87" unique_id=474228969]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_205" type="Node3D" parent="Actors" unique_id=663337843]
+[node name="Actor_205" type="Node3D" parent="Actors" unique_id=153989686]
 transform = Transform3D(-0.017233461, 0, -0.99985147, 0, 1, 0, 0.99985147, 0, -0.017233461, 34.5, 2, 13.5524)
 metadata/actor_id = 205.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_205" unique_id=132045990]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_205" unique_id=1612066139]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_144" type="Node3D" parent="Actors" unique_id=1234966468]
+[node name="Actor_144" type="Node3D" parent="Actors" unique_id=1555015333]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 34.5624, 2, -50.1348)
 metadata/actor_id = 144.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_144" unique_id=1279121383]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_144" unique_id=1588027796]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_77" type="Node3D" parent="Actors" unique_id=49420627]
+[node name="Actor_77" type="Node3D" parent="Actors" unique_id=7572686]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -9.1872, 1.8125, 32.5524)
 metadata/actor_id = 77.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_77" unique_id=1032211787]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_77" unique_id=1597222322]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_204" type="Node3D" parent="Actors" unique_id=137123942]
+[node name="Actor_204" type="Node3D" parent="Actors" unique_id=627127804]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 34.3752, 2, 12.3028)
 metadata/actor_id = 204.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_204" unique_id=596686476]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_204" unique_id=106889185]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_154" type="Node3D" parent="Actors" unique_id=1569497161]
+[node name="Actor_154" type="Node3D" parent="Actors" unique_id=383259470]
 transform = Transform3D(-0.017255392, 0, -0.9998511, 0, 1, 0, 0.9998511, 0, -0.017255392, 34.6872, 2, -51.6348)
 metadata/actor_id = 154.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_154" unique_id=163915029]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_154" unique_id=1014070117]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_172" type="Node3D" parent="Actors" unique_id=907176940]
+[node name="Actor_172" type="Node3D" parent="Actors" unique_id=542498327]
 transform = Transform3D(-0.014937842, 0, 0.9998884, 0, 1, 0, -0.9998884, 0, -0.014937842, -35, 2, -46.6348)
 metadata/actor_id = 172.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_172" unique_id=1502651375]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_172" unique_id=1398516040]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_185" type="Node3D" parent="Actors" unique_id=1009401345]
+[node name="Actor_185" type="Node3D" parent="Actors" unique_id=736799072]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -35.8128, 2, 17.1148)
 metadata/actor_id = 185.0
 metadata/class = 5
 
-[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_185" unique_id=1072821887]
-mesh = ExtResource("39_8w1ni")
+[node name="cobj030" type="MeshInstance3D" parent="Actors/Actor_185" unique_id=1183395647]
+mesh = ExtResource("41_nvej3")
 
-[node name="Actor_41" type="Node3D" parent="Actors" unique_id=894602577]
+[node name="Actor_41" type="Node3D" parent="Actors" unique_id=1314533111]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.9992, -1.40625, -51.3852)
 metadata/actor_id = 41.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_41" unique_id=1711959599]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_41" unique_id=665821990]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_41" unique_id=50111009]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_41" unique_id=1114136362]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_43" type="Node3D" parent="Actors" unique_id=1733418540]
+[node name="Actor_43" type="Node3D" parent="Actors" unique_id=1552479971]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -36.1864, 1.012, -48.994)
 metadata/actor_id = 43.0
 metadata/class = 11
 
-[node name="cobj033" type="MeshInstance3D" parent="Actors/Actor_43" unique_id=1850223025]
-mesh = ExtResource("42_bky73")
+[node name="cobj033" type="MeshInstance3D" parent="Actors/Actor_43" unique_id=1766572655]
+mesh = ExtResource("44_nriuq")
 
-[node name="Actor_48" type="Node3D" parent="Actors" unique_id=848794640]
+[node name="Actor_48" type="Node3D" parent="Actors" unique_id=489789944]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -36.3272, 1.012, 15.006)
 metadata/actor_id = 48.0
 metadata/class = 11
 
-[node name="cobj033" type="MeshInstance3D" parent="Actors/Actor_48" unique_id=1992164023]
-mesh = ExtResource("42_bky73")
+[node name="cobj033" type="MeshInstance3D" parent="Actors/Actor_48" unique_id=944296911]
+mesh = ExtResource("44_nriuq")
 
-[node name="Actor_49" type="Node3D" parent="Actors" unique_id=849197548]
+[node name="Actor_49" type="Node3D" parent="Actors" unique_id=1686704725]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.3128, 1.1448, -48.0724)
 metadata/actor_id = 49.0
 metadata/class = 11
 
-[node name="cobj033" type="MeshInstance3D" parent="Actors/Actor_49" unique_id=1761463027]
-mesh = ExtResource("42_bky73")
+[node name="cobj033" type="MeshInstance3D" parent="Actors/Actor_49" unique_id=2026423229]
+mesh = ExtResource("44_nriuq")
 
-[node name="Actor_60" type="Node3D" parent="Actors" unique_id=653390253]
+[node name="Actor_60" type="Node3D" parent="Actors" unique_id=2140461845]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.5008, 1.1144, 15.9428)
 metadata/actor_id = 60.0
 metadata/class = 11
 
-[node name="cobj033" type="MeshInstance3D" parent="Actors/Actor_60" unique_id=235393758]
-mesh = ExtResource("42_bky73")
+[node name="cobj033" type="MeshInstance3D" parent="Actors/Actor_60" unique_id=1950175833]
+mesh = ExtResource("44_nriuq")
 
-[node name="Actor_61" type="Node3D" parent="Actors" unique_id=643895629]
+[node name="Actor_61" type="Node3D" parent="Actors" unique_id=26216322]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.5, 0, -60.4476)
 metadata/actor_id = 61.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_61" unique_id=1942731883]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_61" unique_id=1428304823]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_61" unique_id=46685116]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_61" unique_id=1401644682]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_112" type="Node3D" parent="Actors" unique_id=1604381381]
+[node name="Actor_112" type="Node3D" parent="Actors" unique_id=1322182696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.6248, -1.40625, -51.2604)
 metadata/actor_id = 112.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_112" unique_id=174210979]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_112" unique_id=1136470022]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_112" unique_id=629444722]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_112" unique_id=466662274]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_113" type="Node3D" parent="Actors" unique_id=978160956]
+[node name="Actor_113" type="Node3D" parent="Actors" unique_id=1231529255]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.0632, 0.3125, -53.01)
 metadata/actor_id = 113.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_113" unique_id=666350989]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_113" unique_id=983375247]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_113" unique_id=1442525520]
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_113" unique_id=829729600]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("41_fqs26")
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_118" type="Node3D" parent="Actors" unique_id=1501130825]
+[node name="Actor_118" type="Node3D" parent="Actors" unique_id=1824255824]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.4376, 0, -60.3852)
 metadata/actor_id = 118.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_118" unique_id=1576089161]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_118" unique_id=981438837]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_118" unique_id=638626452]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_118" unique_id=1516516143]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_119" type="Node3D" parent="Actors" unique_id=1214216589]
+[node name="Actor_119" type="Node3D" parent="Actors" unique_id=1561587027]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.0008, 0.3125, -44.01)
 metadata/actor_id = 119.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_119" unique_id=855277847]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_119" unique_id=1393006123]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_119" unique_id=1783782587]
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_119" unique_id=494558530]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("41_fqs26")
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_148" type="Node3D" parent="Actors" unique_id=722168972]
+[node name="Actor_148" type="Node3D" parent="Actors" unique_id=649632842]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4376, -1.6023375, -42.1972)
 metadata/actor_id = 148.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_148" unique_id=175926423]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_148" unique_id=257810237]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_148" unique_id=508405352]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_148" unique_id=335177318]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_165" type="Node3D" parent="Actors" unique_id=656712358]
+[node name="Actor_165" type="Node3D" parent="Actors" unique_id=1797118422]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 33.0632, -1.40625, -32.4476)
 metadata/actor_id = 165.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_165" unique_id=1830527423]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_165" unique_id=356554882]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_165" unique_id=1515984484]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_165" unique_id=1528102157]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_181" type="Node3D" parent="Actors" unique_id=1576971019]
+[node name="Actor_181" type="Node3D" parent="Actors" unique_id=1933334147]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 33.1256, -2.40625, -16.4788)
 metadata/actor_id = 181.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_181" unique_id=1833826721]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_181" unique_id=1784609846]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_181" unique_id=1295771258]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_181" unique_id=1586673369]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_209" type="Node3D" parent="Actors" unique_id=1627826740]
+[node name="Actor_209" type="Node3D" parent="Actors" unique_id=1510792365]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.564, -1, -29.5724)
 metadata/actor_id = 209.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_209" unique_id=1310568165]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_209" unique_id=1983743195]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_209" unique_id=1060865061]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_209" unique_id=1347975049]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_216" type="Node3D" parent="Actors" unique_id=1101023207]
+[node name="Actor_216" type="Node3D" parent="Actors" unique_id=15265951]
 transform = Transform3D(-0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, -0.70710677, -5.0616, 0.5, -21.0724)
 metadata/actor_id = 216.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_216" unique_id=1644794649]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_216" unique_id=523234641]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_216" unique_id=653988373]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_216" unique_id=677826082]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_265" type="Node3D" parent="Actors" unique_id=211845156]
+[node name="Actor_265" type="Node3D" parent="Actors" unique_id=2101722581]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9368, 0.3125, -53.01)
 metadata/actor_id = 265.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_265" unique_id=638374486]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_265" unique_id=1756080130]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_265" unique_id=958070834]
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_265" unique_id=2008571526]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("41_fqs26")
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_266" type="Node3D" parent="Actors" unique_id=1052216487]
+[node name="Actor_266" type="Node3D" parent="Actors" unique_id=765675387]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -33.9368, -1.40625, -33.01)
 metadata/actor_id = 266.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_266" unique_id=1017079958]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_266" unique_id=351215650]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_266" unique_id=1125385753]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_266" unique_id=221906046]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_267" type="Node3D" parent="Actors" unique_id=1909077043]
+[node name="Actor_267" type="Node3D" parent="Actors" unique_id=751062993]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9992, 0.3125, -43.9476)
 metadata/actor_id = 267.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_267" unique_id=735964003]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_267" unique_id=798868873]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_267" unique_id=884752594]
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_267" unique_id=1745808696]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("41_fqs26")
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_268" type="Node3D" parent="Actors" unique_id=1580656488]
+[node name="Actor_268" type="Node3D" parent="Actors" unique_id=263538685]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -34.032, -2.40625, -16.4788)
 metadata/actor_id = 268.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_268" unique_id=1382160162]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_268" unique_id=932250699]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_268" unique_id=63648790]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_268" unique_id=2038637554]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_269" type="Node3D" parent="Actors" unique_id=578660513]
+[node name="Actor_269" type="Node3D" parent="Actors" unique_id=1415966219]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -13.4984, -1, -3.51)
 metadata/actor_id = 269.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_269" unique_id=64255384]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_269" unique_id=1521596252]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_269" unique_id=384123736]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_269" unique_id=712188349]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_270" type="Node3D" parent="Actors" unique_id=2059369535]
+[node name="Actor_270" type="Node3D" parent="Actors" unique_id=55046911]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 32.6248, 0, 27.6148)
 metadata/actor_id = 270.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_270" unique_id=354947444]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_270" unique_id=287234508]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_270" unique_id=1841231191]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_270" unique_id=1478576478]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_271" type="Node3D" parent="Actors" unique_id=446552354]
+[node name="Actor_271" type="Node3D" parent="Actors" unique_id=1349983004]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -27.9992, 0.3125, 11.0524)
 metadata/actor_id = 271.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_271" unique_id=46294717]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_271" unique_id=768728178]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_271" unique_id=791483167]
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_271" unique_id=1126899655]
 transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 0, 0, 0)
-mesh = ExtResource("41_fqs26")
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_272" type="Node3D" parent="Actors" unique_id=1212256939]
+[node name="Actor_272" type="Node3D" parent="Actors" unique_id=698919475]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 12.6264, -1, -3.4476)
 metadata/actor_id = 272.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_272" unique_id=2032702796]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_272" unique_id=820338006]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_272" unique_id=345630635]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_272" unique_id=824363239]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_273" type="Node3D" parent="Actors" unique_id=1436859817]
+[node name="Actor_273" type="Node3D" parent="Actors" unique_id=1857734107]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -33.876, -1.40625, -0.3852)
 metadata/actor_id = 273.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_273" unique_id=1594631715]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_273" unique_id=107584310]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_273" unique_id=548484714]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_273" unique_id=219082969]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_274" type="Node3D" parent="Actors" unique_id=65195683]
+[node name="Actor_274" type="Node3D" parent="Actors" unique_id=1742606570]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -28.0616, 0.3125, 20.1772)
 metadata/actor_id = 274.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_274" unique_id=1833198837]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_274" unique_id=1959353603]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_274" unique_id=1916027489]
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_274" unique_id=840721543]
 transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 0, 0, 0)
-mesh = ExtResource("41_fqs26")
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_275" type="Node3D" parent="Actors" unique_id=409895605]
+[node name="Actor_275" type="Node3D" parent="Actors" unique_id=1822644908]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -29.5, 0, 27.5524)
 metadata/actor_id = 275.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_275" unique_id=2098778308]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_275" unique_id=483877916]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_275" unique_id=10306256]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_275" unique_id=1156029000]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_276" type="Node3D" parent="Actors" unique_id=1887680711]
+[node name="Actor_276" type="Node3D" parent="Actors" unique_id=1755148502]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -16.3752, -1.40625, 18.2404)
 metadata/actor_id = 276.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_276" unique_id=1909568518]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_276" unique_id=1536231489]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_276" unique_id=1283876762]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_276" unique_id=507147157]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_277" type="Node3D" parent="Actors" unique_id=581573674]
+[node name="Actor_277" type="Node3D" parent="Actors" unique_id=1484969748]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.0008, 0.3125, 20.1148)
 metadata/actor_id = 277.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_277" unique_id=194874546]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_277" unique_id=1543193270]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_277" unique_id=328439236]
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_277" unique_id=624766278]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("41_fqs26")
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_278" type="Node3D" parent="Actors" unique_id=1961184185]
+[node name="Actor_278" type="Node3D" parent="Actors" unique_id=1079188476]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 33.1256, -1.40625, -0.4476)
 metadata/actor_id = 278.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_278" unique_id=431610349]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_278" unique_id=1888186861]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_278" unique_id=849190683]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_278" unique_id=1841534604]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_279" type="Node3D" parent="Actors" unique_id=1588886645]
+[node name="Actor_279" type="Node3D" parent="Actors" unique_id=1312832293]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 27.1256, 0.3125, 11.0524)
 metadata/actor_id = 279.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_279" unique_id=759566644]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_279" unique_id=139312925]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_279" unique_id=327927039]
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_279" unique_id=1719057960]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 0, 0, 0)
-mesh = ExtResource("41_fqs26")
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_280" type="Node3D" parent="Actors" unique_id=1433670015]
+[node name="Actor_280" type="Node3D" parent="Actors" unique_id=901875142]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, -1, -29.4476)
 metadata/actor_id = 280.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_280" unique_id=1154218734]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_280" unique_id=1900900481]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_280" unique_id=907491060]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_280" unique_id=1520488719]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_13" type="Node3D" parent="Actors" unique_id=876981489]
+[node name="Actor_13" type="Node3D" parent="Actors" unique_id=1510795137]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.4376, -1.5967125, 9.1772)
 metadata/actor_id = 13.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_13" unique_id=1287578213]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_13" unique_id=1970273715]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_13" unique_id=54978535]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_13" unique_id=1518871644]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_15" type="Node3D" parent="Actors" unique_id=1824246303]
+[node name="Actor_15" type="Node3D" parent="Actors" unique_id=1672731431]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 6.0936, -0.97453135, -16.4788)
 metadata/actor_id = 15.0
 metadata/class = 10
 
-[node name="cobj034" type="MeshInstance3D" parent="Actors/Actor_15" unique_id=1867815268]
-mesh = ExtResource("43_nvej3")
+[node name="cobj034" type="MeshInstance3D" parent="Actors/Actor_15" unique_id=565488607]
+mesh = ExtResource("45_7leaa")
 
-[node name="Actor_24" type="Node3D" parent="Actors" unique_id=1516917272]
+[node name="Actor_24" type="Node3D" parent="Actors" unique_id=697949370]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -7.0936, -0.987828, -16.51)
 metadata/actor_id = 24.0
 metadata/class = 10
 
-[node name="cobj034" type="MeshInstance3D" parent="Actors/Actor_24" unique_id=1666410169]
-mesh = ExtResource("43_nvej3")
+[node name="cobj034" type="MeshInstance3D" parent="Actors/Actor_24" unique_id=1397671003]
+mesh = ExtResource("45_7leaa")
 
-[node name="Actor_37" type="Node3D" parent="Actors" unique_id=1622620315]
+[node name="Actor_37" type="Node3D" parent="Actors" unique_id=2046832298]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.5, -1.0197, -23.1036)
 metadata/actor_id = 37.0
 metadata/class = 10
 
-[node name="cobj034" type="MeshInstance3D" parent="Actors/Actor_37" unique_id=1273918381]
-mesh = ExtResource("43_nvej3")
+[node name="cobj034" type="MeshInstance3D" parent="Actors/Actor_37" unique_id=1580316265]
+mesh = ExtResource("45_7leaa")
 
-[node name="Actor_39" type="Node3D" parent="Actors" unique_id=690922753]
+[node name="Actor_39" type="Node3D" parent="Actors" unique_id=591087988]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, -0.9797, -9.9164)
 metadata/actor_id = 39.0
 metadata/class = 10
 
-[node name="cobj034" type="MeshInstance3D" parent="Actors/Actor_39" unique_id=142724770]
-mesh = ExtResource("43_nvej3")
+[node name="cobj034" type="MeshInstance3D" parent="Actors/Actor_39" unique_id=837713103]
+mesh = ExtResource("45_7leaa")
 
-[node name="Actor_14" type="Node3D" parent="Actors" unique_id=1412288047]
+[node name="Actor_14" type="Node3D" parent="Actors" unique_id=1525915749]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 1.5, -62.5724)
 metadata/actor_id = 14.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_14" unique_id=407584372 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_14" unique_id=557747613 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_14" unique_id=1175266152]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_14" unique_id=1159284404]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_23" type="Node3D" parent="Actors" unique_id=1630257074]
+[node name="Actor_23" type="Node3D" parent="Actors" unique_id=1554706954]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.436, 1.5, -62.5724)
 metadata/actor_id = 23.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_23" unique_id=352207854 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_23" unique_id=620400565 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_23" unique_id=2075898520]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_23" unique_id=1584977843]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_36" type="Node3D" parent="Actors" unique_id=653263620]
+[node name="Actor_36" type="Node3D" parent="Actors" unique_id=1256331387]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 15.5, 1.5, 29.49)
 metadata/actor_id = 36.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_36" unique_id=56959225 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_36" unique_id=1171027592 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_36" unique_id=1791183475]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_36" unique_id=2068686252]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_38" type="Node3D" parent="Actors" unique_id=743358150]
+[node name="Actor_38" type="Node3D" parent="Actors" unique_id=475096470]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 10.5928, 1.5, 29.646)
 metadata/actor_id = 38.0
 metadata/class = 8
 
-[node name="cobj020" type="Node3D" parent="Actors/Actor_38" unique_id=787286526 instance=ExtResource("29_nksbx")]
+[node name="cobj020" type="Node3D" parent="Actors/Actor_38" unique_id=764930531 instance=ExtResource("31_up30k")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.337891, 0)
 
-[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_38" unique_id=1694188240]
+[node name="cobj021" type="MeshInstance3D" parent="Actors/Actor_38" unique_id=1757378546]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
-mesh = ExtResource("30_6or2b")
+mesh = ExtResource("32_8gnof")
 
-[node name="Actor_40" type="Node3D" parent="Actors" unique_id=1198543865]
+[node name="Actor_40" type="Node3D" parent="Actors" unique_id=1565580481]
 transform = Transform3D(-0.7071068, 0, 0.7071067, 0, 1, 0, -0.7071067, 0, -0.7071068, 4.0632, 0.5, -21.0724)
 metadata/actor_id = 40.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_40" unique_id=5835933]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_40" unique_id=288929967]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_40" unique_id=1696887543]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_40" unique_id=1996637276]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_42" type="Node3D" parent="Actors" unique_id=2053535979]
+[node name="Actor_42" type="Node3D" parent="Actors" unique_id=859064831]
 transform = Transform3D(0.70710677, 0, 0.70710677, 0, 1, 0, -0.70710677, 0, 0.70710677, 4.0632, 0.5, -11.9476)
 metadata/actor_id = 42.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_42" unique_id=791842670]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_42" unique_id=1311456288]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_42" unique_id=1086600754]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_42" unique_id=589752412]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_44" type="Node3D" parent="Actors" unique_id=650059609]
+[node name="Actor_44" type="Node3D" parent="Actors" unique_id=952242907]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, -5.0616, 0.5, -11.9476)
 metadata/actor_id = 44.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_44" unique_id=1678900318]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_44" unique_id=1152036611]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_44" unique_id=1497819732]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_44" unique_id=1448438721]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_46" type="Node3D" parent="Actors" unique_id=601621267]
+[node name="Actor_46" type="Node3D" parent="Actors" unique_id=1807121805]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 14.1256, -1.40625, 18.6148)
 metadata/actor_id = 46.0
 metadata/class = 36
 
-[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_46" unique_id=957431257]
+[node name="cobj031" type="MeshInstance3D" parent="Actors/Actor_46" unique_id=1427062373]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.996094, 0)
-mesh = ExtResource("40_m82xn")
+mesh = ExtResource("42_nhu0i")
 
-[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_46" unique_id=1412242923]
-mesh = ExtResource("41_fqs26")
+[node name="cobj032" type="MeshInstance3D" parent="Actors/Actor_46" unique_id=671443282]
+mesh = ExtResource("43_amolk")
 
-[node name="Actor_50" type="Node3D" parent="Actors" unique_id=350417331]
+[node name="Actor_50" type="Node3D" parent="Actors" unique_id=1291371472]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 5.1104, 1.5702473, -63.9316)
 metadata/actor_id = 50.0
 metadata/class = 11
 
-[node name="cobj035" type="MeshInstance3D" parent="Actors/Actor_50" unique_id=1082838503]
-mesh = ExtResource("44_nhu0i")
+[node name="cobj035" type="MeshInstance3D" parent="Actors/Actor_50" unique_id=684743252]
+mesh = ExtResource("46_v3fl6")
 
-[node name="Actor_52" type="Node3D" parent="Actors" unique_id=753338006]
+[node name="Actor_52" type="Node3D" parent="Actors" unique_id=1213753337]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 1.269096, -68.0724)
 metadata/actor_id = 52.0
 metadata/class = 11
 
-[node name="cobj036" type="MeshInstance3D" parent="Actors/Actor_52" unique_id=568542849]
-mesh = ExtResource("45_amolk")
+[node name="cobj036" type="MeshInstance3D" parent="Actors/Actor_52" unique_id=360912833]
+mesh = ExtResource("47_kx7yd")
 
-[node name="Actor_54" type="Node3D" parent="Actors" unique_id=507451736]
+[node name="Actor_54" type="Node3D" parent="Actors" unique_id=339577530]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -6.064, 1.4070636, 30.9116)
 metadata/actor_id = 54.0
 metadata/class = 11
 
-[node name="cobj035" type="MeshInstance3D" parent="Actors/Actor_54" unique_id=1394770119]
-mesh = ExtResource("44_nhu0i")
+[node name="cobj035" type="MeshInstance3D" parent="Actors/Actor_54" unique_id=200571405]
+mesh = ExtResource("46_v3fl6")
 
-[node name="Actor_56" type="Node3D" parent="Actors" unique_id=1356313500]
+[node name="Actor_56" type="Node3D" parent="Actors" unique_id=61629778]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.9056, 1.2466623, 35.0836)
 metadata/actor_id = 56.0
 metadata/class = 11
 
-[node name="cobj036" type="MeshInstance3D" parent="Actors/Actor_56" unique_id=1404871615]
-mesh = ExtResource("45_amolk")
+[node name="cobj036" type="MeshInstance3D" parent="Actors/Actor_56" unique_id=917120861]
+mesh = ExtResource("47_kx7yd")
 
-[node name="Actor_57" type="Node3D" parent="Actors" unique_id=1558712419]
+[node name="Actor_57" type="Node3D" parent="Actors" unique_id=173020231]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -9.1872, 1.8125, 32.5524)
 metadata/actor_id = 57.0
 metadata/class = 28
 
-[node name="cobj037" type="MeshInstance3D" parent="Actors/Actor_57" unique_id=811490465]
-mesh = ExtResource("46_nriuq")
+[node name="cobj037" type="MeshInstance3D" parent="Actors/Actor_57" unique_id=474754828]
+mesh = ExtResource("48_ggj5l")
 
-[node name="cobj038" type="MeshInstance3D" parent="Actors/Actor_57" unique_id=736172547]
-mesh = ExtResource("47_7leaa")
+[node name="cobj038" type="MeshInstance3D" parent="Actors/Actor_57" unique_id=967920564]
+mesh = ExtResource("49_pwq3i")
 
-[node name="cobj039" type="MeshInstance3D" parent="Actors/Actor_57" unique_id=2100530051]
-mesh = ExtResource("48_v3fl6")
+[node name="cobj039" type="MeshInstance3D" parent="Actors/Actor_57" unique_id=2098434757]
+mesh = ExtResource("50_shom4")
 
-[node name="Actor_7" type="Node3D" parent="Actors" unique_id=1065628804]
+[node name="Actor_7" type="Node3D" parent="Actors" unique_id=851766248]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 8.2504, 2.3125, -65.9164)
 metadata/actor_id = 7.0
 metadata/class = 28
 
-[node name="cobj037" type="MeshInstance3D" parent="Actors/Actor_7" unique_id=1329071788]
-mesh = ExtResource("46_nriuq")
+[node name="cobj037" type="MeshInstance3D" parent="Actors/Actor_7" unique_id=1591088195]
+mesh = ExtResource("48_ggj5l")
 
-[node name="cobj038" type="MeshInstance3D" parent="Actors/Actor_7" unique_id=1141704117]
-mesh = ExtResource("47_7leaa")
+[node name="cobj038" type="MeshInstance3D" parent="Actors/Actor_7" unique_id=674565745]
+mesh = ExtResource("49_pwq3i")
 
-[node name="cobj039" type="MeshInstance3D" parent="Actors/Actor_7" unique_id=853941600]
-mesh = ExtResource("48_v3fl6")
+[node name="cobj039" type="MeshInstance3D" parent="Actors/Actor_7" unique_id=826769379]
+mesh = ExtResource("50_shom4")
 
-[node name="Actor_10" type="Node3D" parent="Actors" unique_id=1698140823]
+[node name="Actor_10" type="Node3D" parent="Actors" unique_id=630157895]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0304, 1.210069, -68.0884)
 metadata/actor_id = 10.0
 metadata/class = 11
 
-[node name="cobj040" type="MeshInstance3D" parent="Actors/Actor_10" unique_id=1453036771]
-mesh = ExtResource("49_kx7yd")
+[node name="cobj040" type="MeshInstance3D" parent="Actors/Actor_10" unique_id=1294032628]
+mesh = ExtResource("51_nwcty")
 
-[node name="Actor_11" type="Node3D" parent="Actors" unique_id=1394804040]
+[node name="Actor_11" type="Node3D" parent="Actors" unique_id=579573625]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 5.0936, 1.5517467, -67.0724)
 metadata/actor_id = 11.0
 metadata/class = 11
 
-[node name="cobj041" type="MeshInstance3D" parent="Actors/Actor_11" unique_id=196213154]
-mesh = ExtResource("50_ggj5l")
+[node name="cobj041" type="MeshInstance3D" parent="Actors/Actor_11" unique_id=973125167]
+mesh = ExtResource("52_eorkt")
 
-[node name="Actor_17" type="Node3D" parent="Actors" unique_id=790377399]
+[node name="Actor_17" type="Node3D" parent="Actors" unique_id=1903489336]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -6.0936, 1.4414161, 34.0996)
 metadata/actor_id = 17.0
 metadata/class = 11
 
-[node name="cobj041" type="MeshInstance3D" parent="Actors/Actor_17" unique_id=2074423311]
-mesh = ExtResource("50_ggj5l")
+[node name="cobj041" type="MeshInstance3D" parent="Actors/Actor_17" unique_id=17483559]
+mesh = ExtResource("52_eorkt")
 
-[node name="Actor_32" type="Node3D" parent="Actors" unique_id=226682105]
+[node name="Actor_32" type="Node3D" parent="Actors" unique_id=164362663]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -3.0776, 1.2463065, 35.0996)
 metadata/actor_id = 32.0
 metadata/class = 11
 
-[node name="cobj040" type="MeshInstance3D" parent="Actors/Actor_32" unique_id=726299944]
-mesh = ExtResource("49_kx7yd")
+[node name="cobj040" type="MeshInstance3D" parent="Actors/Actor_32" unique_id=497048455]
+mesh = ExtResource("51_nwcty")
 
-[node name="Actor_6" type="Node3D" parent="Actors" unique_id=1221760873]
+[node name="Actor_6" type="Node3D" parent="Actors" unique_id=798860397]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3752, -1.6875, 11.4276)
 metadata/actor_id = 6.0
 metadata/class = 9
 
-[node name="cobj042" type="MeshInstance3D" parent="Actors/Actor_6" unique_id=961000428]
-mesh = ExtResource("51_pwq3i")
+[node name="cobj042" type="MeshInstance3D" parent="Actors/Actor_6" unique_id=320101560]
+mesh = ExtResource("53_36nj2")
 
-[node name="Actor_8" type="Node3D" parent="Actors" unique_id=1132882016]
+[node name="Actor_8" type="Node3D" parent="Actors" unique_id=460325438]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3128, -1.6875, -44.4476)
 metadata/actor_id = 8.0
 metadata/class = 9
 
-[node name="cobj042" type="MeshInstance3D" parent="Actors/Actor_8" unique_id=1353982379]
-mesh = ExtResource("51_pwq3i")
+[node name="cobj042" type="MeshInstance3D" parent="Actors/Actor_8" unique_id=1204438818]
+mesh = ExtResource("53_36nj2")
 
-[node name="Actor_284" type="Node3D" parent="Actors" unique_id=84007160]
+[node name="Actor_284" type="Node3D" parent="Actors" unique_id=1400600184]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.436, 0.1875, -16.4476)
 metadata/actor_id = 284.0
 metadata/class = 16
 
-[node name="cobj024" type="MeshInstance3D" parent="Actors/Actor_284" unique_id=830871436]
-mesh = ExtResource("33_up30k")
+[node name="cobj024" type="MeshInstance3D" parent="Actors/Actor_284" unique_id=913641024]
+mesh = ExtResource("35_kkpde")
 
-[node name="Actor_285" type="Node3D" parent="Actors" unique_id=111869497]
+[node name="Actor_285" type="Node3D" parent="Actors" unique_id=1399987172]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.0632, -1.40625, -56.9476)
 metadata/actor_id = 285.0
 metadata/class = 16
 
-[node name="cobj023" type="MeshInstance3D" parent="Actors/Actor_285" unique_id=1577318558]
-mesh = ExtResource("32_2h0vo")
+[node name="cobj023" type="MeshInstance3D" parent="Actors/Actor_285" unique_id=1705664690]
+mesh = ExtResource("34_gdins")
 
-[node name="Actor_286" type="Node3D" parent="Actors" unique_id=273072990]
+[node name="Actor_286" type="Node3D" parent="Actors" unique_id=1269118320]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.1256, -1.40625, 24.1148)
 metadata/actor_id = 286.0
 metadata/class = 16
 
-[node name="cobj025" type="MeshInstance3D" parent="Actors/Actor_286" unique_id=1302669569]
-mesh = ExtResource("34_8gnof")
+[node name="cobj025" type="MeshInstance3D" parent="Actors/Actor_286" unique_id=2041739123]
+mesh = ExtResource("36_wa2c4")
 
-[node name="Actor_287" type="Node3D" parent="Actors" unique_id=1581368276]
+[node name="Actor_287" type="Node3D" parent="Actors" unique_id=1895793850]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3128, 0.59375, 43.0524)
 metadata/actor_id = 287.0
 metadata/class = 37
 
-[node name="cobj056" type="Node3D" parent="Actors/Actor_287" unique_id=1247125196 instance=ExtResource("52_shom4")]
+[node name="cobj056" type="Node3D" parent="Actors/Actor_287" unique_id=1247125196 instance=ExtResource("54_j7idt")]
 
-[node name="Actor_291" type="Node3D" parent="Actors" unique_id=1738874596]
+[node name="Actor_291" type="Node3D" parent="Actors" unique_id=709205870]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.188, -2.40625, -16.51)
 metadata/actor_id = 291.0
 metadata/class = 16
 
-[node name="cobj057" type="Node3D" parent="Actors/Actor_291" unique_id=1887208133 instance=ExtResource("53_nwcty")]
+[node name="cobj057" type="Node3D" parent="Actors/Actor_291" unique_id=1887208133 instance=ExtResource("55_7ld40")]
 
-[node name="Actor_293" type="Node3D" parent="Actors" unique_id=306760625]
+[node name="Actor_293" type="Node3D" parent="Actors" unique_id=1962438064]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.9992, -1.40625, 23.99)
 metadata/actor_id = 293.0
 metadata/class = 16
 
-[node name="cobj023" type="MeshInstance3D" parent="Actors/Actor_293" unique_id=1468486267]
-mesh = ExtResource("32_2h0vo")
+[node name="cobj023" type="MeshInstance3D" parent="Actors/Actor_293" unique_id=1530574019]
+mesh = ExtResource("34_gdins")
 
-[node name="Actor_294" type="Node3D" parent="Actors" unique_id=1943939610]
+[node name="Actor_294" type="Node3D" parent="Actors" unique_id=1524479745]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.8744, -1.40625, -56.9476)
 metadata/actor_id = 294.0
 metadata/class = 16
 
-[node name="cobj025" type="MeshInstance3D" parent="Actors/Actor_294" unique_id=758854350]
-mesh = ExtResource("34_8gnof")
+[node name="cobj025" type="MeshInstance3D" parent="Actors/Actor_294" unique_id=1843586255]
+mesh = ExtResource("36_wa2c4")
 
-[node name="Actor_295" type="Node3D" parent="Actors" unique_id=1983130939]
+[node name="Actor_295" type="Node3D" parent="Actors" unique_id=2041369317]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3752, 0.59375, 42.99)
 metadata/actor_id = 295.0
 metadata/class = 37
 
-[node name="cobj058" type="Node3D" parent="Actors/Actor_295" unique_id=2139579343 instance=ExtResource("54_eorkt")]
+[node name="cobj058" type="Node3D" parent="Actors/Actor_295" unique_id=2139579343 instance=ExtResource("56_gdk6x")]
 
-[node name="Actor_296" type="Node3D" parent="Actors" unique_id=2101782103]
+[node name="Actor_296" type="Node3D" parent="Actors" unique_id=548891965]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3752, 0.59375, 42.99)
 metadata/actor_id = 296.0
 metadata/class = 37
 
-[node name="cobj059" type="Node3D" parent="Actors/Actor_296" unique_id=1613827234 instance=ExtResource("55_36nj2")]
+[node name="cobj059" type="Node3D" parent="Actors/Actor_296" unique_id=1613827234 instance=ExtResource("57_s0tbr")]
 
-[node name="Actor_297" type="Node3D" parent="Actors" unique_id=1380232944]
+[node name="Actor_297" type="Node3D" parent="Actors" unique_id=1264368588]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4376, 0.59375, 43.0524)
 metadata/actor_id = 297.0
 metadata/class = 37
 
-[node name="cobj060" type="Node3D" parent="Actors/Actor_297" unique_id=720094001 instance=ExtResource("56_j7idt")]
+[node name="cobj060" type="Node3D" parent="Actors/Actor_297" unique_id=720094001 instance=ExtResource("58_rfhue")]
 
-[node name="Actor_298" type="Node3D" parent="Actors" unique_id=1417849919]
+[node name="Actor_298" type="Node3D" parent="Actors" unique_id=1641900788]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.2808, -2.40625, -16.5412)
 metadata/actor_id = 298.0
 metadata/class = 16
 
-[node name="cobj057" type="Node3D" parent="Actors/Actor_298" unique_id=1205216214 instance=ExtResource("53_nwcty")]
+[node name="cobj057" type="Node3D" parent="Actors/Actor_298" unique_id=318185041 instance=ExtResource("55_7ld40")]
 
 [editable path="Actors/Actor_12/X1/legs"]
 [editable path="Actors/Actor_12/X1/legs/cobj015/attach_0/cockpit"]

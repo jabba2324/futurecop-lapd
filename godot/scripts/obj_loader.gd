@@ -2,11 +2,14 @@
 ## asset viewer can show any level without copying it into res://assets/.
 ##
 ## Supports what tools/extract_objects.py and extract_terrain.py write:
-##   v x y z [r g b]   (terrain vertex colours encode the PS1 baked shading)
+##   v x y z [r g b]   (terrain: the PS1 baked shading / 256, drawn ×2; "_lfx"
+##                      materials get slfx_water.gd's animated light instead)
 ##   vt u v, vn x y z, f a/b/c … (any polygon, fan-triangulated; vt/vn optional)
 ##   usemtl NAME, mtllib FILE with newmtl / map_Kd / Kd
 ## One surface per material. Textures are cached by absolute path.
 extends RefCounted
+
+const SlfxWater := preload("res://scripts/slfx_water.gd")
 
 static var _textures: Dictionary = {}
 
@@ -77,7 +80,10 @@ static func load_mesh(path: String) -> ArrayMesh:
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 		var mat: StandardMaterial3D = materials.get(name, StandardMaterial3D.new()).duplicate()
 		mat.vertex_color_use_as_albedo = has_colors
-		mesh.surface_set_material(mesh.get_surface_count() - 1, mat)
+		if has_colors:
+			mat.albedo_color = Color(2, 2, 2)   # PS1 shading / 256: 0.5 = texture unchanged
+		var water := SlfxWater.material(mat)
+		mesh.surface_set_material(mesh.get_surface_count() - 1, water if water else mat)
 		mesh.surface_set_name(mesh.get_surface_count() - 1, name)
 	return mesh
 

@@ -6,7 +6,8 @@
 ##   - prop animation clips (all_frames, looping) and 3DTA texture animations
 ##   - additive and env-mapped (sphere-map reflection) materials of .glb props
 ##     (ObjLoader.apply_fc_materials)
-##   - elevators (elevator.gd) move and carry the walker; item pickups spin
+##   - elevators (elevator.gd) move and carry the walker; item pickups spin;
+##     teleporters (teleporters.gd) move it
 ##   - scrolling terrain (water) UVs
 ##   - ambient sounds: BaseEntity.ambient_sound → the Cshd entry with that
 ##     group_id → its tone WAV, looping 3D audio at the actor
@@ -25,6 +26,8 @@ const ObjLoader := preload("res://scripts/obj_loader.gd")
 const Minimap := preload("res://scripts/minimap.gd")
 const DebugOverlay := preload("res://scripts/debug_overlay.gd")
 const Elevator := preload("res://scripts/elevator.gd")
+const Teleporters := preload("res://scripts/teleporters.gd")
+const TELEPORT_SOUND := 105   # script sound id the teleporters' on_damage script plays
 
 var _base := ""
 var _layout: RefCounted
@@ -55,6 +58,7 @@ func _ready() -> void:
 	_start_ambient_sounds()
 	_start_elevators()
 	_start_pickups()
+	_start_teleporters()
 	_start_terrain_scroll()
 	_add_hint()
 	_add_minimap()
@@ -211,11 +215,43 @@ func _start_elevators() -> void:
 			_sound(rec.fields.get("Elevator.end_sound", {}).get("value", "")))
 
 
+func _start_teleporters() -> void:
+	await get_tree().physics_frame
+	var t := Teleporters.new()
+	add_child(t)
+	t.setup(_decoded, _layout, func(at: Vector3) -> float:
+		var f := _floors(at)
+		return f[0] if f.size() > 0 else at.y, _script_sound(TELEPORT_SOUND))
+
+
+func _script_sound(script_id: int) -> AudioStream:
+	## The tone of the Cshd entry a script's play-sound id resolves to, or null.
+	var shd: Variant = _json(_base + "shd.json")
+	if shd is Dictionary:
+		for t: Dictionary in shd.get("tables", []):
+			for e: Dictionary in t.get("entries", []):
+				if int(e.get("script_id", -1)) == script_id and e.get("tone_wav") \
+						and ResourceLoader.exists(_base + e.tone_wav):
+					return load(_base + e.tone_wav)
+	return null
+
+
 func _elevator_ground(at: Vector3) -> float:
 	## The game's elevator ground probe (0x80066f78 from height 0): the highest
 	## terrain floor at or below +0x200 (0.0625) at this x/z, or the lowest floor if
-	## all are higher. Rays only see TerrainCollision (its _pass floors are already
-	## left out); props and the player are excluded.
+	## all are higher.
+	var floors := _floors(at)
+	if floors.is_empty():
+		return at.y
+	for f in floors:   # top down
+		if f <= 0x200 / 8192.0:
+			return f
+	return floors[-1]
+
+
+func _floors(at: Vector3) -> Array[float]:
+	## Terrain floor heights at this x/z, top down. Rays only see TerrainCollision (its
+	## _pass floors are already left out); props and the player are excluded.
 	var space := get_world_3d().direct_space_state
 	var exclude: Array[RID] = []
 	for b: CollisionObject3D in find_children("*", "CollisionObject3D", true, false):
@@ -232,12 +268,7 @@ func _elevator_ground(at: Vector3) -> float:
 		if hit.normal.y > 0.5:
 			floors.append(hit.position.y)
 		y = hit.position.y - 0.01
-	if floors.is_empty():
-		return at.y
-	for f in floors:   # top down
-		if f <= 0x200 / 8192.0:
-			return f
-	return floors[-1]
+	return floors
 
 
 func _start_pickups() -> void:
@@ -313,7 +344,7 @@ func _apply_lighting() -> void:
 			var m := (src as StandardMaterial3D).duplicate() as StandardMaterial3D
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			if mi.name == "TerrainMesh":
-				# PS1 vertex colour 128 = full brightness: the baked shading is ×2.
+				# Vertex colours are the PS1 shading / 256 (128 = texture unchanged).
 				m.vertex_color_use_as_albedo = true
 				m.albedo_color = Color(2, 2, 2)
 			mi.set_surface_override_material(s, m)
@@ -392,10 +423,13 @@ func _process(delta: float) -> void:
 	_clock += delta
 	var ticks := int(_clock * 300.0)
 	for sc: Array in _scrolling:
-		var m := (sc[0] as MeshInstance3D).get_active_material(sc[1]) as BaseMaterial3D
-		if m:
-			# OBJ vt = u/255 and 1 - v/255, so v runs the other way in Godot.
-			m.uv1_offset = Vector3(_scroll_texels(sc[2], ticks) / 255.0, -_scroll_texels(sc[3], ticks) / 255.0, 0.0)
+		var m := (sc[0] as MeshInstance3D).get_active_material(sc[1])
+		# OBJ vt = u/255 and 1 - v/255, so v runs the other way in Godot.
+		var off := Vector2(_scroll_texels(sc[2], ticks) / 255.0, -_scroll_texels(sc[3], ticks) / 255.0)
+		if m is BaseMaterial3D:
+			(m as BaseMaterial3D).uv1_offset = Vector3(off.x, off.y, 0.0)
+		elif m is ShaderMaterial:
+			(m as ShaderMaterial).set_shader_parameter("uv_offset", off)   # slfx_water
 	for sp: Array in _spinning:
 		(sp[0] as Node3D).rotation.y += sp[1] * delta
 	if _minimap and _minimap.visible and _player:

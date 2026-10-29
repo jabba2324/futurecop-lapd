@@ -46,11 +46,13 @@
 ##
 ## Crouch (state 9 of 0x800549f0): Shift+Space with no forward/back plays legs track 3
 ## then holds track 25; the walker stops but can still turn. (The game also lowers its
-## hit box, which only matters for being shot.) Hard landing: touching down faster than
+## hit box, which only matters for being shot.) Its sounds are the landing's motor loop
+## 0x27 and end sound 0x37 (leg animation events 0x25 / 0x27). Hard landing: touching down faster than
 ## 0x50000 (5.86 u/s; 0x80000 from a running jump's hold tracks 56/57) settles with
 ## track 5, and above 0x93333 (10.8 u/s) costs health (0x80052f54): T = (v − 0x93333) /
 ## 0x2CCCD, f = 0.612·T (T ≤ 0.5), 0.866·T^1.5 (T ≤ 0.75), T² above, × max health; a fall
-## at the terminal 0xC0000 is T = 1, all of it.
+## at the terminal 0xC0000 is T = 1, all of it. The hovercraft takes the same damage
+## (threshold 0x50000 only, 0x800543b0) with no squat.
 ##
 ## Special floors (surfaces.gd, from the terrain's surface bytes): conveyors move the
 ## body each step, damaging and deadly floors take health (5000, the X1-Alpha actor's),
@@ -72,8 +74,7 @@
 ## quarter of its turn rate. Godot's collision still stops the body at the wall
 ## surface (the game lets a corner sink in by up to a step's movement).
 ##
-## Not modelled: aiming, the hovercraft's hard landings, the crouch's sounds (its
-## animation events 0x25/0x27 aren't matched to sounds).
+## Not modelled: aiming.
 extends CharacterBody3D
 
 const EffectPlayer := preload("res://scripts/effect_player.gd")
@@ -463,7 +464,15 @@ func _hover_step() -> void:
 	h = h.limit_length(HOVER_MAX_SPEED)
 	velocity.x = h.x
 	velocity.z = h.z
-	velocity.y = 0.0 if is_on_floor() else maxf(velocity.y - GRAVITY, -TERMINAL)
+	if is_on_floor():
+		# 0x800543b0: the same hard-landing damage as the walker (threshold 0x50000
+		# only), no bounce and no squat.
+		_hard_landing(HARD_LANDING)
+		_fall_speed = 0.0
+		velocity.y = 0.0
+	else:
+		velocity.y = maxf(velocity.y - GRAVITY, -TERMINAL)
+		_fall_speed = maxf(_fall_speed, -velocity.y)
 	# Turn rate builds up while held; drops to 0 on release or reversal.
 	var turn := _turn_input()
 	if turn == 0.0 or (_hover_turn != 0.0 and signf(turn) != signf(_hover_turn)):
@@ -630,6 +639,12 @@ func _update_gait() -> void:
 		_crouch = crouch
 		_stop_gait(false)
 		_play_track(CROUCH_TRACK if crouch else 0, 0.0 if crouch else 0.2)
+		# Leg animation events 0x25 / 0x27 (handled by 0x80047088): the same motor
+		# loop and end sound as a landing. Track 3 starts the loop, the hold track 25
+		# ends it; standing up starts it again and the rest track ends it.
+		_set_motor(LAND_LOOP)
+		if not crouch:
+			get_tree().create_timer(0.2).timeout.connect(_crouch_sound_end)
 	if _crouch:
 		return   # turning is allowed but keeps the crouch pose
 	var want := _wanted_gait()
@@ -666,6 +681,7 @@ func _on_legs_clip_finished(_name: StringName) -> void:
 		return
 	if _crouch:
 		_play_track(CROUCH_HOLD)
+		_crouch_sound_end()
 		return
 	if _gait == "":
 		return
@@ -706,6 +722,12 @@ func _jump_clip_finished() -> void:
 func _play_track(n: int, blend := 0.0) -> void:
 	if _legs_anim and _tracks.has(n):
 		_legs_anim.play(_tracks[n], blend)
+
+
+func _crouch_sound_end() -> void:
+	if _gait == "" and _jump.is_empty():
+		_set_motor(-1)
+		_play(LAND_END_SOUND)
 
 
 func _set_motor(id: int, restart := false) -> void:

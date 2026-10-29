@@ -10,7 +10,8 @@ Three audio block types:
   MGAV — music tracks (looping samples loaded into PS1 SPU RAM). Outer 16-byte
           header + 12-byte inner header + raw SPU ADPCM. Sequential slot index stored
           in inner header bytes 6-7. All blocks use flag 0x02 (loop-start) throughout.
-          Stereo: split-half (first half = L, second half = R). Rate: 13230 Hz.
+          Stereo: split-half (first half = L, second half = R). Rate: 14256 Hz
+          (SPU pitch 0x52c). The game streams the slots in order and loops to slot 0.
           Output: sfx_NNN.wav
 
   Cvkb — PS1 SPU ADPCM sound effect banks in the IFF DATA section. Each Cvkb
@@ -29,7 +30,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.iff_utils import find_game_files
 
 VOICE_RATE = 11025   # BGAV voice clips
-SFX_RATE   = 13230   # MGAV music tracks (44100 * 3/10)
+SFX_RATE   = 14256   # MGAV music: 0x800244f8 passes 0x37b4 (14260) -> SPU pitch 0x52c;
+                     # a 0x2fc0-byte channel block is then exactly 1.5 s
 VKB_RATE   = 11025   # Cvkb PS1 SPU ADPCM sound effects
 
 _IFF_BLOCK_SIZE = 0x6000  # IFF DATA section block alignment
@@ -182,7 +184,9 @@ def extract_mgav_blocks(data):
 
 
 def decode_mgav_stereo(data):
-    """MGAV stereo: first half = L channel, second half = R channel."""
+    """MGAV stereo: first half = L channel, second half = R channel. Each 1.5 s block
+    is decoded from a zero predictor: the blocks were encoded independently (carrying
+    the history over puts clicks at a quarter of the joins; resetting leaves none)."""
     half = len(data) // 2
     L = _decode_channel(data[:half], end_on_loop_end=False)[0]
     R = _decode_channel(data[half:], end_on_loop_end=False)[0]
@@ -318,7 +322,7 @@ def process_mis(mis_path, out_dir):
     flush_stream()  # write the final stream
 
     # Music tracks (MGAV) — group by RVWS stream name, assemble in slot order.
-    # Split-half stereo (L=first half, R=second half) at 13230 Hz.
+    # Split-half stereo (L=first half, R=second half) at SFX_RATE, block by block.
     streams: dict[str | None, list[tuple[int, bytes]]] = {}
     stream_order: list[str | None] = []
     for audio, slot_idx, stream in extract_mgav_blocks(data):

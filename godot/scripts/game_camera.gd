@@ -25,7 +25,6 @@
 ## Transform cut-away (0x80056870): during a transform a random preset 9-16 with clear
 ## line of sight is held rigidly until the transform ends.
 ##
-## Not decoded: how fast the zoom changes (ZOOM_RATE is a guess).
 extends Node
 
 const BAM := TAU / 4096.0
@@ -50,7 +49,7 @@ const CLOSE_VIEWS := [5, 6]
 const OFFSET_RATE := 80 * 300 / 8192.0      # u/s
 const PITCH_CAP := 2 * 300.0                # BAM/s
 const YAW_CAP := 4 * 300.0
-const ZOOM_RATE := 0x100 * 2.0              # zoom units/s (not decoded)
+const ZOOM_RATE := 300.0   # zoom units/s: +-1 per 300 Hz tick, no easing (0x800569ec)
 const RETRY := 0x78 / 300.0
 const BODY_UP := 0.6                        # line-of-sight start above the feet
 const LOS_TOP := 4.0                        # 0x8000
@@ -138,7 +137,10 @@ func update(delta: float, heading: float, bc: float, transforming: bool) -> void
 	var flags: int = mode[1]
 	_follow_height(delta)
 	var zoom_t := 0x100 if flags & ZOOM_IN else (300 if flags & ZOOM_CLOSE else 0)
-	_zoom = move_toward(_zoom, zoom_t, ZOOM_RATE * delta)
+	if zoom_t == 0x100 and _zoom > 0x100:
+		_zoom = 0x100   # the game clamps down to 0x100 rather than easing
+	else:
+		_zoom = move_toward(_zoom, zoom_t, ZOOM_RATE * delta)
 	if flags & LOS:
 		_check_line_of_sight(delta, list, flags, heading, bc)
 	var p: Array = PRESETS[list[mini(_at, list.size() - 1)]]

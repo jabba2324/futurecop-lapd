@@ -18,7 +18,8 @@ it copies:
   dcs.json + decal textures          class-97 decals (level_overlays.build_decals)
   rpns.json, fun.json                actor scripts and level functions (debug overlay labels)
   shd.json + sfx_tones/*.wav         ambient sounds (BaseEntity.ambient_sound → the
-                                     Cshd entry with that group_id → its tone WAV)
+                                     Cshd entry with that group_id → its tone WAV),
+                                     the walker's and the teleporters' sounds
 Anything else under godot/assets/<LEVEL>/ (except Godot's *.import sidecars of
 copied files) is removed, so the folder mirrors exactly what the generator reads.
 
@@ -39,6 +40,7 @@ _ASSETS = os.path.join(_REPO_ROOT, "godot", "assets")
 # Mirrors level_layout.gd: weapon definitions are never placed, class 1 uses .glb parts.
 _NOT_PLACED = {98, 99}
 _X1_CLASS = 1
+_TELEPORT_SOUND = 105   # played by every class-29 teleporter's on_damage script (level_ambience.gd)
 
 
 def _mtl_textures(mtl_path):
@@ -104,10 +106,12 @@ def _wanted_files(level):
     # Plus the walker's sounds (player.gd: SOUNDS), by (script_id, positional).
     groups = {int(str(r["fields"]["BaseEntity.ambient_sound"]["value"])[6:]) for r in decoded
               if str(r["fields"].get("BaseEntity.ambient_sound", {}).get("value", "")).startswith("sound ")}
+    has_teleporter = any(r["class_id"] == 29 for r in decoded)
     if os.path.exists(os.path.join(src, "shd.json")):
         for t in json.load(open(os.path.join(src, "shd.json"))).get("tables", []):
             for e in t.get("entries", []):
                 if e.get("tone_wav") and (e.get("group_id") in groups
+                                          or (e.get("script_id") == _TELEPORT_SOUND and has_teleporter)
                                           or (e.get("script_id"), bool(e.get("positional"))) in _PLAYER_SOUNDS):
                     files.add(e["tone_wav"])
     particles = os.path.join(src, "particles")

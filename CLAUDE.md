@@ -97,8 +97,13 @@ in `decode_actors.py` as hypotheses.
   FourCCs are stored byte-reversed (`bkvC` = `Cvkb`).
 - SPU ADPCM: in byte 0, the **low nibble is range/shift** and the high nibble is filter.
   Many docs say the opposite.
-- Audio rates confirmed by listening: voice is 11025 Hz mono. Music (MGAV) is 13230 Hz
-  stereo, laid out split-half (first half L, second half R), with no end flag.
+- Audio rates: voice is 11025 Hz mono (confirmed by listening). Music (MGAV) is 14256 Hz
+  stereo, laid out split-half (first half L, second half R), with no end flag. The rate
+  is from the code: 0x800244f8 passes 14260 → SPU pitch 0x52c, and a 0x2fc0-byte channel
+  block is then exactly 1.5 s (an earlier by-ear 13230 played 7 % slow). The game
+  streams the blocks in slot order and wraps to slot 0 with no gap (0x8002a398); there
+  is nothing interactive and one track per level. Each block decodes from a zero
+  predictor: carrying the ADPCM history over clicks at a quarter of the joins.
   - `extract_sfx.py` writes every Cvkb sample at 11025 Hz. According to the Cvkh tone
     tables, 258 tones are really 22050 Hz and 476 are 16000 Hz. That comes from the data
     and hasn't been checked by ear.
@@ -122,11 +127,16 @@ in `decode_actors.py` as hypotheses.
   128), `_s<u>_<v>` (bit 11, UV scroll by the chunk's two signed bytes after the 84-byte
   block: `(s * clock300 >> 6) % 28` texels, 0x80065744), `_see` (surface bit 0x80) and
   `_pass` (always last).
-- **Water** is tile type 3: its colour comes from the chunk's `SLFX` light table
-  (0x800654f8), not the shading byte (which is 0, so it used to render black). The
-  extractor uses the table's mean level (`_slfx_light`); the per-cell flicker of noise
-  mode isn't reproduced. Type-0 shading is still `/64` (×2 in Godot), which may be up to
-  2× brighter than the game's `shading & 0xfc` with 128 = ×1 (not checked).
+- **Terrain vertex colours** are the PS1 GPU colour / 256: 0x800648e8 writes them as
+  plain bytes into textured polygons (texture × colour/128), so draw them ×2. Type 0
+  `bf & 0xFC`; type 1 6-bit corners × 4; type 2 palette 5-bit channels × 4 (× 8 with
+  STP). (Until 2026-10-29 types 0–2 came out 2× too bright, 4× in the PS1 look.)
+- **Water** is tile type 3: its corner colours come from one shared 16×16 light table
+  the game rebuilds from the chunk's `SLFX` word (0x800654f8; noise cells 0x80063568),
+  `T[(cx & 15)][(cy & 15)]`. `map.obj` marks those polygons `_lfx<word>` and stores the
+  corner's cell in the vertex colour; `shaders/slfx_water.gdshaderinc` animates it
+  (wave: a travelling sine pulse of ±(256 >> a); noise: per-cell triangles 0..p..0,
+  p 64–127, here with a hashed fixed p per cell). Per-chunk OBJs use the mean.
 - **Y-inversion is only a skinned-model thing.** Skinned Cobj vertices are bone-relative,
   and the root bone carries a 180° rotation about (1,0,1). The OBJ export skips that
   rotation, so skinned OBJs (e.g. the mech) look upside-down. The `.glb` export applies
@@ -307,12 +317,16 @@ in `decode_actors.py` as hypotheses.
       while moving. `tile_effect` is the top's surface byte.
     - **Pickups** (class 16) spin at the decoded rate; they don't bob. The power-up
       flash isn't drawn.
-    - **Water scroll:** `_s<u>_<v>` terrain materials get a per-frame `uv1_offset`.
+    - **Water scroll:** `_s<u>_<v>` terrain materials get a per-frame `uv1_offset`
+      (the `uv_offset` uniform on `_lfx` shader materials).
+    - **Teleporters** (`teleporters.gd`, UN only): class-29 spheres move the walker to
+      their destination, highest floor there (0x80067684 with cast −1), with the white
+      flash of 0x80026f68 and script sound 105.
     - **Debug overlay** (O; `debug_overlay.gd`): trigger zones labelled with what their
       scripts message, Cnet paths and special floors by colour, built with the
       viewer's `level_overlays.gd` builders. It needs `rpns.json` and `fun.json`.
     - **Lighting:** L toggles the PS1 look (the default: unshaded, no sun, terrain vertex
-      colours ×2 because PS1 colour 128 = full brightness) and real-time lit. G toggles
+      colours ×2 because they are PS1 colour / 256) and real-time lit (also ×2). G toggles
       fog. A hint line shows the keys.
     - It needs, in `assets/<LEVEL>/`: `actors_decoded.json`, `csfx.json`, `dcs.json`,
       `shd.json`, `particles/`, the decal textures and the ambient WAVs, all copied by
@@ -385,8 +399,10 @@ in `decode_actors.py` as hypotheses.
   - **Hard landing:** above 0x50000 (0x80000 from tracks 56/57) the landing settle plays;
     above 0x93333 it costs health by 0x80052f54 (`landing_damage()`): a terminal-speed
     fall (0xC0000) is all 5000.
-  - Not modelled: aiming, hover hard landings, the crouch's sounds, and what surface bit
-    0x10 does (nothing in the EXE reads it).
+    The hovercraft takes the same damage (threshold 0x50000 only, 0x800543b0), no squat.
+  - Crouch sounds: leg animation events 0x25/0x27 (0x80047088) start the landing's motor
+    loop 0x27 and end it with 0x37.
+  - Not modelled: aiming, and what surface bit 0x10 does (nothing in the EXE reads it).
   - Legs AnmD tracks that share a frame range are exported once. player.gd maps the
     others through the `.glb` extras `duplicate_tracks` (e.g. landing track 5 = track 3).
   - **Spawn:** on its first physics frame it snaps onto the real ground with a raycast,
@@ -414,11 +430,12 @@ in `decode_actors.py` as hypotheses.
       rechecked from the player. Blocked → every 0.4 s step to the next fallback
       (higher, never closer).
     - Transform cut-away: a random preset 9–16 with clear sight, held rigidly.
-    - The zoom's rate isn't decoded (ZOOM_RATE is a guess).
+    - Zoom: ±1 per 300 Hz tick, linear; above 0x100 with a 0x100 target it snaps down.
   - The walker's other sounds: hover loops 0x28–0x2a, transform 0x15.
   - **Testing (2026-10-28):** a scripted walk test showed it lands on the floor in all
     14 levels and walks out of the start bay in most of them.
-- `scripts/music_loop.gd` is an AudioStreamPlayer that replays itself when the track finishes.
+- `scripts/music_loop.gd` is an AudioStreamPlayer that loops its WAV seamlessly (forward
+  loop over the whole stream).
 - `.godot/` and `*.import` are gitignored. Commit the `.uid` files.
 
 ## Status

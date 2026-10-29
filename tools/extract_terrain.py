@@ -208,7 +208,7 @@ def extract_ctil(mis_path, out_dir):
             continue
 
         sect = tags[_TAG_SECT]
-        tris = _tris_from_sect(sect, _slfx_light(tags))
+        tris = _tris_from_sect(sect, _slfx_word(tags))
 
         if not tris:
             continue
@@ -248,8 +248,8 @@ def extract_ctil(mis_path, out_dir):
 
         with open(obj_path, "w") as of:
             of.write(f"# Ctil {res_id} from {os.path.basename(mis_path)}\n")
-            of.write(f"# Vertex colours (v r g b) encode PS1 shading; multiply texture\n")
-            of.write(f"# by vertex colour in Blender to reproduce the original lighting.\n")
+            of.write(f"# Vertex colours (v r g b) are the PS1 shading / 256: texture x colour x 2\n")
+            of.write(f"# reproduces the original lighting.\n")
             of.write(f"mtllib {stem}.mtl\n")
             for v in verts_list:
                 of.write(f"v {v[0]:.6f} {v[1]:.6f} {v[2]:.6f} {v[3]:.4f} {v[4]:.4f} {v[5]:.4f}\n")
@@ -345,7 +345,7 @@ def write_map(mis_path, out_dir):
             if _TAG_SECT not in tags:
                 continue
 
-            tris = _tris_from_sect(tags[_TAG_SECT], _slfx_light(tags))
+            tris = _tris_from_sect(tags[_TAG_SECT], _slfx_word(tags))
             for t in tris:
                 v0, v1, v2 = t[0], t[1], t[2]
                 cbmp_id = min(t[6], max_cbmp_id) if max_cbmp_id else t[6]
@@ -384,12 +384,23 @@ def write_map(mis_path, out_dir):
     # "_see" for polygons the camera's line of sight passes (surface bit 0x80) and
     # "_pass" (always last) for floors the game walks through, which the Godot
     # collision leaves out (terrain_collision.gd).
-    tri_objs = [(_vi(t[0] + t[7]), _vi(t[1] + t[8]), _vi(t[2] + t[9]),
+    # "_lfx<word>" marks type-3 polygons lit by the SLFX light table: their vertex
+    # colours carry the light-table cell instead, ((cx + .5) / 16, (cy + .5) / 16, 0),
+    # for godot/scripts/slfx_water.gdshaderinc to animate.
+    def _cols(t):
+        lfx = t[11][2]
+        if lfx is None:
+            return t[7], t[8], t[9]
+        return tuple(((cx + 0.5) / 16.0, (cy + 0.5) / 16.0, 0.0) for cx, cy in lfx[1])
+
+    tri_objs = [(_vi(t[0] + c[0]), _vi(t[1] + c[1]), _vi(t[2] + c[2]),
                  _ti(t[3]), _ti(t[4]), _ti(t[5]),
                  f"cbmp{t[6]:03d}" + ("_mix" if t[11][0] else "")
                  + (f"_s{t[11][1][0]}_{t[11][1][1]}" if t[11][1] else "")
+                 + (f"_lfx{t[11][2][0]:08x}" if t[11][2] else "")
                  + ("_see" if t[10][0] & _SEE_THROUGH else "")
-                 + ("_pass" if _passes_through(t[10]) else "")) for t in all_tris]
+                 + ("_pass" if _passes_through(t[10]) else ""))
+                for t, c in ((t, _cols(t)) for t in all_tris)]
     mtls = sorted(set(t[6] for t in tri_objs))
 
     _write_surfaces(all_tris, os.path.join(terrain_dir, "surfaces.json"))
@@ -407,8 +418,8 @@ def write_map(mis_path, out_dir):
                           if grid[r][c] not in (0, border_tile_id))
         of.write(f"# Stitched terrain from {os.path.basename(mis_path)}\n")
         of.write(f"# Grid {grid_w}×{grid_h}, {len(content_ids)} content chunks (border tile {border_tile_id} excluded)\n")
-        of.write(f"# Vertex colours (v r g b) encode PS1 shading; multiply texture\n")
-        of.write(f"# by vertex colour in Blender to reproduce the original lighting.\n")
+        of.write(f"# Vertex colours (v r g b) are the PS1 shading / 256: texture x colour x 2\n")
+        of.write(f"# reproduces the original lighting; _lfx polygons hold light-table cells.\n")
         of.write("mtllib map.mtl\n")
         for v in verts_list:
             of.write(f"v {v[0]:.6f} {v[1]:.6f} {v[2]:.6f} {v[3]:.4f} {v[4]:.4f} {v[5]:.4f}\n")
@@ -456,26 +467,36 @@ def _passes_through(surface):
 _TAG_SLFX = 0x534C4658
 
 
-def _slfx_light(tags):
-    """PS1 colour (128 = x1) of the chunk's type-3 tiles, from its SLFX tag.
-
-    The game rebuilds a 16x16 per-cell light table from the SLFX word every frame
-    (0x800654f8) and type-3 tiles (water) take their corner colours from it
-    (0x800648e8). Noise mode (w >> 28 == 1): each cell runs a triangle wave
-    0..p..0, p random 64..127, light = (bright << k + wave) >> k with bright =
-    (w >> 8) & 0xff, k = w & 3; this returns its mean. Wave mode: background
-    (w >> 8) & 0xff plus a sine of about +-1. No SLFX: 128.
-    """
+def _slfx_word(tags):
+    """The chunk's SLFX word (None without one). The noise-mode loader masks it to
+    w & 0xFFFFFF03."""
     s = tags.get(_TAG_SLFX)
     if not s:
-        return 0x80
+        return None
     w = struct.unpack_from("<I", s, 0)[0]
-    if w >> 28 == 1:
-        return ((w >> 8) & 0xFF) + (48 >> (w & 3))
-    return (w >> 8) & 0xFF
+    return w & 0xFFFFFF03 if w >> 28 == 1 else w
 
 
-def _tris_from_sect(sect, slfx_light=0x80):
+def _slfx_light(word):
+    """Mean PS1 colour (128 = x1) of a chunk's type-3 tiles, from its SLFX word.
+
+    The game rebuilds one shared 16x16 per-cell light table from the word whenever it
+    draws a chunk (0x800654f8) and type-3 tiles (water) take their corner colours from
+    it, T[(cx & 15) * 16 + (cy & 15)] (0x800648e8). godot/scripts/slfx_water.gdshaderinc
+    animates it; this mean is for the plain per-chunk OBJs.
+      wave (w >> 28 == 0): b = (w >> 8) & 0xff plus a pulse of +-(256 >> a)
+      noise (w >> 28 == 1): each cell a triangle 0..p..0, p random 64..127,
+        T = ((b << k) + v) >> k with k = w & 3
+    No SLFX: 128.
+    """
+    if word is None:
+        return 0x80
+    if word >> 28 == 1:
+        return ((word >> 8) & 0xFF) + (48 >> (word & 3))
+    return (word >> 8) & 0xFF
+
+
+def _tris_from_sect(sect, slfx_word=None):
     """Extract triangle list from a parsed SECT payload (shared by extract_ctil and write_map).
 
     Each triangle is a 12-tuple:
@@ -483,12 +504,18 @@ def _tris_from_sect(sect, slfx_light=0x80):
     where vN = (wx, wy, wz), uvN = (u, v), vcN = (r, g, b) vertex-color in [0, 1] and
     surface = (action byte, action index, is_floor): the tile's polygon_action_types
     entry (see SURFACES below), the 2-bit index that picked it, and mesh type < 0x47.
-    blend = (semi, scroll): tile graphics bit 12 (semi-transparent, the GPU's ABR 0
-    50/50 blend) and, when bit 11 is set, the chunk's (u, v) scroll speeds (else None).
+    blend = (semi, scroll, lfx): tile graphics bit 12 (semi-transparent, the GPU's
+    ABR 0 50/50 blend); when bit 11 is set, the chunk's (u, v) scroll speeds (else
+    None); for type-3 tiles (SLFX light table), (word, ((cx, cy) per vertex)) with the
+    vertices' light-table cells (else None).
 
-    Vertex colors encode the original PS1 shading so Blender can reproduce the lit
-    appearance with: Base Color = texture × vertex_color (no extra ×2 needed, since the
-    OBJ values are pre-scaled: vc = min(shading / 64.0, 1.0) for solid-mono tiles).
+    Vertex colours are the PS1 GPU colour / 256 (0x800648e8 writes them straight into
+    the textured polygon packets; texture x colour / 128, so 0.5 = texture unchanged):
+    multiply by 2 when drawing (Base Color = texture x vertex colour x 2).
+      type 0  (bf & 0xFC) for every corner
+      type 1  6-bit corner values x 4
+      type 2  palette 5-bit channels x 4 (x 8 with the entry's STP bit)
+      type 3  the SLFX light table (here its mean, _slfx_light)
     """
     p = 0
     color_amount = struct.unpack_from("<H", sect, p)[0]; p += 2
@@ -530,7 +557,7 @@ def _tris_from_sect(sect, slfx_light=0x80):
 
     # Parse Dynamic Color vertex-color palette (Colorizer.cpp channel order:
     # B=bits[0-4], G=bits[5-9], R=bits[10-14], STP=bit15 doubles brightness).
-    # Effective shader multiplier = 4 × colorizer_output → OBJ vc = val / (8 or 16).
+    # The game writes c5 << (2 + STP), so the vertex colour is that / 256.
     colors_arr = []
     for _ in range(color_amount):
         w = struct.unpack_from("<H", sect, p)[0]; p += 2
@@ -538,8 +565,8 @@ def _tris_from_sect(sect, slfx_light=0x80):
         g5 = (w >>  5) & 0x1f
         r5 = (w >> 10) & 0x1f
         stp = (w >> 15) & 1
-        div = 8.0 if stp else 16.0
-        colors_arr.append((min(r5 / div, 1.0), min(g5 / div, 1.0), min(b5 / div, 1.0)))
+        div = 32.0 if stp else 64.0
+        colors_arr.append((r5 / div, g5 / div, b5 / div))
 
     tg_bitfield = []
     while p + 2 <= len(sect):
@@ -572,15 +599,15 @@ def _tris_from_sect(sect, slfx_light=0x80):
                     rect    = (bf >> 13) & 0x1
 
                     if typ == 0:   # Solid Mono: uniform brightness
-                        f = min(shading / 64.0, 1.0)
+                        f = (shading & 0xFC) / 256.0
                         vc = [(f, f, f)] * 4
 
                     elif typ == 3:   # SLFX light table (water); shading only picks the layout
-                        f = min(slfx_light / 256.0, 1.0)
+                        f = _slfx_light(slfx_word) / 256.0
                         vc = [(f, f, f)] * 4
 
                     elif typ == 1:   # Dynamic Mono: per-vertex 6-bit brightness
-                        b0 = min(((shading & 0xFC) >> 2) / 16.0, 1.0)
+                        b0 = ((shading & 0xFC) >> 2) / 64.0
                         vc[0] = (b0, b0, b0)
                         if gfx_idx + 1 < len(tg_bitfield):
                             sec          = tg_bitfield[gfx_idx + 1]
@@ -588,9 +615,9 @@ def _tris_from_sect(sect, slfx_light=0x80):
                             third        = (sec >>  6) & 0x3F
                             forth        = (sec >>  0) & 0x3F
                             second = ((shading & 0x03) << 4) | second_lower
-                            b1 = min(second / 16.0, 1.0)
-                            b2 = min(third  / 16.0, 1.0)
-                            b3 = min(forth  / 16.0, 1.0)
+                            b1 = second / 64.0
+                            b2 = third  / 64.0
+                            b3 = forth  / 64.0
                             vc[1] = (b1, b1, b1)
                             vc[2] = (b2, b2, b2)
                             vc[3] = (b3, b3, b3)
@@ -612,9 +639,17 @@ def _tris_from_sect(sect, slfx_light=0x80):
                                     vc[3] = colors_arr[ter_sec]
 
                 cbmp_id = tex_idx + 1
-                blend = (False, None)
+                semi, scroll, lfx = False, None, None
                 if gfx_idx < len(tg_bitfield):
-                    blend = (bool((bf >> 12) & 1), uv_scroll if (bf >> 11) & 1 else None)
+                    semi = bool((bf >> 12) & 1)
+                    scroll = uv_scroll if (bf >> 11) & 1 else None
+                    lfx = slfx_word if typ == 3 and slfx_word is not None else None
+
+                def _blend(*idx, _s=semi, _sc=scroll, _l=lfx, _p=pts, _tx=tx, _ty=ty):
+                    if _l is None:
+                        return (_s, _sc, None)
+                    return (_s, _sc, (_l, tuple(((_tx + (_p[i][0] & 1)) & 15,
+                                                 (_ty + ((_p[i][0] >> 1) & 1)) & 15) for i in idx)))
 
                 def _uv(off, _tc=tc_idx, _tc_list=texture_cords):
                     if not _tc_list:
@@ -631,14 +666,14 @@ def _tris_from_sect(sect, slfx_light=0x80):
                 if len(pts) == 4:
                     tris.append((_v(pts[3]), _v(pts[1]), _v(pts[0]),
                                  _uv(3), _uv(1), _uv(0), cbmp_id,
-                                 vc[3], vc[1], vc[0], surface, blend))
+                                 vc[3], vc[1], vc[0], surface, _blend(3, 1, 0)))
                     tris.append((_v(pts[3]), _v(pts[2]), _v(pts[1]),
                                  _uv(3), _uv(2), _uv(1), cbmp_id,
-                                 vc[3], vc[2], vc[1], surface, blend))
+                                 vc[3], vc[2], vc[1], surface, _blend(3, 2, 1)))
                 else:
                     tris.append((_v(pts[2]), _v(pts[1]), _v(pts[0]),
                                  _uv(2), _uv(1), _uv(0), cbmp_id,
-                                 vc[2], vc[1], vc[0], surface, blend))
+                                 vc[2], vc[1], vc[0], surface, _blend(2, 1, 0)))
     return tris
 
 
