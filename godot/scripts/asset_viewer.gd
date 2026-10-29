@@ -948,12 +948,15 @@ func _build_level() -> void:
 				part = mi
 			if o in LevelLayout.destroyed_parts(_decoded.get(int(a.id), {})):
 				part.visible = false   # wreck model: drawn only once the actor is destroyed
+				part.set_meta("wreck", true)
 			part.position.y = offsets.get(o, 0.0)
 			part.rotation_degrees.y = part_yaws.get(i, 0.0)
 			if i in aligned:
 				part.quaternion = LevelLayout.tilt_local(node.quaternion, part.quaternion, normal)
 			node.add_child(part)
 			shown += 1
+		if not LevelLayout.is_x1(a):
+			LevelLayout.apply_uv_offset(node, _decoded.get(int(a.id), {}), false)
 		if shown == 0 and not (int(a["class"]) == 97 and _show.Decals):  # decals draw their own quad
 			var mi := MeshInstance3D.new()
 			mi.mesh = dot

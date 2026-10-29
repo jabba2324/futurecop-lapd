@@ -236,23 +236,34 @@ const X1_MOUNTS := {"cockpit": ["legs", ["attach_0"]], "weapon": ["cockpit", ["b
 const X1_PAINTED := ["legs", "cockpit", "weapon", "weapon_2"]
 
 
-static func apply_uv_offset(x1: Node, decoded: Dictionary) -> void:
-	## An X1's paint scheme (SLUS_007.39 0x800597c0): its BaseEntity uv_offset_x / _y
-	## (actor+0x92/0x93, set by 0x8002a5f4) is added to every textured UV of the legs,
-	## cockpit and weapons (0x80013aa0, primitive builder 0x800172a8), but not the
-	## beacon lights or pilot. cbmp009 holds the paint twice side by side: u + 128 is
-	## red in Precinct Assault levels and black in Crime War levels (player 2).
+static func apply_uv_offset(x1: Node, decoded: Dictionary, is_x1 := true) -> void:
+	## An actor's BaseEntity uv_offset_x / _y (actor+0x92/0x93, set by 0x8002a5f4) is
+	## added to every textured UV of its model (0x80013aa0, primitive builder
+	## 0x800172a8):
+	##   - the X1 (0x800597c0): legs, cockpit and weapons, not the beacon lights or
+	##     pilot. cbmp009 holds the paint twice side by side: u + 128 is red in
+	##     Precinct Assault levels and black in Crime War levels (player 2).
+	##   - other actors (is_x1 false; generic draw 0x8002acb4, turret bases and middles
+	##     too): every part except the wreck models, which 0x80031690 draws unshifted.
 	var ou := int(decoded.get("fields", {}).get("BaseEntity.uv_offset_x", {}).get("raw", 0))
 	var ov := int(decoded.get("fields", {}).get("BaseEntity.uv_offset_y", {}).get("raw", 0))
 	if ou == 0 and ov == 0:
 		return
 	var off := Vector2(ou, ov) / 255.0   # glTF UVs are texel / 255 (export_gltf.py)
 	for mi: MeshInstance3D in x1.find_children("*", "MeshInstance3D", true, false):
-		var n: Node = mi
-		while n and n != x1 and not (str(n.name) in X1_ROLES or str(n.name) in X1_PAINTED):
-			n = n.get_parent()
-		if n == null or not str(n.name) in X1_PAINTED or mi.mesh == null:
+		if mi.mesh == null or mi.has_meta("shadow"):
 			continue
+		var n: Node = mi
+		if is_x1:
+			while n and n != x1 and not (str(n.name) in X1_ROLES or str(n.name) in X1_PAINTED):
+				n = n.get_parent()
+			if n == null or not str(n.name) in X1_PAINTED:
+				continue
+		else:
+			while n and n != x1 and not n.has_meta("wreck"):
+				n = n.get_parent()
+			if n and n.has_meta("wreck"):
+				continue
 		for s in mi.mesh.get_surface_count():
 			var m := mi.get_active_material(s)
 			if m is BaseMaterial3D and (m as BaseMaterial3D).albedo_texture:

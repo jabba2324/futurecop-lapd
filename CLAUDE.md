@@ -59,6 +59,7 @@ textures written by `extract_visuals.py`, and `extract_tos.py` checks against `v
 | `decode_actors.py` | `Cact`/`Csac` per-class fields (45 classes), `CASt` spawn data | `actors_decoded.json` |
 | `extract_nets.py` | `Cnet` AI path graphs | `nets.json` |
 | `extract_rpns.py` | `RPNS` actor-script pool + SHDR script slots/load conditions; **shared RPN VM disassembler** | `rpns.json` |
+| `extract_spawns.py` | spawner start state from actors_decoded/rpns/fun | `spawns.json` |
 | `extract_fun.py` | `Cfun` polled trigger list (condition → action scripts) | `fun.json` |
 | `extract_shd.py` | `Cshd` sound table (sound id → bank/program) | `shd.json` |
 | `extract_tos.py` | `Ctos` streamed voice/talking-head clip table | `tos.json` |
@@ -142,6 +143,24 @@ in `decode_actors.py` as hypotheses.
   rotation, so skinned OBJs (e.g. the mech) look upside-down. The `.glb` export applies
   the root rotation, so **never flip `.glb` models**. Static and morph models are upright
   either way.
+- **Csac spawners at the start** (`extract_spawns.py` → `spawns.json`, 0x80060e74 /
+  0x800616a0 / 0x8006125c): present when enabled with a plain "return 1" condition, or
+  spawned at once by a Cfun `return (t[k] == 0)` whose timer an on-load script zeroes
+  (the PA maps' Cfun 27/28/29). The rest (1043 spawners in all, e.g. all 118 of M1A1's)
+  wait for a script: generate_scene.gd places them hidden with no collision, and the
+  debug overlay (O) shows them. Until 2026-10-29 every spawner was drawn, so PA outposts
+  showed three stacked turrets.
+- **Route actors** (`route_actors.gd`; classes 5/20/26/28/31, one path engine
+  0x80050e0c / 0x8004f330 / 0x8005027c): drive their Cnet nets from the node at their
+  position, random junction picks (seek modes toward the player treated as random;
+  node seeking 6/14 kept), corners eased over half the shorter segment with the
+  BasePathed +6 corner slowdown, speed move_speed/512 (class-26 wanderers a quarter),
+  node heights by height mode, distance-driven AnmD tracks. They never react to the
+  player. Still: flag 0x40 (script message 19), class-26 behaviour 5. MovingShooters
+  (27) stay home and Aircraft (9) don't follow nets. The minimap icons don't follow them.
+- **Actor UV offsets:** the generic draw 0x8002acb4 applies `BaseEntity.uv_offset` to
+  every actor's alive parts (turret colour variants, walkers' shirts), not wrecks.
+- The X1's timed V scroll (+0x324) is the 45 s invisibility power-up: never in a walk.
 - **X1 paint schemes:** each X1's `BaseEntity.uv_offset_x/_y` is added to the UVs of its
   legs, cockpit and weapons (not beacon lights or pilot; 0x800597c0 → 0x80013aa0 →
   primitive builder 0x800172a8). cbmp009 holds the paint twice: u + 128 is red in the

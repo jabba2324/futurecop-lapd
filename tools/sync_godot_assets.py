@@ -17,6 +17,7 @@ it copies:
                                      texture animation (used instead of the OBJ)
   dcs.json + decal textures          class-97 decals (level_overlays.build_decals)
   rpns.json, fun.json                actor scripts and level functions (debug overlay labels)
+  spawns.json                        Csac spawners present at the start (extract_spawns.py)
   shd.json + sfx_tones/*.wav         sounds: every "sound N" field (ambient, elevator,
                                      effect) → the Cshd entry with script_id N → its
                                      tone WAV; the walker's and the teleporters' sounds
@@ -93,6 +94,8 @@ def _wanted_files(level):
                 files.update({f"objects/{name}.obj", f"objects/{name}.mtl"})
     files.add(f"loading/{level}LD.png")
     files.update({"actors_decoded.json", "csfx.json", "dcs.json", "shd.json", "rpns.json", "fun.json"})
+    if os.path.exists(os.path.join(src, "spawns.json")):
+        files.add("spawns.json")
     files.add("textures/cbmp010.png")   # env-map sphere map (obj_loader.shine_texture)
     # Decal textures and ambient-sound WAVs actually referenced by the level.
     decoded = json.load(open(os.path.join(src, "actors_decoded.json"))).get("actors", [])

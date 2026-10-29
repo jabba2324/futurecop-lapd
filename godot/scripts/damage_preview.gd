@@ -43,7 +43,8 @@ func setup(actors: Node3D, decoded: Array, registry: Dictionary, sprites: String
 		var ref := str(rec.fields.get("BaseEntity.explosion", {}).get("value", ""))
 		if ref.begins_with("damage_effect_set "):
 			var ds: Variant = registry.damage_sets.get(int(ref.trim_prefix("damage_effect_set ")))
-			if ds and actors.get_node_or_null("Actor_%d" % rec.id) and int(rec.class_id) != 1:
+			var an := actors.get_node_or_null("Actor_%d" % rec.id) as Node3D
+			if ds and an and an.visible and int(rec.class_id) != 1:
 				_sets[int(rec.id)] = ds
 				var flags: Variant = rec.fields.get("BaseEntity.bitfield", {}).get("value")
 				if flags is Array and "disable_destroyed_collision" in flags:

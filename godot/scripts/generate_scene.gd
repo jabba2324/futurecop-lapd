@@ -205,6 +205,14 @@ func _add_actors(root: Node3D) -> bool:
 
 	var wrecks := {}   # actor id -> its wreck models, hidden until destroyed
 	var no_collision := {}   # actor ids with BaseEntity disable_collision
+	# Csac spawners whose actor only appears once a script runs (extract_spawns.py):
+	# placed hidden, shown by the debug overlay (level_ambience.gd, O).
+	var waiting := {}
+	var spawns: Variant = JSON.parse_string(FileAccess.get_file_as_string(_base + "spawns.json")) \
+		if FileAccess.file_exists(_base + "spawns.json") else null
+	if spawns is Dictionary:
+		for id: Variant in spawns.get("waiting", []):
+			waiting[int(id)] = true
 	var decoded: Variant = JSON.parse_string(FileAccess.get_file_as_string(_base + "actors_decoded.json"))
 	if decoded is Dictionary:
 		for rec: Dictionary in decoded.get("actors", []):
@@ -230,6 +238,9 @@ func _add_actors(root: Node3D) -> bool:
 		actor_node.set_meta("class",    cls)
 		if no_collision.has(int(actor.id)):
 			actor_node.set_meta("no_collision", true)   # terrain_collision.gd skips it
+		if actor.get("kind") == "Csac" and waiting.has(int(actor.id)):
+			actor_node.visible = false   # no collision either: its meshes are hidden
+			actor_node.set_meta("waiting_spawn", true)
 		actor_node.position = _layout.actor_position(actor)
 		if is_player:
 			actor_node.position.y += 0.1  # drop onto the terrain collision at start

@@ -8,13 +8,15 @@
 ##   - additive and env-mapped (sphere-map reflection) materials of .glb props
 ##     (ObjLoader.apply_fc_materials)
 ##   - elevators (elevator.gd) move and carry the walker; item pickups spin;
-##     teleporters (teleporters.gd) move it; blob shadows (shadows.gd)
+##     teleporters (teleporters.gd) move it; blob shadows (shadows.gd); route
+##     actors drive their Cnet paths without reacting to anything (route_actors.gd)
 ##   - scrolling terrain (water) UVs
 ##   - ambient sounds: BaseEntity.ambient_sound "sound N" → the Cshd entry with
 ##     script_id N (_sound_table) → its tone WAV, looping 3D audio at the actor;
 ##     effects play their EffectHeader.sound per copy
 ##   - minimap (minimap.gd) of the heightmap, map icons and the walker; M toggles
-##   - debug overlay (debug_overlay.gd): trigger zones, paths, special floors; O toggles
+##   - debug overlay (debug_overlay.gd): trigger zones, paths, special floors, and the
+##     spawner actors that wait for a script (hidden otherwise); O toggles
 ##   - damage preview (damage_preview.gd): K steps the nearest damageable prop through
 ##     its damage stages and destruction (effects, wreck model)
 ##   - lighting: L toggles the PS1 look (baked terrain vertex colours ×2, unshaded,
@@ -33,6 +35,7 @@ const Elevator := preload("res://scripts/elevator.gd")
 const Teleporters := preload("res://scripts/teleporters.gd")
 const DamagePreview := preload("res://scripts/damage_preview.gd")
 const Shadows := preload("res://scripts/shadows.gd")
+const RouteActors := preload("res://scripts/route_actors.gd")
 const EFFECT_RANGE := 16.0     # 0x20000 raw: placed effects start / spawn within this
 const TELEPORT_SOUND := 105   # script sound id the teleporters' on_damage script plays
 
@@ -56,6 +59,7 @@ var _effects: Dictionary = {}     # EffectPlayer.build_registry
 var _effects_root: Node3D
 var _pending_effects: Array = []  # [anchor, effect] waiting for a player in range
 var _damage: Node                 # damage_preview.gd, built on the first K
+var _route_nodes: Array = []      # actors route_actors.gd moves
 var _clock := 0.0
 
 
@@ -75,6 +79,7 @@ func _ready() -> void:
 	_start_elevators()
 	_start_pickups()
 	_start_teleporters()
+	_start_routes()
 	_start_shadows()
 	_start_terrain_scroll()
 	_add_hint()
@@ -176,12 +181,18 @@ func _start_animations() -> void:
 
 
 func _paint_x1s() -> void:
-	## Each X1's own paint scheme (LevelLayout.apply_uv_offset), after the glTF
-	## materials are converted: red in Precinct Assault, P2 black in Crime War.
+	## Each actor's BaseEntity uv_offset (LevelLayout.apply_uv_offset), after the glTF
+	## materials are converted: the X1's paint (red in Precinct Assault, P2 black in
+	## Crime War) and other actors' colour variants (turrets, walkers' shirts).
 	for rec: Dictionary in _decoded:
 		var node := _actor_node(int(rec.id))
-		if int(rec.class_id) == 1 and node and node.get_node_or_null("X1"):
-			LevelLayout.apply_uv_offset(node.get_node("X1"), rec)
+		if node == null:
+			continue
+		if int(rec.class_id) == 1:
+			if node.get_node_or_null("X1"):
+				LevelLayout.apply_uv_offset(node.get_node("X1"), rec)
+		else:
+			LevelLayout.apply_uv_offset(node, rec, false)
 
 
 func _under_x1(n: Node) -> bool:
@@ -314,6 +325,16 @@ func _start_teleporters() -> void:
 		return f[0] if f.size() > 0 else at.y, _sound("sound %d" % TELEPORT_SOUND, false))
 
 
+func _start_routes() -> void:
+	await get_tree().physics_frame
+	var nets: Variant = _json(_base + "nets.json")
+	if not nets is Dictionary:
+		return
+	var r := RouteActors.new()
+	add_child(r)
+	_route_nodes = r.setup(_decoded, nets.get("nets", []), _layout, get_node("Actors"), _floors)
+
+
 func _start_shadows() -> void:
 	## After the first physics frame (terrain collision) and the elevators' bodies.
 	await get_tree().physics_frame
@@ -336,7 +357,7 @@ func _start_shadows() -> void:
 		if node == null or not (flags is Array and "has_shadow" in flags) or node is CharacterBody3D:
 			continue
 		actors.append(node)
-		if int(rec.class_id) == 10:
+		if int(rec.class_id) == 10 or node in _route_nodes:
 			moving.append(node)
 	if _player:
 		actors.append(_player)
@@ -433,6 +454,10 @@ func _toggle_overlay() -> void:
 		add_child(_overlay)
 	else:
 		_overlay.visible = not _overlay.visible
+	# Spawners that wait for a script (generate_scene.gd) show with the overlay.
+	for a: Node in get_node("Actors").get_children():
+		if a.has_meta("waiting_spawn"):
+			(a as Node3D).visible = _overlay.visible
 	_update_hint()
 
 

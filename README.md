@@ -57,7 +57,8 @@ turn the X1 along them as in the game, Shift+Space crouches and hard landings co
 health. V cycles the game's seven camera views, and the camera backs off to its higher
 views when terrain blocks the line of sight (see-through walls don't count). Elevators
 run and carry the X1 (and stop when it is under them), pickups spin and power-ups flash, actors
-cast the game's blob shadows, UN's teleporters work, and water is translucent,
+cast the game's blob shadows, vehicles and pedestrians drive their routes (without reacting
+to you), only the spawned actors the game has at the start appear, UN's teleporters work, and water is translucent,
 scrolls and ripples or flickers with the game's light tables. Placed
 effects, decals, animated props and ambient sounds are included, and K steps the nearest
 prop through its damage states and destruction. L switches between the

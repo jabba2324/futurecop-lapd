@@ -55,12 +55,8 @@ static func solid_hull(mi: MeshInstance3D) -> ConvexPolygonShape3D:
 	if pts.size() < 4:
 		return null
 	var hull := ConvexPolygonShape3D.new()
-	var tmp := ArrayMesh.new()
-	var arr := []
-	arr.resize(Mesh.ARRAY_MAX)
-	arr[Mesh.ARRAY_VERTEX] = pts
-	tmp.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arr)
-	return tmp.create_convex_shape(true, true)
+	hull.points = pts   # the shape keeps their convex hull
+	return hull
 
 
 func _solid_faces(mesh: Mesh) -> PackedVector3Array:
