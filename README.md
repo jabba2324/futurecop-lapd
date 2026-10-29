@@ -56,7 +56,8 @@ floors, and deep water, where the walker turns into a hovercraft. Walls push bac
 turn the X1 along them as in the game, Shift+Space crouches and hard landings cost
 health. V cycles the game's seven camera views, and the camera backs off to its higher
 views when terrain blocks the line of sight (see-through walls don't count). Elevators
-run and carry the X1, pickups spin, UN's teleporters work, and water is translucent,
+run and carry the X1 (and stop when it is under them), pickups spin and power-ups flash, actors
+cast the game's blob shadows, UN's teleporters work, and water is translucent,
 scrolls and ripples or flickers with the game's light tables. Placed
 effects, decals, animated props and ambient sounds are included, and K steps the nearest
 prop through its damage states and destruction. L switches between the

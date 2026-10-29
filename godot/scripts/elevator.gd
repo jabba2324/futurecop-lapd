@@ -13,7 +13,11 @@
 ##   - ambient_sound loops while moving; end_sound plays once on arrival
 ##   - tile_effect is the surface byte of its top (player.gd reads the "tile_effect"
 ##     meta of the body it stands on)
-## Not modelled: the anti-crush pause (message 0xb).
+##   - anti-crush (message 0xb, 0x80041b6c): while anything's boxes overlap it, the
+##     update (0x80041880) skips that frame: no motion, no wait countdown, no reverse.
+##     Here: the walker's hit box (feet + 0.098 to 1.148, crouched 0.797, hover 0 to
+##     0.449; standing on the top doesn't overlap), which also takes the elevator's
+##     collision_damage per frame of contact (0x800584bc; 1 on 4 elevators, else 0).
 extends Node
 
 const TICKS := 300.0
@@ -35,6 +39,7 @@ var _box := AABB()              # collision bounds, actor-local
 var _loop: AudioStreamPlayer3D
 var _end: AudioStreamPlayer3D
 var _player: Node3D
+var _damage := 0
 
 
 static func _raw(rec: Dictionary, name: String) -> int:
@@ -54,6 +59,7 @@ func setup(rec: Dictionary, actor: Node3D, ground: float, loop_sound: AudioStrea
 	_up = int(_raw(rec, "up_speed") * 16 / 300) * TICKS / 8192.0
 	_down = int(_raw(rec, "down_speed") * 16 / 300) * TICKS / 8192.0
 	_type = _raw(rec, "trigger_type")
+	_damage = int(rec.fields.get("BaseEntity.collision_damage", {}).get("raw", 0))
 	var sp := _raw(rec, "starting_position")
 	_at = clampi(sp - 1, 0, n - 1)
 	_dir = -1 if sp >= n else 1
@@ -104,6 +110,10 @@ func _make_body(tile_effect: int) -> void:
 func _physics_process(delta: float) -> void:
 	if _type & 6:
 		return   # waits for a script message
+	if _crushing():
+		if _damage > 0 and _player.has_method("_hurt"):
+			_player._hurt(_damage)
+		return
 	if _target < 0:
 		var on := _player_on()
 		var go := on if _type & 1 or _waits[_at] == 0.0 else false
@@ -146,6 +156,19 @@ func _arrive() -> void:
 		_loop.stop()
 	if _end:
 		_end.play()
+
+
+func _crushing() -> bool:
+	if _player == null:
+		_player = get_tree().get_first_node_in_group("player") as Node3D
+		if _player == null:
+			return false
+	var lo := 0.0 if _player.is_hover() else 0.098
+	var hi := 0.449 if _player.is_hover() else (0.797 if _player.get("_crouch") else 1.148)
+	var r := 0.28   # the walker's capsule
+	var p := _actor.global_transform.affine_inverse() * _player.global_position
+	return p.x > _box.position.x - r and p.x < _box.end.x + r and p.z > _box.position.z - r \
+		and p.z < _box.end.z + r and p.y + hi > _box.position.y and p.y + lo < _box.end.y
 
 
 func _player_on() -> bool:

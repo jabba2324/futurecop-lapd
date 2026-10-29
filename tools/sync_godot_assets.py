@@ -17,9 +17,9 @@ it copies:
                                      texture animation (used instead of the OBJ)
   dcs.json + decal textures          class-97 decals (level_overlays.build_decals)
   rpns.json, fun.json                actor scripts and level functions (debug overlay labels)
-  shd.json + sfx_tones/*.wav         ambient sounds (BaseEntity.ambient_sound → the
-                                     Cshd entry with that group_id → its tone WAV),
-                                     the walker's and the teleporters' sounds
+  shd.json + sfx_tones/*.wav         sounds: every "sound N" field (ambient, elevator,
+                                     effect) → the Cshd entry with script_id N → its
+                                     tone WAV; the walker's and the teleporters' sounds
 Anything else under godot/assets/<LEVEL>/ (except Godot's *.import sidecars of
 copied files) is removed, so the folder mirrors exactly what the generator reads.
 
@@ -103,16 +103,34 @@ def _wanted_files(level):
             for e in table.get("entries", []):
                 if e.get("dcs_id") in dcs_ids and e.get("texture"):
                     files.add(e["texture"])
-    # Plus the walker's sounds (player.gd: SOUNDS), by (script_id, positional).
-    groups = {int(str(r["fields"]["BaseEntity.ambient_sound"]["value"])[6:]) for r in decoded
-              if str(r["fields"].get("BaseEntity.ambient_sound", {}).get("value", "")).startswith("sound ")}
-    has_teleporter = any(r["class_id"] == 29 for r in decoded)
+    # Sounds by Cshd script id, resolved as level_ambience.gd's _sound_table: ids >= 70
+    # from the mission table, below 70 from the global one by (script_id, positional).
+    # The level's "sound N" fields (ambient, elevator, effect sounds), the teleporters'
+    # script sound and the walker's sounds (player.gd: SOUNDS).
+    wanted = set()
+    def _refs(fields):
+        for f in fields.values():
+            v = str(f.get("value", "")) if isinstance(f, dict) else ""
+            if v.startswith("sound "):
+                yield int(v[6:])
+    for r in decoded:
+        wanted.update(_refs(r["fields"]))
+    if os.path.exists(os.path.join(src, "csfx.json")):
+        for t in json.load(open(os.path.join(src, "csfx.json"))):
+            for r in t.get("records", []):
+                for seg in r.get("fields", {}).values():
+                    if isinstance(seg, dict):
+                        wanted.update(_refs(seg))
+    if any(r["class_id"] == 29 for r in decoded):
+        wanted.add(_TELEPORT_SOUND)
     if os.path.exists(os.path.join(src, "shd.json")):
         for t in json.load(open(os.path.join(src, "shd.json"))).get("tables", []):
             for e in t.get("entries", []):
-                if e.get("tone_wav") and (e.get("group_id") in groups
-                                          or (e.get("script_id") == _TELEPORT_SOUND and has_teleporter)
-                                          or (e.get("script_id"), bool(e.get("positional"))) in _PLAYER_SOUNDS):
+                n = e.get("script_id")
+                if e.get("tone_wav") and (
+                        (t.get("kind") == "mission" and n in wanted and n >= 70)
+                        or (t.get("kind") != "mission" and n in wanted and n < 70)
+                        or (n, bool(e.get("positional"))) in _PLAYER_SOUNDS):
                     files.add(e["tone_wav"])
     particles = os.path.join(src, "particles")
     if os.path.isdir(particles):

@@ -23,12 +23,26 @@
 ##     growth_speed per 256 ticks (less growth_decel per 128 ticks, down to 4096); all
 ##     channels drop alike so the brightest reaches 0 at fade_time; ends when black
 ##     or at max_size. Flag 0x200 = half ring.
-##   94 points (0x800437e8, draw 0x80044260): fixed-size screen squares, speed raw / 512
-##     u/s; flags 0x10 additive, 0x20 / 0x08 50/50, else opaque.
+##   94 points (0x80042af4, 0x800437e8, draw 0x80044260): fixed-size screen squares,
+##     speed raw / 512 u/s at a pitch measured from +y, spawn_radius and jitter bits;
+##     dv/dt = (drift - v) drag_scale / drag_time - gravity_percent % of 8 u/s²;
+##     flags 0x10 additive, 0x20 / 0x08 50/50, else opaque.
+##   87 trail (0x80075a84, draw 0x80074104): a ribbon from the owner through its points,
+##     colour_0 → 1 → 2 → black over phase_time_0..2, width size → + size_growth,
+##     colour on the centreline and black edges, additive; points move by emit_speed /
+##     jitter / gravity, with drag once per frame (30 fps assumed).
+##   88 lightning (0x80073bbc, 0x80071b40): bolt_count bolts to random points at
+##     end_radius, segment_count jittered segments, fading to black over fade_time,
+##     each re-rolled half the time every flicker_interval; width / 256, flag 8 tapers.
+##   90 shatter (0x8004c324): max_fragments random faces of the owner's model
+##     (owner_meshes) fly off and spin; they end on landing or after duration, half
+##     spawning impact_effect, the first fragment_effect_count carrying fragment_effect.
+##   89 flag 4 star (0x80014490), 92 flag 0x10 double ring.
 ##   placement: dir(place_yaw, place_pitch) × place_distance (raw / 512) from the anchor
-## Guessed / simplified: 92's blend (additive here) and its flag-1 textured strip and
-## double ring, 89's star shape, 94's gravity (gravity_percent of the walker's), and
-## 87 (trail), 88 (lightning) and 90 (shatter), which are rough previews.
+## Not modelled: 88's terrain snapping and player targeting (flags 0x20 / 4), 90's
+## whole-model flags 8 / 0x10, 92's flag-1 textured strip (unused). Guessed: 92's
+## half ring (0x200) layout. Owners don't move here, so trails only stretch to their
+## moving points.
 ## Usage: var p := EffectPlayer.new(); p.setup(effect, registry, sprite_dir, loop)
 ##   effect   = {"cls": int, "def": {"EffectHeader.duration": value, ...}, "raw": {...}}
 ##   registry = effect_id -> effect (for chained next effects and fragments)
@@ -43,12 +57,17 @@ const FLASH_RANGE := 16.0
 const SPEED_93 := 1.0 / 436.9      # emit_speed raw → u/s
 const GRAVITY_93 := 0.002682       # gravity raw → u/s², + = up
 const GROW := TICKS / 256.0 / 512.0  # "per 256 ticks" raw rate → u/s
-const WALKER_GRAVITY := 26.1       # u/s² (0x9800 per 1/37.5 s step)
+const POINT_GRAVITY := 8.0         # u/s²: 94's gravity_percent is of 1 game unit/s²
+const FRAME_RATE := 30.0           # 87's per-frame drag, at an assumed 30 fps
 
 var owner_radius := 0.5      # Godot units; sizes of 0 / < 0 scale with it
 ## Owner-less effects only spawn a copy while a player is within 16 units
 ## (0x8003e984); when set, a copy is skipped while this returns false.
 var in_range := Callable()
+## Called as sound.call("sound N", global position) for each copy's EffectHeader.sound.
+var sound := Callable()
+## The owner's model, which class 90 shatters into its faces: MeshInstance3Ds.
+var owner_meshes: Array = []
 
 var _fx: Dictionary
 var _registry: Dictionary
@@ -197,6 +216,8 @@ func _process(delta: float) -> void:
 		var p := new()
 		p.owner_radius = owner_radius
 		p.in_range = in_range
+		p.sound = sound
+		p.owner_meshes = owner_meshes
 		p.setup(_registry[_ref_id("EffectHeader.next_effect_id")], _registry, _sprites, false, _depth + 1)
 		add_child(p)
 	_update_items(delta)
@@ -271,6 +292,9 @@ func _load_sprite(id: int) -> Texture2D:
 
 
 func _spawn() -> void:
+	var snd: Variant = _fx.def.get("EffectHeader.sound")
+	if sound.is_valid() and snd != null and is_inside_tree():
+		sound.call(snd, global_position)
 	match int(_fx.cls):
 		93:
 			_spawn_sprite()
@@ -291,13 +315,23 @@ func _spawn() -> void:
 			mi.mesh = ImmediateMesh.new()
 			mi.material_override = mat
 			var pts := []
+			var r := _fraw("spawn_radius")
+			var vbits := _fraw("velocity_jitter_bits")
+			var pbits := _fraw("position_jitter_bits")
 			for i in clampi(_fraw("count", 4), 1, 64):
 				var speed := _rng.randf_range(_field("speed_min"), maxf(_field("speed_max"), _field("speed_min"))) / 512.0
-				var pitch := _rng.randf_range(_field("pitch_min"), maxf(_field("pitch_max"), _field("pitch_min")))
-				pts.append([Vector3.ZERO, _dir(_rng.randf() * 360.0, pitch) * speed])
+				# Pitch is measured from +y (0 = straight up, 1024 = horizontal).
+				var from_up := _rng.randf_range(_field("pitch_min"), maxf(_field("pitch_max"), _field("pitch_min")))
+				var d := _dir(_rng.randf() * 360.0, 90.0 - from_up)
+				var at := d * (r / 512.0 if r > 0 else -r / 512.0 * _rng.randf())
+				var dt := float(_fraw("drag_time"))
+				if dt < 0.0:
+					dt = _rng.randf_range(0.0, -dt)
+				pts.append([at + _jitter(pbits), d * speed + _jitter(vbits), dt])
 			var fade := _field("fade_time")
 			_add(mi, {"kind": 94, "life": _life() if _life() > 0.0 else maxf(fade, 0.3), "pts": pts,
-				"grav": _field("gravity_percent") / 100.0 * WALKER_GRAVITY, "fade": fade,
+				"grav": _field("gravity_percent") / 100.0 * POINT_GRAVITY, "fade": fade,
+				"drift": _dir(_field("drift_yaw"), _field("drift_pitch")) * _fraw("drift_speed") / 512.0,
 				"to_black": int(_fraw("colour_mode")) & 1})
 		92:
 			var mi := MeshInstance3D.new()
@@ -311,24 +345,23 @@ func _spawn() -> void:
 			var mi := MeshInstance3D.new()
 			mi.mesh = ImmediateMesh.new()
 			mi.material_override = _material(1)
-			_add(mi, {"kind": 88, "life": maxf(maxf(_life(), _field("fade_time")), 0.4),
-				"radius": maxf(_field("end_radius") * U, 0.4), "bolts": clampi(int(_field("bolt_count", 3)), 1, 12),
-				"segs": clampi(int(_field("segment_count", 6)), 2, 16)})
+			var bolts := []
+			for b in clampi(_fraw("bolt_count", 1), 1, 16):
+				bolts.append(_new_bolt())
+			_add(mi, {"kind": 88, "life": _life() if _life() > 0.0 else maxf(_field("fade_time"), 0.4),
+				"bolts": bolts, "flicker": 0.0})
 		87:
 			var mi := MeshInstance3D.new()
 			mi.mesh = ImmediateMesh.new()
 			mi.material_override = _material(1)
-			_add(mi, {"kind": 87, "life": maxf(_field("phase_time_0") + _life(), 0.4),
-				"vel": _dir(_field("emit_yaw"), _field("emit_pitch")) * maxf(_field("emit_speed"), 1.0), "trail": []})
+			var j := float(_fraw("velocity_jitter")) / 2.0
+			var v := _dir(_field("emit_yaw"), _field("emit_pitch")) * _field("emit_speed") * 4096.0 \
+				+ Vector3(_rng.randf_range(-j, j), _rng.randf_range(-j, j), _rng.randf_range(-j, j))
+			var moving := v != Vector3.ZERO or _fraw("gravity") != 0
+			_add(mi, {"kind": 87, "life": _life(), "moving": moving,
+				"pts": [{"pos": Vector3.ZERO, "vel": v * SPEED_93, "age": 0.0}]})
 		90:
-			var frag := _ref_id("Effect90.fragment_effect")
-			if frag >= 0 and _registry.has(frag) and _depth < MAX_CHAIN:
-				for i in clampi(int(_field("fragment_effect_count", 3)), 1, 12):
-					var p := new()
-					p.owner_radius = owner_radius
-					p.setup(_registry[frag], _registry, _sprites, false, _depth + 1)
-					p.position += Vector3(_rng.randf_range(-1, 1), _rng.randf_range(0, 1), _rng.randf_range(-1, 1)) * 0.6
-					add_child(p)
+			_spawn_fragments()
 
 
 func _spawn_sprite() -> void:
@@ -363,6 +396,117 @@ func _spawn_sprite() -> void:
 		"tinted": tinted, "c0": _rgb("colour_0", 128.0) if tinted else Color.WHITE,
 		"c1": _rgb("colour_1", 128.0), "fade": fade if tinted and fade * 4800.0 >= 16.0 else 0.0,
 		"drain": flags & 0x100 != 0})
+
+
+func _jitter(bits: int) -> Vector3:
+	## rand32 >> (32 - n) per component: uniform in +-2^(n-1) raw units (/512 Godot).
+	if bits <= 0:
+		return Vector3.ZERO
+	var h := float(1 << (bits - 1)) / 512.0
+	return Vector3(_rng.randf_range(-h, h), _rng.randf_range(-h, h), _rng.randf_range(-h, h))
+
+
+func _child(id: int) -> Node3D:
+	## A fragment / impact effect as a child player, or null.
+	if id < 0 or not _registry.has(id) or _depth >= MAX_CHAIN:
+		return null
+	var p := new()
+	p.owner_radius = owner_radius
+	p.in_range = in_range
+	p.sound = sound
+	p.owner_meshes = owner_meshes
+	p.setup(_registry[id], _registry, _sprites, false, _depth + 1)
+	return p
+
+
+func _new_bolt() -> Dictionary:
+	## 0x80070e48 / 0x80070730: the far end on the end_radius sphere (flags 1 / 0x20:
+	## a random horizontal point within it), interior points jittered sideways by
+	## random walks that shrink toward the far end.
+	var r := _fraw("end_radius") / 512.0
+	var flags := _fraw("tail_flags")
+	var far: Vector3
+	if flags & 0x21:
+		var a := _rng.randf() * TAU
+		far = Vector3(cos(a), 0.0, sin(a)) * _rng.randf() * r
+	else:
+		far = _dir(_rng.randf() * 360.0, _rng.randf_range(-90.0, 90.0)) * r
+	var n := clampi(_fraw("segment_count", 6), 1, 32)
+	var axis := Vector3.UP if absf(far.normalized().y) < 0.9 else Vector3.RIGHT
+	var p := far.cross(axis).normalized()
+	var q := far.cross(p).normalized()
+	var step := 16.0 * (_fraw("jitter") >> 7) / 8192.0
+	var pts := [Vector3.ZERO]
+	var wp := 0.0
+	var wq := 0.0
+	var walk := [-1.0, -0.5, 0.0, 0.5, 1.0]
+	var along := [0.5, 1.0, 1.5]
+	for i in range(1, n):
+		wp += walk[_rng.randi() % 5]
+		wq += walk[_rng.randi() % 5]
+		var k: float = ((i - 1) + along[_rng.randi() % 3]) / n
+		pts.append(far * k + (p * wp + q * wq) * (1.0 - float(i - 1) / n) * step)
+	pts.append(far)
+	return {"pts": pts, "age": 0.0}
+
+
+func _spawn_fragments() -> void:
+	## 0x8004c324: up to max_fragments random faces of the owner's model fly off.
+	var faces := []   # [a, b, c, [uv_a, uv_b, uv_c], material]
+	for mi: MeshInstance3D in owner_meshes:
+		if not is_instance_valid(mi) or mi.mesh == null or not is_inside_tree():
+			continue
+		var xf := global_transform.affine_inverse() * mi.global_transform
+		for si in mi.mesh.get_surface_count():
+			var arr := mi.mesh.surface_get_arrays(si)
+			var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			var uv: Variant = arr[Mesh.ARRAY_TEX_UV]
+			var idx: Variant = arr[Mesh.ARRAY_INDEX]
+			var mat := mi.get_active_material(si)
+			var count: int = (idx as PackedInt32Array).size() if idx else v.size()
+			for t in range(0, count - 2, 3):
+				var ids: Array = [t, t + 1, t + 2] if not idx else [idx[t], idx[t + 1], idx[t + 2]]
+				var uvs := [Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]
+				if uv:
+					uvs = [uv[ids[0]], uv[ids[1]], uv[ids[2]]]
+				faces.append([xf * v[ids[0]], xf * v[ids[1]], xf * v[ids[2]], uvs, mat])
+	if faces.is_empty():
+		return
+	var n := mini(clampi(_fraw("max_fragments", 10), 1, 200), faces.size())
+	var carry := _fraw("fragment_effect_count")
+	var flags := _fraw("tail_flags")
+	var rmin := float(_fraw("radial_speed_min"))
+	var rmax := float(_fraw("radial_speed_max"))
+	for k in n:
+		var f: Array = faces[_rng.randi() % faces.size()]
+		var c: Vector3 = (f[0] + f[1] + f[2]) / 3.0
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for i in 3:
+			st.set_uv(f[3][i])
+			st.add_vertex(f[i] - c)
+		var mi := MeshInstance3D.new()
+		mi.mesh = st.commit()
+		if f[4]:
+			mi.material_override = f[4]
+		mi.position = c
+		# The game draws the radial speed from [max, 2 max - min] (sic), vy upward.
+		var radial := c.normalized() * _rng.randf_range(rmax, 2.0 * rmax - rmin) / 512.0
+		radial.y = absf(radial.y)
+		var vel := radial + _dir(_field("direction_yaw"), _field("direction_pitch")) \
+			* _rng.randf_range(_field("direction_speed_min"), maxf(_field("direction_speed_max"), _field("direction_speed_min"))) / 512.0
+		if flags & 4:
+			vel.y = 0.0
+		var spin := Vector2(_rng.randf_range(_field("spin_min"), _field("spin_max")),
+			_rng.randf_range(_field("spin_min"), _field("spin_max"))) * TICKS / 256.0 * TAU / 4096.0
+		var life := _life() + _rng.randf_range(0.0, 255.0) / TICKS if _life() > 0.0 else 0.0
+		_add(mi, {"kind": 90, "life": life, "vel": vel, "spin": spin,
+			"grav": -_rng.randf_range(2.5, 2.98) * _field("gravity_percent") / 100.0,
+			"floor": -0.05, "impact": _rng.randf() < 0.5, "r": (f[0] - c).length()})
+		if carry < 0 or k < carry:
+			var fx := _child(_ref_id("Effect90.fragment_effect"))
+			if fx:
+				mi.add_child(fx)
 
 
 # ─── Updating ─────────────────────────────────────────────────────────────────
@@ -431,25 +575,33 @@ func _update_items(delta: float) -> void:
 				var k: float = it.age / maxf(it.fade, 0.01)
 				var c := _rgb("colour_0", 255.0).lerp(Color.BLACK if it.to_black else _rgb("colour_1", 255.0), clampf(k, 0.0, 1.0))
 				im.surface_begin(Mesh.PRIMITIVE_POINTS)
+				var drag_scale := float(_fraw("drag_scale"))
 				for p: Array in it.pts:
+					# dv/dt = (drift - v) * drag_scale / drag_time - gravity
+					if p[2] > 0.0:
+						p[1] += (it.drift - p[1]) * minf(drag_scale / p[2] * delta, 1.0)
 					p[1].y -= it.grav * delta
 					p[0] += p[1] * delta
 					im.surface_set_color(c)
 					im.surface_add_vertex(p[0])
 				im.surface_end()
 			88:
-				_draw_lightning(node, it)
+				_update_lightning(node, it, delta, cam)
 			87:
-				var head: Vector3 = (it.trail.back() if it.trail else Vector3.ZERO) + it.vel * delta
-				it.trail.append(head)
-				var im := node.mesh as ImmediateMesh
-				im.clear_surfaces()
-				if it.trail.size() >= 2:
-					im.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
-					im.surface_set_color(_rgb("colour_0", 128.0))
-					for p in it.trail:
-						im.surface_add_vertex(p)
-					im.surface_end()
+				gone = gone or _update_trail(node, it, delta, cam)
+			90:
+				it.vel.y += it.grav * delta
+				node.position += it.vel * delta
+				node.rotate_object_local(Vector3.RIGHT, it.spin.x * delta)
+				node.rotate_object_local(Vector3.UP, it.spin.y * delta)
+				if node.position.y < it.floor and it.vel.y < 0.0:
+					gone = true   # landed (0x8004c0c0)
+				if gone and it.impact:
+					var fx := _child(_ref_id("Effect90.impact_effect"))
+					if fx:
+						fx.owner_radius = it.r
+						fx.position = node.position
+						add_child(fx)
 		if gone:
 			node.queue_free()
 			_items.erase(it)
@@ -473,6 +625,22 @@ func _draw_disc(node: MeshInstance3D, it: Dictionary, cam: Basis) -> void:
 		return
 	im.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 	var n: int = it.segs
+	if _fraw("tail_flags") & 4:
+		# Star (0x80014490): a spike per segment, tip at R in the rim colour, base
+		# half-width R >> star_shift in the centre colour.
+		var base: float = it.r / float(1 << clampi(_fraw("star_shift"), 0, 15))
+		for k in range(1, n + 1):
+			var th: float = it.roll + TAU * k / n
+			var d := Vector3(cos(th), sin(th), 0.0)
+			var side := Vector3(-sin(th), cos(th), 0.0) * base
+			im.surface_set_color(centre)
+			im.surface_add_vertex(b * side)
+			im.surface_set_color(rim)
+			im.surface_add_vertex(b * (d * it.r))
+			im.surface_set_color(centre)
+			im.surface_add_vertex(b * -side)
+		im.surface_end()
+		return
 	for i in n:
 		var a0: float = it.roll + TAU * i / n
 		var a1: float = it.roll + TAU * (i + 1) / n
@@ -505,34 +673,115 @@ func _update_ring(node: MeshInstance3D, it: Dictionary, delta: float) -> bool:
 	var im := node.mesh as ImmediateMesh
 	im.clear_surfaces()
 	im.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
-	var n: int = it.segs
-	var arc := PI if flags & 0x200 else TAU
+	var n: int = maxi(it.segs, 8)
+	var bands := [[r0, r1, inner, outer]]
+	if flags & 0x10:   # double ring: a second band outward, colours mirrored
+		bands.append([r1, r1 + (r1 - r0), outer, inner])
 	for i in n:
-		var a0 := arc * i / n
-		var a1 := arc * (i + 1) / n
+		var a0 := TAU * i / n
+		var a1 := TAU * (i + 1) / n
+		# 0x200: only the first half of each 45° octant (0x8009b214; guessed)
+		if flags & 0x200 and fmod(a0, PI / 4.0) >= PI / 8.0 - 0.0001:
+			continue
 		var p := [Vector3(cos(a0), 0, sin(a0)), Vector3(cos(a1), 0, sin(a1))]
-		for v: Array in [[p[0], r0, inner], [p[0], r1, outer], [p[1], r1, outer],
-				[p[0], r0, inner], [p[1], r1, outer], [p[1], r0, inner]]:
-			im.surface_set_color(v[2])
-			im.surface_add_vertex(v[0] * v[1])
+		for band: Array in bands:
+			for v: Array in [[p[0], band[0], band[2]], [p[0], band[1], band[3]], [p[1], band[1], band[3]],
+					[p[0], band[0], band[2]], [p[1], band[1], band[3]], [p[1], band[0], band[2]]]:
+				im.surface_set_color(v[2])
+				im.surface_add_vertex(v[0] * v[1])
 	im.surface_end()
 	var black := inner.r + inner.g + inner.b + outer.r + outer.g + outer.b <= 0.0
 	return black or it.size >= _fraw("max_size")
 
 
-func _draw_lightning(node: MeshInstance3D, it: Dictionary) -> void:
+func _strip(im: ImmediateMesh, a: Vector3, b: Vector3, wa: float, wb: float, ca: Color, cb: Color, cam: Basis) -> void:
+	## One segment as two additive gouraud quads: colour on the centreline, black at
+	## the edges, laid out across the screen direction.
+	var side := (b - a).cross(global_basis.inverse() * cam.z)
+	if side.length() < 0.000001:
+		return
+	side = side.normalized()
+	for e: float in [1.0, -1.0]:
+		var oa := side * wa * e
+		var ob := side * wb * e
+		for v: Array in [[a, ca], [a + oa, Color.BLACK], [b + ob, Color.BLACK],
+				[a, ca], [b + ob, Color.BLACK], [b, cb]]:
+			im.surface_set_color(v[1])
+			im.surface_add_vertex(v[0])
+
+
+func _update_lightning(node: MeshInstance3D, it: Dictionary, delta: float, cam: Basis) -> void:
+	## 0x80071b40 / flicker 0x800718b8 / draw 0x80071fa4.
+	var fade := maxf(_field("fade_time"), 0.001)
+	var interval := _field("flicker_interval")
+	var flags := _fraw("tail_flags")
+	it.flicker += delta
+	var regen: bool = interval > 0.0 and it.flicker >= interval
+	if regen:
+		it.flicker -= interval
+	# Drift: v = offset * drift / 65536 raw per tick, pos += v * dt / 8.
+	var drift_rate := _fraw("drift") / 65536.0 * TICKS / 8.0
 	var im := node.mesh as ImmediateMesh
 	im.clear_surfaces()
-	im.surface_begin(Mesh.PRIMITIVE_LINES)
-	im.surface_set_color(_rgb("colour", 128.0))
-	for b in it.bolts:
-		var end: Vector3 = Vector3(_rng.randf_range(-1, 1), _rng.randf_range(-0.2, 1), _rng.randf_range(-1, 1)).normalized() * it.radius
-		var prev := Vector3.ZERO
-		for s in range(1, it.segs + 1):
-			var p: Vector3 = end * float(s) / it.segs
-			if s < it.segs:
-				p += Vector3(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1), _rng.randf_range(-1, 1)) * it.radius * 0.12
-			im.surface_add_vertex(prev)
-			im.surface_add_vertex(p)
-			prev = p
+	im.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	var w := _fraw("width") / 256.0
+	for i in it.bolts.size():
+		var b: Dictionary = it.bolts[i]
+		b.age += delta
+		if regen and _rng.randf() < 0.5 and (not flags & 2 or b.age >= fade):
+			b = _new_bolt()
+			it.bolts[i] = b
+		var line: Vector3 = b.pts[-1]
+		for k in range(1, b.pts.size() - 1):
+			var on_line: Vector3 = line * (float(k) / (b.pts.size() - 1))
+			b.pts[k] += (b.pts[k] - on_line) * drift_rate * delta
+		var c := _rgb("colour", 255.0).lerp(Color.BLACK, clampf(b.age / fade, 0.0, 1.0))
+		var n: int = b.pts.size() - 1
+		for k in n:
+			var wa := w if not flags & 8 else w * (1.0 - float(k) / n)
+			var wb := w if not flags & 8 else w * (1.0 - float(k + 1) / n)
+			_strip(im, b.pts[k], b.pts[k + 1], wa, wb, c, c, cam)
 	im.surface_end()
+
+
+func _trail_colour(age: float) -> Color:
+	## colour_0 -> colour_1 -> colour_2 -> black over phase_time_0/1/2 (alpha 0 after).
+	var t := [_field("phase_time_0"), _field("phase_time_1"), _field("phase_time_2")]
+	var c := [_rgb("colour_0", 255.0), _rgb("colour_1", 255.0), _rgb("colour_2", 255.0), Color.BLACK]
+	for k in 3:
+		if age < t[k]:
+			return (c[k] as Color).lerp(c[k + 1], age / t[k])
+		age -= t[k]
+	return Color(0, 0, 0, 0)
+
+
+func _update_trail(node: MeshInstance3D, it: Dictionary, delta: float, cam: Basis) -> bool:
+	## 0x80075a84 / draw 0x80074104: the head stays at the owner (here the effect's
+	## origin); each point ages through the colour phases and widens by size_growth
+	## over them. Returns true once every point is past its last phase.
+	var total := _field("phase_time_0") + _field("phase_time_1") + _field("phase_time_2")
+	var drag := _fraw("drag") / 4096.0
+	for p: Dictionary in it.pts:
+		p.age += delta
+		if it.moving:
+			p.vel.y += _fraw("gravity") * GRAVITY_93 * delta
+			p.vel *= pow(maxf(1.0 - drag, 0.0), delta * FRAME_RATE)   # once per frame
+			p.pos += p.vel * delta
+	var im := node.mesh as ImmediateMesh
+	im.clear_surfaces()
+	var head_w := _fraw("size") / 512.0
+	var prev := Vector3.ZERO
+	var prev_w := head_w
+	var prev_c := _rgb("colour_0", 255.0)
+	var alive := false
+	im.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	for p: Dictionary in it.pts:
+		var c := _trail_colour(p.age)
+		alive = alive or c.a > 0.0
+		var w := head_w + _fraw("size_growth") / 512.0 * clampf(p.age / maxf(total, 0.001), 0.0, 1.0)
+		_strip(im, prev, p.pos, prev_w, w, prev_c, Color(c.r, c.g, c.b), cam)
+		prev = p.pos
+		prev_w = w
+		prev_c = Color(c.r, c.g, c.b)
+	im.surface_end()
+	return not alive and total > 0.0

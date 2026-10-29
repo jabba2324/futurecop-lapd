@@ -8,10 +8,11 @@
 ##   - additive and env-mapped (sphere-map reflection) materials of .glb props
 ##     (ObjLoader.apply_fc_materials)
 ##   - elevators (elevator.gd) move and carry the walker; item pickups spin;
-##     teleporters (teleporters.gd) move it
+##     teleporters (teleporters.gd) move it; blob shadows (shadows.gd)
 ##   - scrolling terrain (water) UVs
-##   - ambient sounds: BaseEntity.ambient_sound → the Cshd entry with that
-##     group_id → its tone WAV, looping 3D audio at the actor
+##   - ambient sounds: BaseEntity.ambient_sound "sound N" → the Cshd entry with
+##     script_id N (_sound_table) → its tone WAV, looping 3D audio at the actor;
+##     effects play their EffectHeader.sound per copy
 ##   - minimap (minimap.gd) of the heightmap, map icons and the walker; M toggles
 ##   - debug overlay (debug_overlay.gd): trigger zones, paths, special floors; O toggles
 ##   - damage preview (damage_preview.gd): K steps the nearest damageable prop through
@@ -31,6 +32,7 @@ const DebugOverlay := preload("res://scripts/debug_overlay.gd")
 const Elevator := preload("res://scripts/elevator.gd")
 const Teleporters := preload("res://scripts/teleporters.gd")
 const DamagePreview := preload("res://scripts/damage_preview.gd")
+const Shadows := preload("res://scripts/shadows.gd")
 const EFFECT_RANGE := 16.0     # 0x20000 raw: placed effects start / spawn within this
 const TELEPORT_SOUND := 105   # script sound id the teleporters' on_damage script plays
 
@@ -44,8 +46,11 @@ var _hint: Label
 var _minimap: Control
 var _player: Node3D
 var _overlay: Node3D
-var _sounds: Dictionary = {}     # Cshd group_id -> entry
+var _sounds: Dictionary = {}     # _sound_table(): sound id -> Cshd entry
 var _spinning: Array = []        # [pickup node, yaw rad/s]
+var _flashing: Array = []        # power-up MeshInstance3Ds (red tint every 128 ticks)
+var _flash_on := false
+var _tint: StandardMaterial3D
 var _scrolling: Array = []       # [terrain MeshInstance3D, surface, u speed, v speed]
 var _effects: Dictionary = {}     # EffectPlayer.build_registry
 var _effects_root: Node3D
@@ -64,11 +69,12 @@ func _ready() -> void:
 	_start_spawn_effects()
 	_add_decals()
 	_start_animations()
-	_sounds = _sound_groups()
+	_sounds = _sound_table()
 	_start_ambient_sounds()
 	_start_elevators()
 	_start_pickups()
 	_start_teleporters()
+	_start_shadows()
 	_start_terrain_scroll()
 	_add_hint()
 	_add_minimap()
@@ -118,6 +124,7 @@ func _start_spawn_effects() -> void:
 		var v := str(ds.fields.get("DamageEffectSet.spawn_effect", {}).get("value", "")) if ds else ""
 		if v.begins_with("effect ") and _effects.effects.has(int(v.trim_prefix("effect "))):
 			var p := EffectPlayer.new()
+			p.sound = _play_effect_sound
 			p.setup(_effects.effects[int(v.trim_prefix("effect "))], _effects.effects, _base + "particles", false)
 			node.add_child(p)
 
@@ -133,6 +140,7 @@ func _start_pending_effects() -> void:
 			_pending_effects.erase(pe)
 			var p := EffectPlayer.new()
 			p.in_range = _player_near
+			p.sound = _play_effect_sound
 			p.setup(pe[1], _effects.effects, _base + "particles", false)
 			anchor.add_child(p)
 
@@ -175,27 +183,58 @@ func _under_x1(n: Node) -> bool:
 	return false
 
 
-func _sound_groups() -> Dictionary:
-	## Cshd group_id -> its first entry with a tone WAV.
+func _sound_table() -> Dictionary:
+	## How the game resolves a sound id N (0x80045494): N >= 70 is the Cshd entry with
+	## script_id N in the level's mission table (0x800a18d0); below 70 it is the global
+	## table's entry with that script_id and the wanted positional flag (3D table
+	## 0x800a1830 / plain 0x800a1880). Keys: N for >= 70, [N, positional] below.
 	var shd: Variant = _json(_base + "shd.json")
-	var by_group := {}
+	var out := {}
 	if shd is Dictionary:
 		for t: Dictionary in shd.get("tables", []):
 			for e: Dictionary in t.get("entries", []):
-				if not by_group.has(int(e.group_id)) and e.get("tone_wav"):
-					by_group[int(e.group_id)] = e
-	return by_group
+				if not e.get("tone_wav"):
+					continue
+				var n := int(e.get("script_id", -1))
+				var key: Variant = n if t.get("kind") == "mission" else [n, bool(e.get("positional"))]
+				if not out.has(key):
+					out[key] = e
+	return out
 
 
-func _sound(ref: Variant) -> AudioStream:
-	## The tone of a "sound N" field value, or null.
+func _sound(ref: Variant, positional := true) -> AudioStream:
+	## The tone of a "sound N" field value (BaseEntity.ambient_sound, elevator and
+	## effect sounds: all Cshd script ids), or null. Until 2026-10-29 these were looked
+	## up by group_id, which picked weapon-bank samples for every ambient sound.
 	var r := str(ref)
 	if not r.begins_with("sound "):
 		return null
-	var e: Variant = _sounds.get(int(r.trim_prefix("sound ")))
+	var n := int(r.trim_prefix("sound "))
+	var e: Variant = _sounds.get(n if n >= 70 else [n, positional])
 	if e == null or not ResourceLoader.exists(_base + e.tone_wav):
 		return null
 	return load(_base + e.tone_wav)
+
+
+func _play_effect_sound(ref: Variant, at: Vector3) -> void:
+	## EffectHeader.sound, played once per effect copy (0x8003e984): the plain entry,
+	## panned from where it starts. Ids 61–68 and 100–118 only play with a player
+	## within 16 units (0x80046c84).
+	var stream := _sound(ref, false)
+	if stream == null:
+		return
+	var n := int(str(ref).trim_prefix("sound "))
+	if ((n >= 61 and n <= 68) or (n >= 100 and n <= 118)) and not _player_near(at):
+		return
+	var s := AudioStreamPlayer3D.new()
+	s.stream = stream
+	s.unit_size = 3.0
+	s.max_distance = 35.0
+	s.volume_db = -4.0
+	add_child(s)
+	s.global_position = at
+	s.finished.connect(s.queue_free)
+	s.play()
 
 
 func _start_ambient_sounds() -> void:
@@ -262,19 +301,39 @@ func _start_teleporters() -> void:
 	add_child(t)
 	t.setup(_decoded, _layout, func(at: Vector3) -> float:
 		var f := _floors(at)
-		return f[0] if f.size() > 0 else at.y, _script_sound(TELEPORT_SOUND))
+		return f[0] if f.size() > 0 else at.y, _sound("sound %d" % TELEPORT_SOUND, false))
 
 
-func _script_sound(script_id: int) -> AudioStream:
-	## The tone of the Cshd entry a script's play-sound id resolves to, or null.
-	var shd: Variant = _json(_base + "shd.json")
-	if shd is Dictionary:
-		for t: Dictionary in shd.get("tables", []):
-			for e: Dictionary in t.get("entries", []):
-				if int(e.get("script_id", -1)) == script_id and e.get("tone_wav") \
-						and ResourceLoader.exists(_base + e.tone_wav):
-					return load(_base + e.tone_wav)
-	return null
+func _start_shadows() -> void:
+	## After the first physics frame (terrain collision) and the elevators' bodies.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var space := get_world_3d().direct_space_state
+	var exclude: Array[RID] = []
+	for b: CollisionObject3D in find_children("*", "CollisionObject3D", true, false):
+		if b.name != "TerrainCollision":
+			exclude.append(b.get_rid())
+	var floor_at := func(at: Vector3) -> float:
+		var q := PhysicsRayQueryParameters3D.create(at + Vector3(0, 0x200 / 8192.0, 0), at - Vector3(0, 100, 0))
+		q.exclude = exclude
+		var hit := space.intersect_ray(q)
+		return hit.position.y if hit else NAN
+	var actors: Array = []
+	var moving: Array = []
+	for rec: Dictionary in _decoded:
+		var node := _actor_node(int(rec.id))
+		var flags: Variant = rec.fields.get("BaseEntity.bitfield", {}).get("value")
+		if node == null or not (flags is Array and "has_shadow" in flags) or node is CharacterBody3D:
+			continue
+		actors.append(node)
+		if int(rec.class_id) == 10:
+			moving.append(node)
+	if _player:
+		actors.append(_player)
+		moving.append(_player)
+	var s := Shadows.new()
+	add_child(s)
+	s.setup(actors, moving, floor_at)
 
 
 func _elevator_ground(at: Vector3) -> float:
@@ -315,12 +374,16 @@ func _floors(at: Vector3) -> Array[float]:
 func _start_pickups() -> void:
 	## Class-16 ItemPickups spin (0x8002fa20): rotation < 0 means spin at
 	## ((rotational_speed * 16) / 218) >> 4 BAM per 300 Hz tick, from yaw 0. They
-	## don't bob. Power-ups also flash (entity flag 0x2000000, 0.43 s on / off),
-	## which isn't drawn here.
+	## don't bob. Power-ups (item_flags & 0xf0) flash: while bit 7 of the 300 Hz clock
+	## is set (128 ticks on, 128 off) they get entity flag 0x2000000 (0x80030224), and
+	## the primitive builder (0x80015f38) keeps red and halves green and blue, the
+	## game's hit tint. Drawn as a multiply overlay.
 	for rec: Dictionary in _decoded:
 		var node := _actor_node(int(rec.id))
 		if int(rec.class_id) != 16 or node == null:
 			continue
+		if int(rec.fields.get("ItemPickup.item_flags", {}).get("raw", 0)) & 0xf0:
+			_flashing.append_array(node.find_children("*", "MeshInstance3D", true, false))
 		if int(rec.fields.get("ItemPickup.rotation", {}).get("raw", 0)) >= 0:
 			continue
 		var rs := int(rec.fields.get("ItemPickup.rotational_speed", {}).get("raw", 0))
@@ -346,7 +409,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			if _damage == null:
 				_damage = DamagePreview.new()
 				add_child(_damage)
-				_damage.setup(get_node("Actors"), _decoded, _effects, _base + "particles")
+				_damage.setup(get_node("Actors"), _decoded, _effects, _base + "particles", _play_effect_sound)
 			_damage.step(_player.global_position)
 		elif event.keycode == KEY_M and _minimap:
 			_minimap.visible = not _minimap.visible
@@ -478,6 +541,16 @@ func _process(delta: float) -> void:
 		elif m is ShaderMaterial:
 			(m as ShaderMaterial).set_shader_parameter("uv_offset", off)   # slfx_water
 	_start_pending_effects()
+	var flash := (ticks & 0x80) != 0
+	if flash != _flash_on and not _flashing.is_empty():
+		_flash_on = flash
+		if _tint == null:
+			_tint = StandardMaterial3D.new()
+			_tint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			_tint.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+			_tint.albedo_color = Color(1.0, 0.5, 0.5)
+		for mi: MeshInstance3D in _flashing:
+			mi.material_overlay = _tint if flash else null
 	for sp: Array in _spinning:
 		(sp[0] as Node3D).rotation.y += sp[1] * delta
 	if _minimap and _minimap.visible and _player:

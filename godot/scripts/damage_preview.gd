@@ -10,7 +10,8 @@
 ## Group 0 is what plain hits show; groups 1–4 belong to weapon damage types (bits
 ## 2, 4, 8, 16). When group 0 has nothing for a stage the first group that does is
 ## shown instead, and the label says so.
-## The wreck gets no collision here.
+## The wreck gets convex-hull collision in place of the prop's, unless the actor has
+## disable_destroyed_collision.
 extends Node
 
 const EffectPlayer := preload("res://scripts/effect_player.gd")
@@ -27,10 +28,12 @@ var _playing := {}            # actor id -> EffectPlayer
 var _label: Label
 var _label_t := 0.0
 var _rng := RandomNumberGenerator.new()
+var _sound: Callable          # (ref, position): effect sounds
 
 
-func setup(actors: Node3D, decoded: Array, registry: Dictionary, sprites: String) -> void:
+func setup(actors: Node3D, decoded: Array, registry: Dictionary, sprites: String, sound := Callable()) -> void:
 	name = "DamagePreview"
+	_sound = sound
 	_actors = actors
 	_registry = registry
 	_sprites = sprites
@@ -41,6 +44,9 @@ func setup(actors: Node3D, decoded: Array, registry: Dictionary, sprites: String
 			var ds: Variant = registry.damage_sets.get(int(ref.trim_prefix("damage_effect_set ")))
 			if ds and actors.get_node_or_null("Actor_%d" % rec.id) and int(rec.class_id) != 1:
 				_sets[int(rec.id)] = ds
+				var flags: Variant = rec.fields.get("BaseEntity.bitfield", {}).get("value")
+				if flags is Array and "disable_destroyed_collision" in flags:
+					actors.get_node("Actor_%d" % rec.id).set_meta("no_wreck_collision", true)
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	_label = Label.new()
@@ -73,6 +79,7 @@ func step(from: Vector3) -> void:
 	if _playing.has(best) and is_instance_valid(_playing[best]):
 		_playing[best].queue_free()
 	_playing.erase(best)
+	var radius := _radius(node)   # before the destroyed state hides the model
 	_set_destroyed(node, stage == STAGES.size() - 1)
 	var id := -1
 	var group := 0
@@ -90,7 +97,9 @@ func step(from: Vector3) -> void:
 				group = 0
 	if id >= 0 and _registry.effects.has(id):
 		var p := EffectPlayer.new()
-		p.owner_radius = _radius(node)
+		p.owner_radius = radius
+		p.sound = _sound
+		p.owner_meshes = _alive_meshes(node)
 		p.setup(_registry.effects[id], _registry.effects, _sprites, false)
 		node.add_child(p)
 		_playing[best] = p
@@ -109,16 +118,51 @@ static func _effect_id(ds: Dictionary, field: String) -> int:
 
 
 func _set_destroyed(node: Node3D, destroyed: bool) -> void:
-	var has_wreck := false
-	for c: Node in node.get_children():
-		if c is Node3D and c.has_meta("wreck"):
-			has_wreck = true
+	if destroyed and not node.get_meta("no_wreck_collision", false):
+		_add_wreck_collision(node)
 	for c: Node in node.get_children():
 		if c is CollisionObject3D:
-			(c as CollisionObject3D).process_mode = Node.PROCESS_MODE_DISABLED if destroyed else Node.PROCESS_MODE_INHERIT
+			var wreck: bool = c.has_meta("wreck")
+			(c as CollisionObject3D).process_mode = Node.PROCESS_MODE_INHERIT \
+				if wreck == destroyed else Node.PROCESS_MODE_DISABLED
 		elif c is Node3D and str(c.name).begins_with("cobj"):
 			var wreck: bool = c.has_meta("wreck")
 			(c as Node3D).visible = (wreck and destroyed) or (not wreck and not destroyed)
+
+
+static func _add_wreck_collision(node: Node3D) -> void:
+	## Convex hulls for the wreck models, like terrain_collision.gd's props (built once).
+	if node.has_meta("wreck_collision"):
+		return
+	node.set_meta("wreck_collision", true)
+	for part: Node in node.get_children():
+		if not (part is Node3D and part.has_meta("wreck")):
+			continue
+		var meshes := part.find_children("*", "MeshInstance3D", true, false)
+		if part is MeshInstance3D:
+			meshes.append(part)
+		for mi: MeshInstance3D in meshes:
+			if mi.mesh == null or mi.get_aabb().size.length() < 0.05:
+				continue
+			var body := StaticBody3D.new()
+			body.name = "WreckCollision"
+			body.set_meta("wreck", true)
+			body.process_mode = Node.PROCESS_MODE_DISABLED
+			var cs := CollisionShape3D.new()
+			cs.shape = mi.mesh.create_convex_shape(true, true)
+			cs.transform = node.global_transform.affine_inverse() * mi.global_transform
+			body.add_child(cs)
+			node.add_child(body)
+
+
+static func _alive_meshes(node: Node3D) -> Array:
+	var out := []
+	for c: Node in node.get_children():
+		if c is Node3D and str(c.name).begins_with("cobj") and not c.has_meta("wreck"):
+			out.append_array(c.find_children("*", "MeshInstance3D", true, false))
+			if c is MeshInstance3D:
+				out.append(c)
+	return out
 
 
 static func _radius(node: Node3D) -> float:

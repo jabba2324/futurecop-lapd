@@ -243,7 +243,9 @@ in `decode_actors.py` as hypotheses.
         repeat with flag 0x800); a copy lives `duration` (0 = no timed death).
       - 93 sprites, 89 flash discs, 92 rings and 94 points follow the decoded update
         and draw code (sizes raw/512, rates per 256 ticks, sprite strips at anim_fps,
-        colour ramps, add/subtract/50-50 blends). 87, 88 and 90 are still rough.
+        colour ramps, add/subtract/50-50 blends), and so do 87 trails, 88 lightning
+        and 90 shatter (owner model faces, `owner_meshes`), 89's star and 92's double
+        ring. Each copy plays its `EffectHeader.sound` (a script id, plain entry).
       - Effects flagged `placed_at_load` loop at their positions in the viewer (224 in
         8 levels).
       - Selecting an effect actor plays it.
@@ -310,7 +312,8 @@ in `decode_actors.py` as hypotheses.
     - placed effects, started once when the walker comes within 16 units (copies only
       spawn while it's in range, 0x8003e984), plus damage sets' spawn effects;
     - wreck models (LSRa `*destroyed_model` slots, `LevelLayout.destroyed_parts`) are
-      hidden and have no collision; until 2026-10-29 they were drawn over the intact
+      hidden (no collision until destroyed, then convex hulls unless
+      `disable_destroyed_collision`); until 2026-10-29 they were drawn over the intact
       model. **K** (`damage_preview.gd`) steps the nearest damageable prop through
       below 75/50/25 % (the current stage's effect, attached) and destroyed (destroy
       effect, wreck shown), then back. Group 0 is plain hits; when it's empty the
@@ -318,18 +321,27 @@ in `decode_actors.py` as hypotheses.
     - class-97 decals (only some levels have them, e.g. M2C 180, UN 88, M4A1 44);
     - looping `all_frames` clips on props (not on the X1 parts);
     - 3DTA texture animations;
-    - looping 3D ambient sounds. `BaseEntity.ambient_sound` "sound N" is the Cshd entry
-      with **group_id N** (group_id is the sound key), and it plays that entry's tone
-      WAV.
+    - looping 3D ambient sounds. **"sound N" fields are Cshd script ids** (0x80045494):
+      N ≥ 70 is the mission table's entry with script_id N, below 70 the global table's
+      entry with that script_id and positional flag (`_sound_table`). Until 2026-10-29
+      they were looked up by group_id, which picked weapon-bank samples.
+    - power-up pickups (item_flags & 0xf0) get the game's red hit tint (red kept, green
+      and blue halved) while bit 7 of the 300 Hz clock is set: a multiply overlay.
+    - **Blob shadows** (`shadows.gd`): actors with `has_shadow` (0x80000) and the X1 get
+      the game's octagon blob (0x800164f4), 1.25 × the model box, subtractive, darkest
+      0.39 on the ground and gone 8 units up.
+    - The walker and hover code start no effects of their own beyond transform (4) and
+      death (3, 9): no dust, splashes or thrusters in the game.
     - **Minimap** (bottom right; M toggles): `minimap.gd` from the viewer, tracking the
       walker with a heading tick.
     - **Elevators** (`elevator.gd`, class 10): absolute stop heights from the ground
       probe, the game's speeds and waits, ping-pong; the walker rides an
       AnimatableBody3D (moved directly: moving its parent doesn't sync it). Trigger types
       2/3/4 wait for script messages, so they stay put. Their ambient sound loops only
-      while moving. `tile_effect` is the top's surface byte.
-    - **Pickups** (class 16) spin at the decoded rate; they don't bob. The power-up
-      flash isn't drawn.
+      while moving. `tile_effect` is the top's surface byte. Anti-crush (message 0xb):
+      while the walker's hit box overlaps one it skips the frame (no motion or wait
+      countdown) and deals its collision_damage.
+    - **Pickups** (class 16) spin at the decoded rate; they don't bob.
     - **Water scroll:** `_s<u>_<v>` terrain materials get a per-frame `uv1_offset`
       (the `uv_offset` uniform on `_lfx` shader materials).
     - **Teleporters** (`teleporters.gd`, UN only): class-29 spheres move the walker to
