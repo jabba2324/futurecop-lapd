@@ -233,16 +233,22 @@ in `decode_actors.py` as hypotheses.
       - Frame meshes are built once per model and shared; rebuilding per instance made
         LAX1 run at 6 frames/s instead of 145.
       - The Models tab plays them too.
-    - Effects: `scripts/effect_player.gd` plays effect definitions approximately.
+    - Effects: `scripts/effect_player.gd` plays effect definitions (decoded 2026-10-29;
+      its header has the formulas and addresses).
       - The effect lookup is the Csfx table 0 overlaid with the level's class 87–94
-        actors.
-      - Effects flagged `placed_at_load` loop at their positions (224 in 8 levels).
+        actors. Damage sets (class 91) come from both too: most props point at the
+        global ones (M1A1: 122 damageable props, 8 with level sets).
+      - Timing: repeat_count 0 + interval = endless, N = N copies, −1 = once; each
+        repeat is a fresh copy; the next effect starts at next_delay (or after the last
+        repeat with flag 0x800); a copy lives `duration` (0 = no timed death).
+      - 93 sprites, 89 flash discs, 92 rings and 94 points follow the decoded update
+        and draw code (sizes raw/512, rates per 256 ticks, sprite strips at anim_fps,
+        colour ramps, add/subtract/50-50 blends). 87, 88 and 90 are still rough.
+      - Effects flagged `placed_at_load` loop at their positions in the viewer (224 in
+        8 levels).
       - Selecting an effect actor plays it.
       - Selecting an actor with `BaseEntity.explosion` plays its damage set's
         destruction effect and lists its damage stages.
-      - The shared header (repeat, chained next effect, placement) and each class's
-        visual are driven by the decoded fields. The size/speed unit scale (fx12, ×8,
-        per second) is assumed.
     - Minimap: `scripts/minimap.gd` shows the heightmap and decoded map icons
       (`BaseEntity.map_icon` / `NeutralTurret.map_icon_a`), cropped to the play area,
       with a camera marker. Click to move the camera there.
@@ -301,7 +307,14 @@ in `decode_actors.py` as hypotheses.
     - Before this, env-only models such as CONFT cobj063 (the arches on actors 360/362)
       drew near-black.
   - The scene root runs `scripts/level_ambience.gd` (visual/audio; only elevators react):
-    - placed effects;
+    - placed effects, started once when the walker comes within 16 units (copies only
+      spawn while it's in range, 0x8003e984), plus damage sets' spawn effects;
+    - wreck models (LSRa `*destroyed_model` slots, `LevelLayout.destroyed_parts`) are
+      hidden and have no collision; until 2026-10-29 they were drawn over the intact
+      model. **K** (`damage_preview.gd`) steps the nearest damageable prop through
+      below 75/50/25 % (the current stage's effect, attached) and destroyed (destroy
+      effect, wreck shown), then back. Group 0 is plain hits; when it's empty the
+      first weapon-type group with an effect is shown.
     - class-97 decals (only some levels have them, e.g. M2C 180, UN 88, M4A1 44);
     - looping `all_frames` clips on props (not on the X1 parts);
     - 3DTA texture animations;

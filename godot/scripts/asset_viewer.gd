@@ -942,6 +942,8 @@ func _build_level() -> void:
 				var mi := MeshInstance3D.new()
 				mi.mesh = mesh
 				part = mi
+			if o in LevelLayout.destroyed_parts(_decoded.get(int(a.id), {})):
+				part.visible = false   # wreck model: drawn only once the actor is destroyed
 			part.position.y = offsets.get(o, 0.0)
 			part.rotation_degrees.y = part_yaws.get(i, 0.0)
 			if i in aligned:
@@ -1211,7 +1213,7 @@ func _focus_actor(a: Variant) -> void:
 	var cls := int(a["class"])
 	if cls >= 87 and cls <= 94 and cls != 91:
 		if _play_effect_at(int(LevelOverlays.field(rec, "effect_id", -1)), p):
-			text += "\n[b]Effect[/b] playing (approximate preview)\n"
+			text += "\n[b]Effect[/b] playing\n"
 	var set_ref := str(LevelOverlays.field(rec, "explosion", ""))
 	if set_ref.begins_with("damage_effect_set "):
 		var ds: Dictionary = _damage_sets.get(int(set_ref.trim_prefix("damage_effect_set ")), {})

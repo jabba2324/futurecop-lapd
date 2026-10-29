@@ -58,7 +58,8 @@ health. V cycles the game's seven camera views, and the camera backs off to its 
 views when terrain blocks the line of sight (see-through walls don't count). Elevators
 run and carry the X1, pickups spin, UN's teleporters work, and water is translucent,
 scrolls and ripples or flickers with the game's light tables. Placed
-effects, decals, animated props and ambient sounds are included. L switches between the
+effects, decals, animated props and ambient sounds are included, and K steps the nearest
+prop through its damage states and destruction. L switches between the
 original PS1 lighting (the default) and real-time lighting, G toggles fog, M the minimap
 and O a debug overlay of trigger zones (labelled with what they trigger), paths and
 special floors. Reflective surfaces

@@ -36,7 +36,7 @@ func _ready() -> void:
 	title.add_theme_font_size_override("font_size", 32)
 	left.add_child(title)
 	var hint := Label.new()
-	hint.text = "Choose a level to walk around.\nIn a level: W/S walk, A/D turn, Q/E strafe, Shift slow,\nSpace jump (hover: brake), Shift+Space crouch, T transform,\nV camera view, L lighting (PS1/lit), G fog, M map, O overlay,\nEsc returns here."
+	hint.text = "Choose a level to walk around.\nIn a level: W/S walk, A/D turn, Q/E strafe, Shift slow,\nSpace jump (hover: brake), Shift+Space crouch, T transform,\nV camera view, K damage nearest prop, L lighting (PS1/lit), G fog,\nM map, O overlay, Esc returns here."
 	hint.modulate = Color(0.75, 0.78, 0.85)
 	left.add_child(hint)
 

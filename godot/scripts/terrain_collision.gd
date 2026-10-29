@@ -33,8 +33,8 @@ func _ready() -> void:
 		if not actor is Node3D or actor is CharacterBody3D or _skipped(actor):
 			continue
 		for mi: MeshInstance3D in actor.find_children("*", "MeshInstance3D", true, false):
-			if mi.mesh == null or mi.get_aabb().size.length() < 0.05:
-				continue
+			if mi.mesh == null or mi.get_aabb().size.length() < 0.05 or not mi.is_visible_in_tree():
+				continue   # hidden: wreck models (generate_scene.gd) collide only once shown
 			# Convex hull per prop mesh: cheap and good enough to walk around.
 			var hull := mi.mesh.create_convex_shape(true, true)
 			_add_body(actor, "Collision", hull, (actor as Node3D).global_transform.affine_inverse() * mi.global_transform)

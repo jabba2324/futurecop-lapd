@@ -201,6 +201,20 @@ static func part_y_offsets(actor: Dictionary, base_aabb: Callable) -> Dictionary
 	return out
 
 
+static func destroyed_parts(decoded: Dictionary) -> Array:
+	## Object names ("cobjNNN.obj") of an actors_decoded.json record's wreck models: its
+	## LSRa *destroyed_model slots, which the game only draws once the actor is
+	## destroyed (0x80031690 spawns them as a wreck). Models that are also an alive
+	## part are left out.
+	var alive := []
+	var wreck := []
+	for s: Dictionary in decoded.get("resources", []):
+		if s.get("type") != "Cobj" or s.get("ref") == null:
+			continue
+		(wreck if str(s.get("role", "")).ends_with("destroyed_model") else alive).append(str(s.ref) + ".obj")
+	return wreck.filter(func(o: String) -> bool: return o not in alive)
+
+
 static func is_x1(actor: Dictionary) -> bool:
 	# Class 1 = X1-Alpha player mech, built from glTF parts by assemble_x1().
 	return int(actor.get("class", 0)) == 1

@@ -203,6 +203,12 @@ func _add_actors(root: Node3D) -> bool:
 		push_error("actors.json parse failed")
 		return false
 
+	var wrecks := {}   # actor id -> its wreck models, hidden until destroyed
+	var decoded: Variant = JSON.parse_string(FileAccess.get_file_as_string(_base + "actors_decoded.json"))
+	if decoded is Dictionary:
+		for rec: Dictionary in decoded.get("actors", []):
+			wrecks[int(rec.id)] = LevelLayout.destroyed_parts(rec)
+
 	var placed := 0
 	var has_player := false
 	for actor in data.actors:
@@ -263,6 +269,9 @@ func _add_actors(root: Node3D) -> bool:
 				mi = MeshInstance3D.new()
 				(mi as MeshInstance3D).mesh = mesh_res
 			mi.name = str(obj_name).get_basename()
+			if obj_name in wrecks.get(int(actor.id), []):
+				mi.visible = false   # level_ambience.gd's damage preview (K) shows it
+				mi.set_meta("wreck", true)
 			var y_off: float = obj_y_offsets.get(str(obj_name), 0.0)
 			if y_off != 0.0:
 				mi.position.y = y_off

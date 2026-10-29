@@ -1,7 +1,8 @@
 ## Ambient scene dressing for a generated level scene (root of
 ## scenes/<LEVEL>_level.tscn). Visual/audio only; nothing reacts to the player
 ## except elevators that wait for a rider.
-##   - effects the level places at load, looping (effect_player.gd)
+##   - effects the level places at load, started when the walker comes near, and
+##     the damage sets' spawn effects of their actors (effect_player.gd)
 ##   - class-97 decals (level_overlays.build_decals)
 ##   - prop animation clips (all_frames, looping) and 3DTA texture animations
 ##   - additive and env-mapped (sphere-map reflection) materials of .glb props
@@ -13,6 +14,8 @@
 ##     group_id → its tone WAV, looping 3D audio at the actor
 ##   - minimap (minimap.gd) of the heightmap, map icons and the walker; M toggles
 ##   - debug overlay (debug_overlay.gd): trigger zones, paths, special floors; O toggles
+##   - damage preview (damage_preview.gd): K steps the nearest damageable prop through
+##     its damage stages and destruction (effects, wreck model)
 ##   - lighting: L toggles the PS1 look (baked terrain vertex colours ×2, unshaded,
 ##     no sun; the default) and real-time lighting; G toggles distance fog
 ## Reads res://assets/<LEVEL>/ (synced by tools/sync_godot_assets.py).
@@ -27,6 +30,8 @@ const Minimap := preload("res://scripts/minimap.gd")
 const DebugOverlay := preload("res://scripts/debug_overlay.gd")
 const Elevator := preload("res://scripts/elevator.gd")
 const Teleporters := preload("res://scripts/teleporters.gd")
+const DamagePreview := preload("res://scripts/damage_preview.gd")
+const EFFECT_RANGE := 16.0     # 0x20000 raw: placed effects start / spawn within this
 const TELEPORT_SOUND := 105   # script sound id the teleporters' on_damage script plays
 
 var _base := ""
@@ -42,6 +47,10 @@ var _overlay: Node3D
 var _sounds: Dictionary = {}     # Cshd group_id -> entry
 var _spinning: Array = []        # [pickup node, yaw rad/s]
 var _scrolling: Array = []       # [terrain MeshInstance3D, surface, u speed, v speed]
+var _effects: Dictionary = {}     # EffectPlayer.build_registry
+var _effects_root: Node3D
+var _pending_effects: Array = []  # [anchor, effect] waiting for a player in range
+var _damage: Node                 # damage_preview.gd, built on the first K
 var _clock := 0.0
 
 
@@ -52,6 +61,7 @@ func _ready() -> void:
 		_decoded = decoded.get("actors", []) if decoded is Dictionary else []
 		_layout = LevelLayout.new(FileAccess.get_file_as_string(_base + "heightmap.json"))
 	_start_effects()
+	_start_spawn_effects()
 	_add_decals()
 	_start_animations()
 	_sounds = _sound_groups()
@@ -78,22 +88,53 @@ func _actor_pos(rec: Dictionary) -> Vector3:
 # ─── Effects / decals / animation / sound ────────────────────────────────────
 
 func _start_effects() -> void:
-	var reg := EffectPlayer.build_registry(_decoded, _json(_base + "csfx.json"))
-	var root := Node3D.new()
-	root.name = "Effects"
-	add_child(root)
+	## Effects the level places at load (flag 1) wait until a player comes within
+	## EFFECT_RANGE (0x8003fd74 / 0x8003ff7c), then play once as in the game (endless
+	## ones keep going); their copies only spawn while a player is in range.
+	_effects = EffectPlayer.build_registry(_decoded, _json(_base + "csfx.json"))
+	_effects_root = Node3D.new()
+	_effects_root.name = "Effects"
+	add_child(_effects_root)
 	for rec: Dictionary in _decoded:
 		if not EffectPlayer.placed_at_load(rec):
 			continue
 		var id: Variant = rec.fields.get("EffectHeader.effect_id", {}).get("value")
-		if id == null or not reg.effects.has(int(id)):
+		if id == null or not _effects.effects.has(int(id)):
 			continue
 		var anchor := Node3D.new()
 		anchor.position = _actor_pos(rec)
-		var p := EffectPlayer.new()
-		p.setup(reg.effects[int(id)], reg.effects, _base + "particles", true)
-		anchor.add_child(p)
-		root.add_child(anchor)
+		_effects_root.add_child(anchor)
+		_pending_effects.append([anchor, _effects.effects[int(id)]])
+
+
+func _start_spawn_effects() -> void:
+	## A damage set's spawn_effect starts with its actor (0x8003b5ac), attached to it.
+	for rec: Dictionary in _decoded:
+		var ref := str(rec.fields.get("BaseEntity.explosion", {}).get("value", ""))
+		var node := _actor_node(int(rec.id))
+		if not ref.begins_with("damage_effect_set ") or node == null or int(rec.class_id) == 1:
+			continue
+		var ds: Variant = _effects.damage_sets.get(int(ref.trim_prefix("damage_effect_set ")))
+		var v := str(ds.fields.get("DamageEffectSet.spawn_effect", {}).get("value", "")) if ds else ""
+		if v.begins_with("effect ") and _effects.effects.has(int(v.trim_prefix("effect "))):
+			var p := EffectPlayer.new()
+			p.setup(_effects.effects[int(v.trim_prefix("effect "))], _effects.effects, _base + "particles", false)
+			node.add_child(p)
+
+
+func _player_near(at: Vector3) -> bool:
+	return _player != null and _player.global_position.distance_to(at) < EFFECT_RANGE
+
+
+func _start_pending_effects() -> void:
+	for pe: Array in _pending_effects.duplicate():
+		var anchor: Node3D = pe[0]
+		if _player_near(anchor.global_position):
+			_pending_effects.erase(pe)
+			var p := EffectPlayer.new()
+			p.in_range = _player_near
+			p.setup(pe[1], _effects.effects, _base + "particles", false)
+			anchor.add_child(p)
 
 
 func _add_decals() -> void:
@@ -301,6 +342,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			_apply_lighting()
 		elif event.keycode == KEY_O:
 			_toggle_overlay()
+		elif event.keycode == KEY_K and _player:
+			if _damage == null:
+				_damage = DamagePreview.new()
+				add_child(_damage)
+				_damage.setup(get_node("Actors"), _decoded, _effects, _base + "particles")
+			_damage.step(_player.global_position)
 		elif event.keycode == KEY_M and _minimap:
 			_minimap.visible = not _minimap.visible
 			_update_hint()
@@ -363,7 +410,7 @@ func _add_hint() -> void:
 
 func _update_hint() -> void:
 	if _hint:
-		_hint.text = "W/S move · A/D turn · Q/E strafe · Shift slow · Space jump/brake · Shift+Space crouch\nT transform · V view · L lighting: %s · G fog: %s · M map: %s · O overlay: %s · Esc menu" % [
+		_hint.text = "W/S move · A/D turn · Q/E strafe · Shift slow · Space jump/brake · Shift+Space crouch\nT transform · V view · K damage prop · L lighting: %s · G fog: %s · M map: %s · O overlay: %s · Esc menu" % [
 			"PS1" if _ps1_look else "lit", "on" if _fog else "off",
 			"on" if _minimap and _minimap.visible else "off",
 			"on" if _overlay and _overlay.visible else "off"]
@@ -430,6 +477,7 @@ func _process(delta: float) -> void:
 			(m as BaseMaterial3D).uv1_offset = Vector3(off.x, off.y, 0.0)
 		elif m is ShaderMaterial:
 			(m as ShaderMaterial).set_shader_parameter("uv_offset", off)   # slfx_water
+	_start_pending_effects()
 	for sp: Array in _spinning:
 		(sp[0] as Node3D).rotation.y += sp[1] * delta
 	if _minimap and _minimap.visible and _player:
