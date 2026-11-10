@@ -213,7 +213,7 @@ in `decode_actors.py` as hypotheses.
   - It needs the `ghidra_psx_ldr` extension (PSX language), which has no Ghidra 12.2 build
     yet. On the Linux box, Ghidra 12.1.4 + ghidra_psx_ldr + a Temurin 25 JDK live in
     `~/.local/opt`.
-  - Ghidra refuses project paths containing dot-dirs. The project owner field is `chris`.
+  - Ghidra refuses project paths containing dot-dirs. The project owner field must match the local user name.
   - `../ghidra/decomp.sh <addr>...` decompiles headlessly via `scripts/Decomp.java` (pass
     `list` to list all functions). Each call costs ~1 min of start-up, so batch addresses.
   - Only one process can open the project at a time.
