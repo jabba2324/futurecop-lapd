@@ -56,30 +56,54 @@ godot --path godot res://scenes/asset_viewer.tscn            # browse everything
 Run `run_all.py` once before opening the viewer; it fills `parsed/` and `godot/assets/`.
 The video step also needs `java` and an `ffmpeg` built with libtheora.
 
-Level scenes: every level except FE has `godot/scenes/<LEVEL>_level.tscn`. Each has the
-terrain with collision, all props as static scenery, and the X1-Alpha walker at player
-one's start, with the original game's movement physics and chase camera: W/S walk, A/D
-turn, Q/E strafe, Shift slow walk, Space jump (brake when hovering) and T transforms
-between walker and hovercraft. The game's special floors work too: conveyors, damaging
-and deadly floors (a health readout shows; at zero the X1 explodes and restarts), slippery
-floors, and deep water, where the walker turns into a hovercraft. Walls push back and
-turn the X1 along them as in the game, Shift+Space crouches and hard landings cost
-health. V cycles the game's seven camera views, and the camera backs off to its higher
-views when terrain blocks the line of sight (see-through walls don't count). Elevators
-run and carry the X1 (and stop when it is under them), pickups spin and power-ups flash, actors
-cast the game's blob shadows, vehicles and pedestrians drive their routes (without reacting
-to you), only the spawned actors the game has at the start appear, UN's teleporters work, and water is translucent,
-scrolls and ripples or flickers with the game's light tables. Placed
-effects, decals, animated props and ambient sounds are included, and K steps the nearest
-prop through its damage states and destruction. L switches between the
-original PS1 lighting (the default) and real-time lighting, G toggles fog, M the minimap
-and O a debug overlay of trigger zones (labelled with what they trigger), paths and
-special floors. Reflective surfaces
-use the level's sphere map, and the level's loading screen shows while it loads. Crime War
-levels play their briefing movie first, if the videos are extracted (any key skips). There are no enemies, scripts or
-objectives; it's for walking around the level. The `.tscn` files are committed, but
-they load `godot/assets/`, so run the pipeline first. Then run the project for a
-level-select menu, or open a level directly:
+## What's decoded
+
+Every file on the PS1 disc is decoded or accounted for, and all of it can be browsed in the
+asset viewer. ✅ decoded · 🟡 mostly decoded · ➖ out of scope
+
+| Data | Status | Notes |
+|---|---|---|
+| Textures, particles, fonts | ✅ | PNG; fonts also converted to TTF |
+| 3D models | ✅ | Skeletons, morphs, animation clips and UV animation, exported as glTF |
+| Terrain | ✅ | Heightmaps, tiles, vertex colours, water and special floor types |
+| Actors (props, vehicles, enemies, effects…) | 🟡 | 45 classes; 98.3% of bytes decoded, a few fields unknown |
+| AI path graphs, spawners, decals | ✅ | |
+| Mission scripts (RPN VM) and triggers | 🟡 | Disassembled, and every message and variable that scripts use is named. A few AI modes and variable values are still unexplained |
+| Music, voice and sound effects | 🟡 | WAV; sound tables decoded. SFX sample rates not yet confirmed by ear |
+| Front end: menus, sprites, strings, save icon | ✅ | |
+| Loading screens | ✅ | MDEC still images |
+| FMV movies | ✅ | Via jPSXdec, to Ogg Theora |
+| Attract-mode demos | ✅ | Joypad recordings |
+| Text in the executable | ✅ | |
+| PC / Mac version | ➖ | Out of scope; the PS1 version only |
+
+## Level scenes
+
+Every level except the front end has a walkable scene, `godot/scenes/<LEVEL>_level.tscn`,
+with the X1-Alpha at player one's start. It's for exploring the levels, not for playing
+them. ✅ works as in the game · 🟡 partly · ❌ not implemented
+
+| Feature | Status |
+|---|---|
+| Terrain with collision, all props, the level's loading screen | ✅ |
+| X1-Alpha movement physics, wall response, walker ↔ hovercraft, crouch, jump, landing damage | ✅ |
+| The game's chase camera and its seven views | ✅ |
+| Special floors: conveyors, damaging/deadly, slippery, deep water | ✅ |
+| Elevators, teleporters (UN), pickups, power-ups | ✅ |
+| Vehicles and pedestrians driving their routes | 🟡 They don't react to you |
+| Placed effects, decals, animated props, prop damage states (K) | ✅ |
+| Water, fog, sphere-map reflections, PS1 or real-time lighting (L) | ✅ |
+| Ambient sounds, music, Crime War briefing movies | ✅ |
+| Minimap (M) and debug overlay of triggers, paths and floors (O) | ✅ |
+| Enemies and combat | ❌ |
+| Mission scripts and objectives | ❌ |
+
+**Controls:** W/S walk · A/D turn · Q/E strafe · Shift slow walk · Space jump (brake when
+hovering) · Shift+Space crouch · T walker/hovercraft · V camera view · K damage the nearest
+prop · L lighting · G fog · M minimap · O overlay · Esc back to the menu.
+
+The `.tscn` files are committed, but they load `godot/assets/`, so run the pipeline first.
+Run the project for a level-select menu, or open a level directly:
 
 ```sh
 godot --path godot                               # menu: pick a level, Esc returns to it
