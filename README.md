@@ -103,8 +103,8 @@ Toast's "HFS Optimizer" filler files, which have tab and space names, are skippe
 
 - [Future Cop: MIT](https://github.com/Ghoster738/Future-Cop-MIT) by Ghoster738 (MIT
   licence): the open-source reimplementation of the game engine, and the reference that
-  several parsers here were ported from. Each docstring says which. Its copyright notice
-  is kept in `LICENSE`.
+  several parsers here were ported from. Each docstring says which. Its licence is kept in
+  `licenses/Future-Cop-MIT.txt`.
 - [jPSXdec](https://github.com/m35/jpsxdec): decodes the EA `.WVE` movies. It's
   downloaded on first use and checksum-verified, not committed.
 - [ghidra_psx_ldr](https://github.com/lab313ru/ghidra_psx_ldr): the PS1 loader that the
