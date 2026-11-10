@@ -105,10 +105,11 @@ in `decode_actors.py` as hypotheses.
   streams the blocks in slot order and wraps to slot 0 with no gap (0x8002a398); there
   is nothing interactive and one track per level. Each block decodes from a zero
   predictor: carrying the ADPCM history over clicks at a quarter of the joins.
-  - `extract_sfx.py` writes every Cvkb sample at 11025 Hz. According to the Cvkh tone
-    tables, 258 tones are really 22050 Hz and 476 are 16000 Hz. That comes from the data
-    and hasn't been checked by ear.
-  - `sfx_tones/` has each tone at its in-game pitch.
+  - `extract_sfx.py` writes each Cvkb sample at the native rate of the first Cvkh tone
+    that plays it (mostly 11025/16000/22050 Hz). Confirmed both by the game's SPU play
+    pitch (1211 of 1701 tones play exactly at their native rate) and by ear. 119
+    samples are shared by tones with different native rates, so no single rate fits.
+  - `sfx_tones/` has each tone at its in-game pitch; the level scenes use these.
 - BGAV clips are grouped by the preceding 36-byte `RVWS` name. Slice the name at the null
   byte, because it is followed by a `\x80` pad. Strip any partial `.stream` suffix as
   well, because the 20-byte field truncates it.
@@ -529,8 +530,7 @@ each docstring). What's still open:
   - The Cctr payload is freed unread, so it can't be recovered from the executable.
   - Cvkh +10/+13 and Cnet `unknown_10` are never read by the game.
 - **Not yet confirmed by eye:**
-  - The per-class initial yaws in level_layout.gd. (SFX sample rates are confirmed:
-    see extract_sfx.py.)
+  - The per-class initial yaws in level_layout.gd.
 - **Disc coverage:** every file on the PS1 disc is decoded or accounted for. `DUMMY.DAT`
   is 27.6 MB of zeros, `SYSTEM.CNF` is the boot config, and the executable embeds no
   images or audio, only text.
