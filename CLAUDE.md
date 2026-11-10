@@ -505,22 +505,28 @@ Every resource type in every MIS has a parser, as do the movies, loading screens
 demos. All of it is viewable in the asset viewer.
 
 Almost every field is now confirmed against SLUS_007.39 (function addresses are cited in
-each docstring). What's still open:
-- **Actors (98.3% of payload bytes decoded; fields confirmed never read count as
-  `unused_*`):** weapon +29 (classes 98/99), lightning (88) +50, class 35 +18/+19, class 32
-  +14, BasePathed +10, class 27 +18…22, class 34 +12, Trigger +6, Prop +9; the reader of
-  class 99 `weapon_category`; most lightning (88) flag names and ring (92) flags
-  0x4/0x8/0x20.
+each docstring). The searches use a full Ghidra decompilation and a capstone disassembly
+of the executable (see "Searching the executable" below).
+- **Actors: 100% of payload bytes decoded.** Fields confirmed never read are named
+  `unused_*`: weapon +29 (classes 98/99), lightning (88) +50 and class 35 +18/+19. Class
+  99 `weapon_category` is never read either. Resolved on 2026-11-10:
+  - BasePathed +10 is `deceleration`.
+  - Class 27 +18…22 are the animation tracks of its four-state cycle.
+  - Class 32 +14 is `refill_time`.
+  - Class 34 +12 is `two_sided`.
+  - Trigger +6 is `ground_cast`.
+  - Prop +9 is `prop_flags`.
+  - Every lightning (88) and ring (92) flag is named.
   - The effect classes 87–94 have one decoder (tables in decode_actors.py), which
     extract_sfx_meta.py reuses for Csfx records.
   - Corrections from that pass: 87 is a trail ribbon, 88 lightning, 89 a flash disc/star,
     90 a model shatter, 92 a shockwave ring; class 31 is a player `Pusher`.
 - **RPN VM / variables:** all messages any script uses are named, and so are all `v[]`
-  indices any script touches. Still unknown:
-  - `v[0]`, `v[1]`, `v[5]`, `v[18]` and `v[20..22]`: no code or script uses them.
-  - `v[56]` codes 1/4/5/8: scripts test them, but no writer was found.
-  - Walker state 4 and the meaning of each `v[39]` Sky Captain AI mode.
-  - `*ref[1]` is unused.
+  indices any script touches.
+  - `v[39]` (the Sky Captain's defend/support/hunt modes), every `v[56]` announcer code
+    (1–9) and walker state 4 (guard) are confirmed in code.
+  - `v[0]`, `v[1]`, `v[5]`, `v[18]`, `v[20..22]` and `*ref[1]`: no code or script uses
+    them.
   - Messages are u8 message + **u8 argument**, so large script arguments are truncated by
     the game itself.
 - **Demos:** decoded. Timing values are 1/300 s per frame, and each demo is 60 s. Buttons
@@ -539,6 +545,17 @@ each docstring). What's still open:
   which are on the retail disc. Separately, 10 script references point at actor ids that don't exist (M2C
   469/470, OV 442/346/352, OVMP 219/223). The PC and PS1 builds of OVMP have identical
   actor sets, so these actors were removed before release and the messages go nowhere.
+
+## Searching the executable
+
+`../ghidra/` also holds a whole-executable search kit (outside git; regenerate when
+needed): `decomp_all.c` (every function decompiled by `scripts/DumpAll.java`, ~3 min
+headless), `exe.s` (a full capstone disassembly from `dis.py all exe.s`; capstone is in
+the venv) and `fn.sh <addr>` (prints one function from the dump). Grep these instead of
+decompiling one function at a time. Some handlers (e.g. 0x80073bbc, 0x800357c0) are not
+Ghidra functions, so only `exe.s` has them, and stores through a register loaded long
+before are easiest to find there. The v[] base is `lw rX, -0x56c(rY)` after `lui rY,
+0x800a`.
 
 ## Conventions
 

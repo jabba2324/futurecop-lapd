@@ -11,11 +11,10 @@ by actor id ("id"). Field layouts come from two sources:
     marked "exe" was read from the class's init code (addresses below);
     "fc-mit+exe" means fc-mit's layout was checked against that code.
 Confidence per class: "exe", "fc-mit+exe", "fc-mit" (not re-checked) or
-"guessed" (value statistics only; none left). Fields still named unknown_*
-are either copied into a runtime struct with no reader found or not read
-by any code found; their raw values are kept. Fields named unused_* were
-checked: the init copies them (or not) and nothing reads them; they count
-as decoded. Unit conversions: see "Units" below.
+"guessed" (value statistics only; none left). No class field is named
+unknown_* any more (only classes with no layout fall back to unknown_<off>
+words). Fields named unused_* were checked: the init copies them (or not)
+and no instruction in the executable reads them; they count as decoded. Unit conversions: see "Units" below.
 
 How the exe loads actors (all addresses in SLUS_007.39):
   0x8004d6d4  per-resource loader. Classes 87-99 are *definitions*, handled
@@ -117,7 +116,10 @@ Class table (TCAt +4).  "chain" lists the base structs in payload order.
                0x29-0x2c set the type (msg - 0x28) and value (0x8002cb20).
                Confirmed in code.
   BasePathedEntity (20 B, 0x80050e0c) bitfield u16, move_speed (/300),
-               height_offset fx12, +6 raw, +8 and +10 speeds (/300),
+               height_offset fx12, +6 raw, +8 acceleration and +10
+               deceleration (/300; the path mover 0x8005027c raises the
+               current speed towards move_speed by acceleration per tick and
+               lowers it by deceleration, never below the target),
                junction_seek_chance (+12, of 4096), junction_seek_range
                (+14, fx12), junction_seek_targeting (+16), junction_seek_type
                (+18 low nibble, target-search type; also bits 24-31 of the
@@ -183,7 +185,14 @@ Class table (TCAt +4).  "chain" lists the base structs in payload order.
   27  MovingShooter             60  BE+BS + 28 B: flags, ground_cast,     exe
                                     height, rotation, move offset z/x/y,
                                     speed, two pause times; shuttles
-                                    between its position and pos+offset
+                                    between its position and pos+offset.
+                                    +18..+22 are AnmD tracks for its states
+                                    (0x8002e2bc / 0x8002e630): home_anim
+                                    (0, paused at home), move_out_anim (1),
+                                    return_anim (3), arrive_anim (2, paused
+                                    at pos+offset) and attack_anim (played
+                                    in state 2 when it has a target; anim
+                                    event 2 fires the weapon)
   28  PathedMultiTurret        112  BE+BS+BasePathed + gun speed/rotation exe
                                     + 4 gun_flags + 4 gun_explosion +
                                     BaseShooter#2..#4 (guns 2-4 when
@@ -212,8 +221,10 @@ Class table (TCAt +4).  "chain" lists the base structs in payload order.
                                     Was "PathedEntity31".
   32  PoliceLocker (CW pickup)  36  BE + ground_cast, filter, height,     exe
                                     use_radius fx12 (0x80030498),
-                                    item_flags, rotation, unknown_14
-                                    (-> +0xbe), amount (given per use, -1 =
+                                    item_flags, rotation, refill_time
+                                    (i16 seconds: after use it reopens when
+                                    refill_time*300 ticks have passed; -1 =
+                                    never; 0x800306a0), amount (per use, -1 =
                                     fill; 0x800306a0 -> 0x8002fc90); RSL
                                     slot 2 = item model
   33  Turret33 (M1A1)           52  BE+BS+BaseTurret + mid_rotation,      exe
@@ -221,11 +232,14 @@ Class table (TCAt +4).  "chain" lists the base structs in payload order.
                                     class-6 middle part (RSL 4/5, yaw
                                     mid_rotation) + class-11 base (RSL 2/3)
   34  Sheet34                   32  BE + width, length, rotation y/x/z,   exe
-                                    height: a 5x3 vertex grid (cloth/flag
-                                    style surface)
+                                    height, two_sided (bit0: also drawn
+                                    when facing away, 0x80042128): a 5x3
+                                    vertex grid (cloth/flag style surface)
   35  MapObjectiveNodeGroup     64  BE + player u8 (0/1 = player 1/2,    exe
                                     else both; the group is hung on that
-                                    player, 0x800423f0), 3 bytes, node_states
+                                    player, 0x800423f0), 3 unused bytes
+                                    (+18/+19 copied to +0xa2/+0xa3, never
+                                    read), node_states
                                     u32 (3 bits per node: bit0 radar arrow
                                     0x8005a9c4, bit1 minimap 0x8005ab8c,
                                     bit2 full map 0x8004edc8; script msg
@@ -249,9 +263,13 @@ Class table (TCAt +4).  "chain" lists the base structs in payload order.
                                     (0x800313f0). Was "TargetLink38".
   87-90, 92-94  Effect<N>  56-76  instanced effect definitions (below)  exe
   91  DamageEffectSet           28  per-entity damage/explosion effects  exe
-  95  Trigger                   12  box w/l/h fx12, flags, actor ref     fc-mit
+  95  Trigger                   12  box w/l/h fx12, ground_cast, flags,  fc-mit+exe
+                                    actor ref (loader 0x800319d4)
   96  Prop                      16  rotation y/z/x (0x800188d0(y, x, z); fc-mit+exe
-                                    rotation <0 = random), scale /64, spin
+                                    rotation <0 = random), prop_flags
+                                    (_PROP_FLAGS; 0x40: the low byte of
+                                    rotation_z is an ambient sound id,
+                                    0x8008363c), scale /64, spin
   97  DCSQuad                   20  flags, dcs_id i8 (Cdcs entry; <0 =   fc-mit+exe
                                     timed), height fx12, width/height fx12
                                     (skipped unless one is > 0x3f),
@@ -276,7 +294,7 @@ weapon_id 0x8005ff70; fire 0x8005f6e8; projectile spawn 0x8005e47c /
   +18 projectile_speed (/300 at load)  +20 projectile_acceleration
   (<<8/300)  +22 max_range fx12  +24 lifetime (*4096/218)  +26 impact_effect
   (-> projectile BaseEntity.explosion slot)  +27 fire_effect (effect ids)
-  +28 fire_sound  +29 unknown u8 (no reader found)  +30 projectile_sound
+  +28 fire_sound  +29 unused u8 (no instruction reads +0x1d of an entry)  +30 projectile_sound
   (-> the projectile's BaseEntity.ambient_sound, 0x8005e47c -> 0x80035904)
   +31 damage_type (byte 6 of the damage message 0xe, 0x8005c344, 0x8005f6e8;
   0x8002aa1c ORs (v & 0xfe) << 3 into the victim's +0x19 and 0x8003b898
@@ -287,7 +305,8 @@ weapon_id 0x8005ff70; fire 0x8005f6e8; projectile spawn 0x8005e47c /
 PlayerWeaponDefinition (class 99; loader 0x8006a918): u8 weapon_slot (the
   player's weapon choice, looked up by 0x8006aaec: 0-5 gun, 16-21 heavy, 32-36
   special = SHDR v[10..15]), u8 weapon_category (== weapon_slot >> 4 in every
-  level; no reader found), pad, then two 32-byte blocks: normal (+4) and
+  level; never read: the only byte-1 loads in the player weapon code
+  read the blocks' weapon_flags), pad, then two 32-byte blocks: normal (+4) and
   powered-up (+36, used while the power-up counter is > 0). Blocks use the
   WeaponDefinition layout from +2 on (0x8006a898 applies the same unit
   conversions) but byte 0 is the weapon_type (0x8006acb0 switch) and byte 1
@@ -339,13 +358,17 @@ so effect ids that no actor defines live in Csfx.
     shifts it <<4) +34 segment_count +36 bolt_count +39 colour RGB +42
     fade_time s4800 +44 jitter (zigzag amplitude, >>7) +46 drift fx12
     (per-point drift velocity scale; -1.0 = contract) +48 flicker_interval
-    ticks (bolts re-randomised when it expires) +50 unknown_50 (not read by
-    the class-88 code; 0 or 1000) +52 width (near end; far end too unless
-    flag 8) +54 flags (8 taper - confirmed; plausible from the endpoint/
-    bolt flag mapping: 1 ground scatter, 2 regenerate only after fading,
-    4 far end may jump to a player in range and damage it, 0x10 set by the
-    create function (stoppable by msg 7), 0x20 near-end ground scatter,
-    0x40 wider seek).
+    ticks (bolts re-randomised when it expires) +50 unused_50 (never read: the
+    lightning code reads +0x44 and +0x48 of the record but not +0x46; 0 or
+    1000) +52 width (near end; far end too unless
+    flag 8) +54 flags, all confirmed: the handler 0x80073bbc turns them
+    into per-end flags for 0x80070730 and bolt flags for 0x800718b8. 1 both
+    ends scatter in a flat disc snapped to the terrain, 2 bolts regenerate
+    only once faded, 4 the far end may jump to a random player in range
+    (and damage it), 8 taper (far-end width 0), 0x10 stoppable (the create
+    function sets it; the stop message then ends the effect), 0x20 both
+    ends drop onto the terrain below their reference point, 0x40 the
+    player seek range is doubled.
   89 FLASH DISC / STAR (create 0x8007043c, update 0x80070048 / 0x8006fb7c,
     ramps 0x8006f898, draw 0x80070158 -> 0x8001484c / 0x80014490): a
     screen-facing gouraud fan. +32 size (radius) +34 segments +36 size_rate
@@ -377,7 +400,8 @@ so effect ids that no actor defines live in Csfx.
     ring, 0x40 trail mode with a 256-point buffer (0x8006c84c, drawn by
     0x8006cb58; 0x80/0x100 its options), 0x200 half ring (half the
     segments; also halves the dome's damage cone 0x200 -> 0x100 BAM), 0x400
-    dome (damage via the cone test 0x80041428); 0x20 own orientation is plausible; bits 2/3 only
+    dome (damage via the cone test 0x80041428); 0x20 draw with the instance's own
+    matrix instead of camera x placement (0x8006dc24); bits 2/3 only
     change the draw-cost estimate). blast_damage hits actors swept by the
     ring (0x800413ec / cone 0x80041428).
   93 SPRITE (create 0x80040e60, handler 0x80040874, update 0x80040a00,
@@ -550,11 +574,12 @@ _FX87_FLAGS = {0x0001: "end_when_empty", 0x0002: "glow_sprites", 0x0004: "untext
                0x8000: "runtime_moving"}
 _FX88_FLAGS = {0x0001: "ground_scatter", 0x0002: "regenerate_after_fade",
                0x0004: "far_end_seeks_player", 0x0008: "taper",
-               0x0010: "stoppable", 0x0020: "near_end_ground_scatter",
+               0x0010: "stoppable", 0x0020: "ground_drop",
                0x0040: "wide_seek"}
 _FX89_FLAGS = {0x0001: "ping_pong", 0x0002: "rotated", 0x0004: "star"}
 _FX90_FLAGS = {0x04: "flat_spread", 0x08: "whole_model", 0x10: "break_owner_model"}
-_FX92_FLAGS = {0x0001: "no_fade", 0x0010: "double_ring", 0x0020: "own_orientation",
+_FX92_FLAGS = {0x0001: "no_fade", 0x0004: "draw_cost_4", 0x0008: "draw_cost_8",
+               0x0010: "double_ring", 0x0020: "own_orientation",
                0x0040: "trail", 0x0080: "trail_option_80", 0x0100: "trail_option_100",
                0x0200: "half_ring", 0x0400: "dome"}
 _FX93_FLAGS = {0x0004: "no_x_spin", 0x0010: "colour_fade", 0x0020: "colour_fade_b",
@@ -568,6 +593,14 @@ _PLAYER_WEAPON_FLAGS = {0x01: "projectile_has_shadow", 0x02: "projectile_flag_1"
 # Pusher (class 31) flags byte (0x8003a160, 0x8003a09c).
 _PUSHER_FLAGS = {0x01: "enabled", 0x02: "push_vertical", 0x04: "player_state_filter",
                  0x40: "runtime_cycling", 0x80: "runtime_off_phase"}
+# Prop (class 96) +9, Prop init 0x80083a10 / update 0x80084398 / script
+# messages 0x800841c4. 0x01/0x02 set model flags 8/4 (0x80013af0: 8 = sort at the
+# true depth instead of 256 nearer, 0x80016a64 -> 0x80015b68; 4 is never read).
+# 0x08 and 0x10 are also toggled by script messages 0x1a / 0x1b; the loader sets
+# 0x80 on every prop placed at level load (message 0x19 clears it).
+_PROP_FLAGS = {0x01: "true_depth_sort", 0x02: "model_flag_4", 0x04: "ping_pong_anim",
+               0x08: "anim_paused", 0x10: "hidden", 0x20: "flicker_anim",
+               0x40: "ambient_sound", 0x80: "permanent"}
 # MapObjectiveNodeGroup per-node state (3 bits each, 0x8005a9c4 / 0x8005ab8c /
 # 0x8004edc8).
 _FLAG_TABLES = {"entity": _ENTITY_FLAGS, "shooter": _SHOOTER_FLAGS,
@@ -577,7 +610,7 @@ _FLAG_TABLES = {"entity": _ENTITY_FLAGS, "shooter": _SHOOTER_FLAGS,
                 "fx89": _FX89_FLAGS, "fx90": _FX90_FLAGS, "fx92": _FX92_FLAGS,
                 "fx93": _FX93_FLAGS, "fx94": _FX94_FLAGS, "fx94colour": _FX94_COLOUR,
                 "playerweapon": _PLAYER_WEAPON_FLAGS, "pusher": _PUSHER_FLAGS,
-                "none": {}}
+                "prop": _PROP_FLAGS, "none": {}}
 
 _GROUND_CAST = {0: "high", 1: "low", 3: "middle", 255: "none"}
 # Pusher (class 31, 0x8003a160): force scale by distance d / radius r.
@@ -666,7 +699,7 @@ _BASE_PATHED = [
     _f("height_offset", "i16", "fx12"),
     _f("move_speed_multiplier", "u16", "fx12"),
     _f("acceleration", "u16", "fx12"),
-    _f("unknown_10", "u16", "fx12"),
+    _f("deceleration", "u16", "fx12"),
     _f("junction_seek_chance", "u16"),
     _f("junction_seek_range", "u16", "fx12"),
     _f("junction_seek_targeting", "u16"),
@@ -715,7 +748,7 @@ _WEAPON = [
     _f("impact_effect", "u8", "effect"),
     _f("fire_effect", "u8", "effect"),
     _f("fire_sound", "u8", "sound"),
-    _f("unknown_29", "u8"),
+    _f("unused_29", "u8"),
     _f("projectile_sound", "u8", "sound"),
     _f("damage_type", "u8"),
 ]
@@ -820,8 +853,8 @@ _CLASSES = {
             _f("move_offset_z", "i16", "fx12"), _f("move_offset_x", "i16", "fx12"),
             _f("move_offset_y", "i16", "fx12"), _f("move_speed", "i16", "fx12"),
             _f("pause_time_a", "i16"), _f("pause_time_b", "i16"),
-            _f("unknown_18", "u8"), _f("unknown_19", "u8"), _f("unknown_20", "u8"),
-            _f("unknown_21", "u8"), _f("unknown_22", "u8"),
+            _f("home_anim", "u8"), _f("move_out_anim", "u8"),
+            _f("return_anim", "u8"), _f("arrive_anim", "u8"), _f("attack_anim", "u8"),
             _f("destroy_flags", "u8"), _f("destroy_anim", "u8"),
             _f("pad_25", "u8", "zero"), _f("pad_26", "u16", "zero")])]),
     28: ("PathedMultiTurret", "exe", [
@@ -857,7 +890,7 @@ _CLASSES = {
             _f("ground_cast", "u8", "ground_cast"), _f("filter_type", "u8"),
             _f("filter_value", "u16"), _f("height_offset", "i16", "fx12"),
             _f("use_radius", "u16", "fx12"), _f("item_flags", "u32", "flags:item"),
-            _f("rotation", "i16", "bam"), _f("unknown_14", "u16"),
+            _f("rotation", "i16", "bam"), _f("refill_time", "i16"),
             _f("amount", "i16"), _f("pad_18", "u16", "zero")])]),
     33: ("Turret33", "exe", [
         ("BaseEntity", _BASE_ENTITY), ("BaseShooter", _BASE_SHOOTER),
@@ -869,13 +902,13 @@ _CLASSES = {
         ("Sheet34", [_f("width", "u16", "fx12"), _f("length", "u16", "fx12"),
                      _f("rotation_y", "i16", "bam"), _f("rotation_x", "i16", "bam"),
                      _f("rotation_z", "i16", "bam"), _f("height_offset", "i16", "fx12"),
-                     _f("unknown_12", "u8"), _f("pad_13", "u8", "zero"),
+                     _f("two_sided", "u8"), _f("pad_13", "u8", "zero"),
                      _f("pad_14", "u16", "zero")])]),
     35: ("MapObjectiveNodeGroup", "exe", [
         ("BaseEntity", _BASE_ENTITY),
         ("MapObjectiveNodeGroup",
-         [_f("player", "u8"), _f("unused_17", "u8"), _f("unknown_18", "u8"),
-          _f("unknown_19", "u8"), _f("node_states", "u32", "node_states")]
+         [_f("player", "u8"), _f("unused_17", "u8"), _f("unused_18", "u8"),
+          _f("unused_19", "u8"), _f("node_states", "u32", "node_states")]
          + [_f(f"map_icon_{k}", "u8", "map_icon") for k in range(8)]
          # first u16 -> world z, second -> world x (0x8004edc8)
          + [x for k in range(8) for x in (_f(f"node_{k}_z", "u16", "node16"),
@@ -903,15 +936,15 @@ _CLASSES = {
             _f("pad_11", "u8", "zero"), _f("size_z", "u16", "fx12"),
             _f("size_x", "u16", "fx12"), _f("size_y", "u16", "fx12"),
             _f("pad_18", "u16", "zero")])]),
-    95: ("Trigger", "fc-mit", [
+    95: ("Trigger", "fc-mit+exe", [
         ("Trigger", [_f("width", "u16", "fx12"), _f("length", "u16", "fx12"),
-                     _f("height", "u16", "fx12"), _f("unknown_6", "u8"),
+                     _f("height", "u16", "fx12"), _f("ground_cast", "u8", "ground_cast"),
                      _f("bitfield", "u8", "flags:none"),
                      _f("triggering_actor", "u16", "actor"), _f("pad_10", "u16", "zero")])]),
     96: ("Prop", "fc-mit+exe", [
         ("Prop", [_f("rotation_y", "i16", "bam"), _f("rotation_z", "i16", "bam"),
                   _f("rotation_x", "i16", "bam"), _f("height_offset", "i16", "fx12"),
-                  _f("ground_cast", "u8", "ground_cast"), _f("unknown_9", "u8"),
+                  _f("ground_cast", "u8", "ground_cast"), _f("prop_flags", "u8", "flags:prop"),
                   _f("animation_speed", "u8"), _f("scale_y", "u8", "scale64"),
                   _f("scale_z", "u8", "scale64"), _f("scale_x", "u8", "scale64"),
                   _f("spin_speed", "i8"), _f("spin_angle", "u8", "degrees")])]),
@@ -974,7 +1007,7 @@ _EFFECT_TAILS = {
         + _RGB("colour")
         + [_f("fade_time", "i16", "s4800"), _f("jitter", "i16"),
            _f("drift", "i16", "fx12"), _f("flicker_interval", "i16", "ticks"),
-           _f("unknown_50", "i16"), _f("width", "i16"),
+           _f("unused_50", "i16"), _f("width", "i16"),
            _f("tail_flags", "u16", "flags:fx88")],
     # 89 flash disc / star (create 0x8007043c, update 0x80070048 + 0x8006fb7c,
     # ramps 0x8006f898, draw 0x80070158 -> 0x8001484c disc / 0x80014490 star):

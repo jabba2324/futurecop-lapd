@@ -159,9 +159,21 @@ SCRIPT VM (verified against the interpreter at 0x80069d68 and its jump table at
                                on_detect script of one hidden actor in UN, OV and
                                M3A respectively. [P] secret areas found.
       v[38] p2_difficulty      [C] as v[2] for player 2.
-      v[39] sky_captain_mode   [C] mirror of the AI's state (0x800336dc):
-                               [P] 0 = roam / hunt, 1 = support own attack,
-                               2 = defend base (2 at spawn, 0x800331cc).
+      v[39] sky_captain_mode   [C] mirror of the AI's state (0x800336dc), chosen
+                               each think from two points the init 0x800331cc
+                               stores: the AI's start (its base) and player 1's
+                               start (the player base). 2 = defend base (also
+                               the start mode): an enemy tank (class 5) within
+                               8.0 or dreadnought (class 28) within 9.0 of its
+                               base, or fewer than 10 of its class-8 turrets
+                               within 32.0; it attacks those and drops to 0 when
+                               neither holds. 1 = support its own attack: its
+                               tanks within 6.5 / dreadnoughts within 7.5 of the
+                               player base score > 1 (tank 1, dreadnought 10);
+                               it flies to the player base. 0 = hunt: patrols
+                               the midpoint between the bases and goes after
+                               the player and their units (0x800330e8 sets the
+                               waypoint per mode).
       v[40..43] outpost_owner_0..3  [C] team owning outpost k (0 = free); the AI
                                claims a free one for 30 points (writes its team,
                                2), a player's claim script writes 1 and takes 30
@@ -173,12 +185,18 @@ SCRIPT VM (verified against the interpreter at 0x80069d68 and its jump table at
                                v[49+2k] ai_buy_tanks_outpost_k / ai_buy_jets_outpost_k
                                (k = 0..3, 2 points each). Written by the AI, read,
                                turned into spawns and cleared by PA Cfun scripts.
-      v[56] announcer_event    [C] written by game code (0x800336dc, 0x8002d1a0,
-                               0x8002d664, 0x80035698), read and cleared by PA
-                               scripts: 2 / 3 Sky Captain goes after the player,
-                               6 it captured a turret, 7 it destroyed a turret,
-                               9 it respawned. Codes 1, 4, 5, 8 are tested by
-                               scripts but no writer was found.
+      v[56] announcer_event    [C] written by game code, read and cleared by PA
+                               scripts (which queue Sky Captain voice streams):
+                               1 it heads for the player base (mode 1,
+                               0x800330e8), 2 / 3 it goes after the player
+                               (0x800336dc), 4 it repaired itself (at its base
+                               or a class-16 pickup with item flag 0x20000,
+                               0x8003526c), 5 player 1 hit or touched it
+                               (messages 9 / 0xb / 0xe in its handler
+                               0x800357c0), 6 it captured a turret (0x8002d1a0),
+                               7 it destroyed a turret, 8 a player-held turret
+                               was destroyed (both 0x8002d664, message 5), 9 it
+                               respawned (0x80035698). 1-player PA only.
       Not written or read by any script in the 15 levels: v[0], v[1], v[5], v[18],
       v[20..22], v[24] (cleared on exit by 0x80025b7c), v[57..60] (= the *ref
       pointers). No code access was found for v[0], v[1], v[5], v[18], v[20..22].
@@ -306,7 +324,9 @@ MESSAGES (actor_msg / group_msg_*; confirmed by decompilation unless marked)
          0 wander (quarter speed unless walker flag 1; attacks targets it meets),
          1 attack (needs a target: ignored when sent by message), 2 flee (also
          entered automatically below 5 health), 3 walk the path ignoring targets,
-         4 [P] hold / fight (never flees), 5 halt (speed 0) and shoot,
+         4 guard: stops and shoots at targets in range like 0/1, but never
+         flees or retreats, keeps its target when shot (0x8002bfb4) and stays
+         in state 4 when the target is gone (0x8002b784), 5 halt (speed 0) and shoot,
          6 run to the nearest Cnet node with flag bit 0 (retreat), 7 die (death
          animation, sets dead flag), 8 dead.
       91 class 26: b = 0 sets walker flags 0xfe (incl. 0x80 = never attack, 0x02 =
@@ -467,7 +487,7 @@ VARIABLE_NAMES = {
 # Readable meaning of literal message arguments (pseudo-code comments only).
 _CAMERAS = ("Standard", "Close-Up", "Standard Side", "Close-Up Side", "Sky",
             "Crowd Control", "Crowd Control Side")
-_WALKER_STATES = ("wander", "attack", "flee", "walk ignoring targets", "hold/fight",
+_WALKER_STATES = ("wander", "attack", "flee", "walk ignoring targets", "guard",
                   "halt and shoot", "retreat to flagged node", "die", "dead")
 _KIND_FIELDS = ("class", "actor id", "group", "team", "team mask")
 

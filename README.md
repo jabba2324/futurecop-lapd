@@ -66,9 +66,9 @@ asset viewer. ✅ decoded · 🟡 mostly decoded · ➖ out of scope
 | Textures, particles, fonts | ✅ | PNG; fonts also converted to TTF |
 | 3D models | ✅ | Skeletons, morphs, animation clips and UV animation, exported as glTF |
 | Terrain | ✅ | Heightmaps, tiles, vertex colours, water and special floor types |
-| Actors (props, vehicles, enemies, effects…) | 🟡 | 45 classes; 98.3% of bytes decoded, a few fields unknown |
+| Actors (props, vehicles, enemies, effects…) | ✅ | 45 classes; every byte decoded |
 | AI path graphs, spawners, decals | ✅ | |
-| Mission scripts (RPN VM) and triggers | 🟡 | Disassembled, and every message and variable that scripts use is named. A few AI modes and variable values are still unexplained |
+| Mission scripts (RPN VM) and triggers | ✅ | Disassembled, and every message, variable and AI mode that scripts use is named |
 | Music, voice and sound effects | ✅ | WAV at the game's sample rates; sound tables decoded |
 | Front end: menus, sprites, strings, save icon | ✅ | |
 | Loading screens | ✅ | MDEC still images |
