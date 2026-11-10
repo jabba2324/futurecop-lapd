@@ -69,7 +69,7 @@ asset viewer. ✅ decoded · 🟡 mostly decoded · ➖ out of scope
 | Actors (props, vehicles, enemies, effects…) | 🟡 | 45 classes; 98.3% of bytes decoded, a few fields unknown |
 | AI path graphs, spawners, decals | ✅ | |
 | Mission scripts (RPN VM) and triggers | 🟡 | Disassembled, and every message and variable that scripts use is named. A few AI modes and variable values are still unexplained |
-| Music, voice and sound effects | 🟡 | WAV; sound tables decoded. SFX sample rates not yet confirmed by ear |
+| Music, voice and sound effects | ✅ | WAV at the game's sample rates; sound tables decoded |
 | Front end: menus, sprites, strings, save icon | ✅ | |
 | Loading screens | ✅ | MDEC still images |
 | FMV movies | ✅ | Via jPSXdec, to Ogg Theora |

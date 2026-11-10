@@ -599,7 +599,7 @@ func _tab_help() -> String:
 		"Level":
 			return "Terrain + every actor (level_layout.gd), Cnet paths, decals, trigger zones (yellow box = trigger, green = collision trigger, magenta = attached box, purple ring = spawner), ranges, height layers (R/G/B = Ctil channels) and the script wiring. Click an actor (or a 'Level fn' entry) to see what it sends and receives. The filter also hides non-matching actors in 3D."
 		"Audio":
-			return "Music (MGAV), SFX samples (Cvkb, raw at 11025 Hz), sfx_tones (each Cvkh tone at its in-game pitch) and voice clips (BGAV)."
+			return "Music (MGAV), SFX samples (Cvkb, at their Cvkh native rate), sfx_tones (each Cvkh tone at its in-game pitch) and voice clips (BGAV)."
 		"Video":
 			return "FMV movies decoded by tools/extract_videos.py."
 		"Data":

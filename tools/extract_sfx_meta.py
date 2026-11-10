@@ -51,8 +51,11 @@ Cvkh - VAB-like header for the Cvkb sample bank with the SAME resource id.
   (confirmed arithmetically: the four common note/fine pairs give those rates to
   within 0.01 %). The pitch field is then the default playback rate and often
   differs (pitch-shifted reuse of a sample: several tones may share one offset).
-  NOTE: extract_sfx.py decodes every Cvkb sample at 11025 Hz; tones with note 72 or
-  78/57 are really 22050 / 16000 Hz recordings (plausible, not yet confirmed by ear).
+  Confirmed against the play pitch: 1211 of 1701 tones play exactly at their native
+  rate, at every rate (715/903 at 11025, 340/476 at 16000, 94/258 at 22050 Hz).
+  The rate belongs to the tone, not the sample: 119 of 1255 samples are shared by
+  tones with different native rates. extract_sfx.py writes each raw sample at the
+  native rate of the first tone using it.
   SHDR load conditions of banks 2-16 (the "10 header code bytes", decoded with the
   RPN VM in extract_rpns.py; output "load_condition"): bank 1 and 50 load always;
   banks 2-6 load when (v[10] == k || v[13] == k) for k = 0,1,2,3,5, banks 7-11 when

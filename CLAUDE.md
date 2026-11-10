@@ -528,10 +528,9 @@ each docstring). What's still open:
 - **Small leftovers:**
   - The Cctr payload is freed unread, so it can't be recovered from the executable.
   - Cvkh +10/+13 and Cnet `unknown_10` are never read by the game.
-- **Not yet confirmed by ear/eye:**
-  - The SFX sample rates (extract_sfx.py writes 11025 Hz; Cvkh says 16/22 kHz for 734
-    tones).
-  - The per-class initial yaws in level_layout.gd.
+- **Not yet confirmed by eye:**
+  - The per-class initial yaws in level_layout.gd. (SFX sample rates are confirmed:
+    see extract_sfx.py.)
 - **Disc coverage:** every file on the PS1 disc is decoded or accounted for. `DUMMY.DAT`
   is 27.6 MB of zeros, `SYSTEM.CNF` is the boot config, and the executable embeds no
   images or audio, only text.

@@ -16,7 +16,14 @@ Three audio block types:
 
   Cvkb — PS1 SPU ADPCM sound effect banks in the IFF DATA section. Each Cvkb
           resource is a VAB Voice Bank containing multiple individual SFX samples
-          separated by end-of-sample flags. Rate: 11025 Hz mono.
+          separated by end-of-sample flags. Mono. Each sample is written at the
+          native rate of the first Cvkh tone that plays it (centre note / fine tune,
+          see extract_sfx_meta.py): 11025, 16000 or 22050 Hz mostly, and 11025 Hz
+          if no tone uses it. Confirmed against the game's own SPU pitch (Cvkh +18):
+          1211 of the 1701 tones play exactly at their native rate, at every rate.
+          About 10% of samples are shared by tones with different native rates (the
+          game plays them both ways), so no single rate is right for those; the
+          per-tone renders in sfx_tones/ (extract_sfx_meta.py) are what the game plays.
           Output: vkbNN_sMMM.wav
 """
 
@@ -27,12 +34,12 @@ import sys
 import wave
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from lib.iff_utils import find_game_files
+from lib.iff_utils import find_game_files, iter_iff_resources
 
 VOICE_RATE = 11025   # BGAV voice clips
 SFX_RATE   = 14256   # MGAV music: 0x800244f8 passes 0x37b4 (14260) -> SPU pitch 0x52c;
                      # a 0x2fc0-byte channel block is then exactly 1.5 s
-VKB_RATE   = 11025   # Cvkb PS1 SPU ADPCM sound effects
+VKB_RATE   = 11025   # Cvkb samples no Cvkh tone references
 
 _IFF_BLOCK_SIZE = 0x6000  # IFF DATA section block alignment
 
@@ -264,9 +271,32 @@ def extract_cvkb_samples(data):
         while i < len(vb):
             pcm, consumed = _decode_channel(vb[i:])
             if len(pcm) > 56:  # skip null-separator blocks (≤ 1 ADPCM block = 28 samples)
-                yield r["id"], sample_idx, pcm
+                yield r["id"], sample_idx, i, pcm
                 sample_idx += 1
             i += consumed
+
+
+def cvkh_native_rates(data):
+    """{(bank id, VB offset): native Hz} from the first Cvkh tone using each sample.
+
+    Tone layout in extract_sfx_meta.py: +7 centre note, +8 fine tune, +20 sample
+    offset into the Cvkb payload (its 16-byte prefix included, except that an offset
+    of 0 means the first sample).
+    """
+    rates = {}
+    for rtype, rid, h in iter_iff_resources(data):
+        if rtype != "Cvkh" or len(h) < 16:
+            continue
+        n = h[4]
+        for off in struct.unpack_from("<%dI" % n, h, 16):
+            e = h[off:off + 24]
+            if len(e) < 24:
+                continue
+            note, fine = e[7], e[8]
+            sample_off = struct.unpack_from("<I", e, 20)[0]
+            key = (rid, max(sample_off - 16, 0))  # offset 0 = the bank's first sample
+            rates.setdefault(key, round(11025 * 2 ** ((84 - (note - fine / 128)) / 12)))
+    return rates
 
 
 def process_mis(mis_path, out_dir):
@@ -346,9 +376,11 @@ def process_mis(mis_path, out_dir):
 
     # SFX samples (Cvkb) — PS1 SPU ADPCM sound effects in the IFF DATA section.
     vkb_count = 0
-    for res_id, sample_idx, pcm in extract_cvkb_samples(data):
+    rates = cvkh_native_rates(data)
+    for res_id, sample_idx, vb_off, pcm in extract_cvkb_samples(data):
         name = f"vkb{res_id:02d}_s{sample_idx:03d}.wav"
-        write_wav(os.path.join(sfx_dir, name), pcm, 1, VKB_RATE)
+        write_wav(os.path.join(sfx_dir, name), pcm, 1,
+                  rates.get((res_id, vb_off), VKB_RATE))
         vkb_count += 1
 
     if voice_count == 0 and sfx_count == 0 and vkb_count == 0:
