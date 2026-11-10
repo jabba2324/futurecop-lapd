@@ -9,6 +9,16 @@ Format knowledge lives in each tool's module docstring, which is the source of t
 that binary layout. `CLAUDE.md` holds the working notes: pipeline details, hard-won
 format facts and open questions.
 
+![M2C, the X1-Alpha at player one's start](docs/screenshots/level_m2c.jpg)
+
+| | |
+|---|---|
+| ![LAX1](docs/screenshots/level_lax1.jpg) | ![UN](docs/screenshots/level_un.jpg) |
+| ![Asset viewer: an animated model](docs/screenshots/viewer_model.jpg) | ![Asset viewer: M2C with every actor, path and trigger zone](docs/screenshots/viewer_level.jpg) |
+
+The walkable level scenes (top: M2C, LAX1, UN) and the asset viewer (bottom: an
+animated model, and a whole level with its actors, paths and trigger zones).
+
 ## Layout
 
 ```
@@ -84,6 +94,16 @@ godot --headless --path godot --import
 godot --headless --path godot --script scripts/generate_scene.gd -- M2C
 ```
 
+To screenshot a scene from the command line (it needs a display; on a machine without
+one, run Godot under Xvfb):
+
+```sh
+godot --path godot --resolution 1280x720 --script res://scripts/screenshot.gd \
+  -- res://scenes/M2C_level.tscn /abs/out.png
+godot --path godot --resolution 1280x720 res://scenes/asset_viewer.tscn \
+  -- --level M2C --tab Models --item cobj018 --shot /abs/out.png
+```
+
 ## From the disc images to `../ps1/` and `../pc/`
 
 ```sh
@@ -115,5 +135,5 @@ Toast's "HFS Optimizer" filler files, which have tab and space names, are skippe
 The code and documentation are released under the [MIT License](LICENSE).
 
 This is an unofficial fan project, not affiliated with or endorsed by Electronic Arts.
-*Future Cop: L.A.P.D.* and its assets belong to their owners. No game data is included:
-the tools need your own copy of the PS1 disc.
+*Future Cop: L.A.P.D.* and its assets belong to their owners. Apart from the
+screenshots, no game data is included: the tools need your own copy of the PS1 disc.
