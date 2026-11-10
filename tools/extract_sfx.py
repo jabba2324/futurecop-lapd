@@ -21,6 +21,9 @@ Three audio block types:
           see extract_sfx_meta.py): 11025, 16000 or 22050 Hz mostly, and 11025 Hz
           if no tone uses it. Confirmed against the game's own SPU pitch (Cvkh +18):
           1211 of the 1701 tones play exactly at their native rate, at every rate.
+          Also confirmed by ear (2026-11-10): M2C vkb01_s012 and vkb50_s024 (16 kHz)
+          and vkb50_s022 and vkb13_s000 (22 kHz) sound right at their native rate and
+          too slow at 11025 Hz.
           About 10% of samples are shared by tones with different native rates (the
           game plays them both ways), so no single rate is right for those; the
           per-tone renders in sfx_tones/ (extract_sfx_meta.py) are what the game plays.
