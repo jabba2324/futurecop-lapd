@@ -61,6 +61,7 @@ var _pending_effects: Array = []  # [anchor, effect] waiting for a player in ran
 var _damage: Node                 # damage_preview.gd, built on the first K
 var _route_nodes: Array = []      # actors route_actors.gd moves
 var _clock := 0.0
+var _prop_spins: Array = []       # [prop node, spin_speed, sway amplitude BAM, base yaw deg]
 
 
 func _ready() -> void:
@@ -76,6 +77,7 @@ func _ready() -> void:
 	_paint_x1s()
 	_sounds = _sound_table()
 	_start_ambient_sounds()
+	_start_props()
 	_start_elevators()
 	_start_pickups()
 	_start_teleporters()
@@ -171,7 +173,8 @@ func _start_animations() -> void:
 				n.add_child(a)
 				break
 		# Clip animation for props; X1 parts are left to player.gd / parked at rest.
-		if _under_x1(n):
+		# Class-96 props are timed by _start_props (their animation_speed and flags).
+		if _under_x1(n) or _actor_class(n) == 96:
 			continue
 		for ap: AnimationPlayer in n.find_children("*", "AnimationPlayer", false, false):
 			var anim := "all_frames" if ap.has_animation("all_frames") else ""
@@ -193,6 +196,81 @@ func _paint_x1s() -> void:
 				LevelLayout.apply_uv_offset(node.get_node("X1"), rec)
 		else:
 			LevelLayout.apply_uv_offset(node, rec, false)
+
+
+func _actor_class(n: Node) -> int:
+	## The class of the Actor_<id> node above n, or -1.
+	var p := n.get_parent()
+	while p and p != self:
+		if p.has_meta("class"):
+			return int(p.get_meta("class"))
+		p = p.get_parent()
+	return -1
+
+
+func _start_props() -> void:
+	## Class-96 Props, as the prop update 0x80084398 runs them:
+	##  - frames advance only when animation_speed v != 0, one frame per 300 / v
+	##    ticks (integer division; 1 -> 255 ticks), i.e. about v frames per second.
+	##    prop_flags 0x04 plays them back and forth, 0x08 holds them (script message
+	##    0x1a). 0x20 (random two-frame flicker) also needs v != 0: the one prop with
+	##    it (OV) has v = 0 and starts hidden, so it isn't modelled.
+	##  - spin_speed s != 0: yaw = (clock & 0xfff) * s BAM, a full turn every 4096 / s
+	##    ticks; with spin_angle A it sways instead: rotation_y plus a triangle wave
+	##    0, -A, 0, +A over the same period.
+	##  - prop_flags 0x40: the low byte of rotation_z is an ambient sound id
+	##    (0x8008363c, the same sound player as BaseEntity.ambient_sound).
+	##  - 0x10 (hidden) is applied by generate_scene.gd.
+	for rec: Dictionary in _decoded:
+		if int(rec.class_id) != 96:
+			continue
+		var node := _actor_node(int(rec.id))
+		if node == null:
+			continue
+		var f: Dictionary = rec.fields
+		var flags := int(f.get("Prop.prop_flags", {}).get("raw", 0))
+		if flags & 0x10:
+			continue   # hidden props skip the whole update, sound included
+		var speed := int(f.get("Prop.animation_speed", {}).get("raw", 0))
+		for ap: AnimationPlayer in node.find_children("*", "AnimationPlayer", true, false):
+			if not ap.has_animation("all_frames") or speed == 0 or flags & 0x08:
+				continue
+			var ticks_per_frame: int = 255 if speed == 1 else 300 / speed
+			ap.get_animation("all_frames").loop_mode = \
+				Animation.LOOP_PINGPONG if flags & 0x04 else Animation.LOOP_LINEAR
+			ap.speed_scale = (300.0 / ticks_per_frame) / 10.0   # clips are 10 fps
+			ap.play("all_frames")
+		var spin := int(f.get("Prop.spin_speed", {}).get("raw", 0))
+		if spin != 0:
+			var amp := int(f.get("Prop.spin_angle", {}).get("raw", 0)) * 4096 / 360
+			_prop_spins.append([node, spin, amp, node.rotation_degrees.y])
+		if flags & 0x40:
+			var sound_id := int(f.get("Prop.rotation_z", {}).get("raw", 0)) & 0xff
+			var stream := _sound("sound %d" % sound_id)
+			if stream:
+				var s := AudioStreamPlayer3D.new()
+				s.stream = stream
+				s.unit_size = 3.0
+				s.max_distance = 35.0
+				s.volume_db = -6.0
+				s.finished.connect(s.play)   # loop
+				s.autoplay = true
+				node.add_child(s)
+
+
+func _update_prop_spins(ticks: int) -> void:
+	for ps: Array in _prop_spins:
+		var phase: int = ((ticks & 0xfff) * int(ps[1])) & 0xfff
+		var node := ps[0] as Node3D
+		if int(ps[2]) == 0:
+			# Full spin from BAM 0; Godot yaw = 90 - degrees (level_layout._bam_to_degrees).
+			node.rotation_degrees.y = 90.0 - phase * 360.0 / 4096.0
+		else:
+			var a: int = ps[2]
+			var t: float = 2.0 * a * phase / 4096.0   # 0 .. 2A
+			var tri: float = (-2.0 * t if t <= a / 2.0 else -2.0 * (a - t)) if t <= a \
+				else (2.0 * (t - a) if t - a <= a / 2.0 else 2.0 * (a - (t - a)))
+			node.rotation_degrees.y = float(ps[3]) - tri * 360.0 / 4096.0
 
 
 func _under_x1(n: Node) -> bool:
@@ -588,5 +666,6 @@ func _process(delta: float) -> void:
 			mi.material_overlay = _tint if flash else null
 	for sp: Array in _spinning:
 		(sp[0] as Node3D).rotation.y += sp[1] * delta
+	_update_prop_spins(ticks)
 	if _minimap and _minimap.visible and _player:
 		_minimap.set_camera(_player.global_position, _player.global_basis.z)   # X1 faces +Z

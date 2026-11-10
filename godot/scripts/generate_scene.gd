@@ -205,6 +205,7 @@ func _add_actors(root: Node3D) -> bool:
 
 	var wrecks := {}   # actor id -> its wreck models, hidden until destroyed
 	var no_collision := {}   # actor ids with BaseEntity disable_collision
+	var hidden_props := {}   # class-96 props that start hidden
 	# Csac spawners whose actor only appears once a script runs (extract_spawns.py):
 	# placed hidden, shown by the debug overlay (level_ambience.gd, O).
 	var waiting := {}
@@ -220,6 +221,9 @@ func _add_actors(root: Node3D) -> bool:
 			var flags: Variant = rec.fields.get("BaseEntity.bitfield", {}).get("value")
 			if flags is Array and "disable_collision" in flags:
 				no_collision[int(rec.id)] = true
+			# Prop flag 0x10: hidden until a script shows it (message 0x1b, 0x800841c4).
+			if int(rec.fields.get("Prop.prop_flags", {}).get("raw", 0)) & 0x10:
+				hidden_props[int(rec.id)] = true
 
 	var placed := 0
 	var has_player := false
@@ -241,6 +245,9 @@ func _add_actors(root: Node3D) -> bool:
 		if actor.get("kind") == "Csac" and waiting.has(int(actor.id)):
 			actor_node.visible = false   # no collision either: its meshes are hidden
 			actor_node.set_meta("waiting_spawn", true)
+		if hidden_props.has(int(actor.id)):
+			actor_node.visible = false   # no collision either (terrain_collision.gd)
+			actor_node.set_meta("hidden_prop", true)
 		actor_node.position = _layout.actor_position(actor)
 		if is_player:
 			actor_node.position.y += 0.1  # drop onto the terrain collision at start

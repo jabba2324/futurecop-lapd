@@ -145,11 +145,14 @@ Class table (TCAt +4).  "chain" lists the base structs in payload order.
                                     base_rotation (0x8002dc94).
    9  Aircraft                  64  BE+BS + 32 B flight block (0x80032180) fc-mit+exe
                                     (fc-mit had orbit/spawn x and z swapped)
-  10  Elevator                  40  BE + stops/heights/speeds/rotation   fc-mit
+  10  Elevator                  40  BE + stops/heights/speeds/rotation,  fc-mit+exe
+                                    trigger flags, tile_effect, end sound
+                                    (0x80041488)
   11  DynamicProp               24  BE + ground_cast, align_flags (bit0 = fc-mit+exe
                                     tilt to terrain normal), rotation,
                                     height fx16
-  12  WalkableProp              24  BE + rotation_y/x, height            fc-mit
+  12  WalkableProp              24  BE + rotation_y/x, height, tile_     fc-mit+exe
+                                    effect (handler 0x80041c6c, msg 2)
   14  CollisionTrigger          24  BE + radius, ground_cast i16, flags,  exe
                                     filter_type/value (0x8002f8b8: same
                                     type codes as the target search; e.g.
@@ -172,7 +175,22 @@ Class table (TCAt +4).  "chain" lists the base structs in payload order.
                                     (a DamageEffectSet id: all 88 values in
                                     20/28 resolve to class-91 sets; gun =
                                     class-21 sub-actor 0x80039418)
-  25  MoveableProp              32  BE + move axis/sound/end pos & rot   fc-mit
+  25  MoveableProp              32  BE + move_axis (0 yaw, 1 along local  exe
+                                    x, 2 along local z, 3 vertical, 4
+                                    pitch, 5 roll), move_flags (1 start
+                                    at the end, 2 ping-pong, 4 walkable
+                                    surface, 8 moving at start),
+                                    ground_cast, stop_sound (played when
+                                    it stops; the BaseEntity ambient
+                                    sound loops while it moves), height,
+                                    rotation, end_offset i32 fx16 (the
+                                    distance; for 0/4/5 the high half is
+                                    the end angle in BAM) and speed i32
+                                    fx16 per second (/300 at load; BAM/s
+                                    in the high half for rotations).
+                                    fc-mit split the two i32s into u16s
+                                    and had the axes and sound wrong
+                                    (init 0x8002eed8, mover 0x8002f30c)
   26  PathedWalker              60  BE+BS+BasePathed + 8 B: behaviour     exe
                                     (state), draw_flags (as class 5),
                                     attack_anim (+1 = recoil), walk_anim
@@ -598,6 +616,9 @@ _PUSHER_FLAGS = {0x01: "enabled", 0x02: "push_vertical", 0x04: "player_state_fil
 # true depth instead of 256 nearer, 0x80016a64 -> 0x80015b68; 4 is never read).
 # 0x08 and 0x10 are also toggled by script messages 0x1a / 0x1b; the loader sets
 # 0x80 on every prop placed at level load (message 0x19 clears it).
+# MoveableProp (class 25) +1 (0x8002eed8 / 0x8002f30c).
+_MOVER_FLAGS = {0x01: "start_at_end", 0x02: "ping_pong", 0x04: "walkable_surface",
+                0x08: "moving_at_start"}
 _PROP_FLAGS = {0x01: "true_depth_sort", 0x02: "model_flag_4", 0x04: "ping_pong_anim",
                0x08: "anim_paused", 0x10: "hidden", 0x20: "flicker_anim",
                0x40: "ambient_sound", 0x80: "permanent"}
@@ -610,7 +631,7 @@ _FLAG_TABLES = {"entity": _ENTITY_FLAGS, "shooter": _SHOOTER_FLAGS,
                 "fx89": _FX89_FLAGS, "fx90": _FX90_FLAGS, "fx92": _FX92_FLAGS,
                 "fx93": _FX93_FLAGS, "fx94": _FX94_FLAGS, "fx94colour": _FX94_COLOUR,
                 "playerweapon": _PLAYER_WEAPON_FLAGS, "pusher": _PUSHER_FLAGS,
-                "prop": _PROP_FLAGS, "none": {}}
+                "prop": _PROP_FLAGS, "mover": _MOVER_FLAGS, "none": {}}
 
 _GROUND_CAST = {0: "high", 1: "low", 3: "middle", 255: "none"}
 # Pusher (class 31, 0x8003a160): force scale by distance d / radius r.
@@ -627,7 +648,8 @@ _MAP_COLORS = [
     "flashing_white", "flashing_orange", "flashing_gray",
 ]
 _MAP_SHAPES = ["circle", "triangle", "diamond", "shape_3"]
-_MOVE_AXIS = {0: "x", 1: "y", 2: "z", 3: "rotate_y", 4: "unknown_4", 5: "unknown_5"}
+_MOVE_AXIS = {0: "rotate_y", 1: "local_x", 2: "local_z", 3: "vertical", 4: "rotate_x",
+              5: "rotate_z"}
 
 
 def _f(name, typ, conv=None):
@@ -785,7 +807,7 @@ _CLASSES = {
     9: ("Aircraft", "fc-mit+exe", [
         ("BaseEntity", _BASE_ENTITY), ("BaseShooter", _BASE_SHOOTER),
         ("Aircraft", _AIRCRAFT)]),
-    10: ("Elevator", "fc-mit", [
+    10: ("Elevator", "fc-mit+exe", [
         ("BaseEntity", _BASE_ENTITY),
         ("Elevator", [
             _f("num_stops", "u8"), _f("starting_position", "u8"),
@@ -801,10 +823,10 @@ _CLASSES = {
         ("DynamicProp", [
             _f("ground_cast", "u8", "ground_cast"), _f("align_flags", "u8"),
             _f("rotation", "i16", "bam"), _f("height_offset", "i32", "fx16")])]),
-    12: ("WalkableProp", "fc-mit", [
+    12: ("WalkableProp", "fc-mit+exe", [
         ("BaseEntity", _BASE_ENTITY),
         ("WalkableProp", [
-            _f("rotation_y", "u16", "bam"), _f("rotation_x", "u16", "bam"),
+            _f("rotation_y", "i16", "bam"), _f("rotation_x", "i16", "bam"),
             _f("height_offset", "i16", "fx12"), _f("tile_effect", "u8"),
             _f("pad_7", "u8", "zero")])]),
     14: ("CollisionTrigger", "exe", [
@@ -828,16 +850,14 @@ _CLASSES = {
                           _f("gun_flags", "u8", "flags:gun"),
                           _f("gun_explosion", "u8", "explosion"),
                           _f("pad_6", "u16", "zero")])]),
-    25: ("MoveableProp", "fc-mit", [
+    25: ("MoveableProp", "exe", [
         ("BaseEntity", _BASE_ENTITY),
         ("MoveableProp", [
-            _f("move_axis", "u8", "move_axis"), _f("bitfield", "u8", "flags:none"),
-            _f("ground_cast", "u8", "ground_cast"), _f("start_sound", "u8", "sound"),
-            _f("height_offset", "i16", "fx12"), _f("rotation", "u16", "bam"),
-            # fc-mit splits these u32s with >>8 (bug); they are two u16 each.
-            _f("ending_position_offset", "i16", "fx12"),
-            _f("ending_rotation", "u16", "bam"),
-            _f("position_speed", "u16", "fx12"), _f("rotation_speed", "u16", "fx12")])]),
+            _f("move_axis", "u8", "move_axis"), _f("move_flags", "u8", "flags:mover"),
+            _f("ground_cast", "u8", "ground_cast"), _f("stop_sound", "u8", "sound"),
+            _f("height_offset", "i16", "fx12"), _f("rotation", "i16", "bam"),
+            # i32s (0x8002eed8). Rotation axes use the high half as BAM.
+            _f("end_offset", "i32", "fx16"), _f("speed", "i32", "fx16")])]),
     26: ("PathedWalker", "exe", [
         ("BaseEntity", _BASE_ENTITY), ("BaseShooter", _BASE_SHOOTER),
         ("BasePathedEntity", _BASE_PATHED),

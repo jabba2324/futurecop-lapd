@@ -91,7 +91,7 @@ them. ✅ works as in the game · 🟡 partly · ❌ not implemented
 | Special floors: conveyors, damaging/deadly, slippery, deep water | ✅ |
 | Elevators, teleporters (UN), pickups, power-ups | ✅ |
 | Vehicles and pedestrians driving their routes | 🟡 They don't react to you |
-| Placed effects, decals, animated props, prop damage states (K) | ✅ |
+| Placed effects, decals, animated, spinning and swaying props, prop sounds, prop damage states (K) | ✅ |
 | Water, fog, sphere-map reflections, PS1 or real-time lighting (L) | ✅ |
 | Ambient sounds, music, Crime War briefing movies | ✅ |
 | Minimap (M) and debug overlay of triggers, paths and floors (O) | ✅ |

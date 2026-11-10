@@ -355,7 +355,13 @@ in `decode_actors.py` as hypotheses.
       effect, wreck shown), then back. Group 0 is plain hits; when it's empty the
       first weapon-type group with an effect is shown.
     - class-97 decals (only some levels have them, e.g. M2C 180, UN 88, M4A1 44);
-    - looping `all_frames` clips on props (not on the X1 parts);
+    - looping `all_frames` clips on animated actors (not on the X1 parts). Class-96
+      Props follow the game instead (`_start_props`, 0x80084398): frames run only when
+      `animation_speed` v != 0, at 300 / (300 div v) frames/s (clips are 10 fps),
+      back and forth with prop_flags 0x04 and held with 0x08. `spin_speed` turns them
+      `spin_speed` BAM per tick, or sways them ± `spin_angle` around their yaw.
+      prop_flags 0x40 makes the low byte of rotation_z an ambient sound id, and 0x10
+      props are hidden by generate_scene.gd (10 in OV; no collision);
     - 3DTA texture animations;
     - looping 3D ambient sounds. **"sound N" fields are Cshd script ids** (0x80045494):
       N ≥ 70 is the mission table's entry with script_id N, below 70 the global table's
@@ -516,6 +522,9 @@ of the executable (see "Searching the executable" below).
   - Class 34 +12 is `two_sided`.
   - Trigger +6 is `ground_cast`.
   - Prop +9 is `prop_flags`.
+  - Classes 10, 12 and 25 are checked against the executable too. MoveableProp (25) was
+    wrong in fc-mit: +8 and +12 are i32 end_offset/speed (not four u16s), the axes are
+    0 yaw, 1 local x, 2 local z, 3 vertical, 4 pitch, 5 roll, and +3 is a stop sound.
   - Every lightning (88) and ring (92) flag is named.
   - The effect classes 87–94 have one decoder (tables in decode_actors.py), which
     extract_sfx_meta.py reuses for Csfx records.
